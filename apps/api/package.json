@@ -1,6 +1,6 @@
 {
   "name": "@kankor/api",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "typecheck": "npm --workspace @kankor/database run build && tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/cors": "11.3.0",
     "@fastify/rate-limit": "11.2.0",
     "@kankor/database": "*",
     "dotenv": "^17.2.3",

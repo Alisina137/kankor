@@ -24,6 +24,7 @@ async function answerHistoryForUser(userId: string) {
     attemptId: schema.examAttempts.id,
     submittedAt: schema.examAttempts.submittedAt,
     questionId: schema.examQuestions.questionId,
+    questionOrder: schema.examQuestions.order,
     curriculum: schema.examQuestions.curriculumSnapshot,
     correct: schema.attemptAnswers.correct,
     timeSpentSeconds: schema.attemptAnswers.timeSpentSeconds
@@ -35,7 +36,7 @@ async function answerHistoryForUser(userId: string) {
       eq(schema.examAttempts.userId, userId),
       eq(schema.examAttempts.status, "analyzed")
     ))
-    .orderBy(asc(schema.examAttempts.submittedAt));
+    .orderBy(asc(schema.examAttempts.submittedAt), asc(schema.examQuestions.order));
 
   return rows.map((row) => ({
     attemptId: row.attemptId,

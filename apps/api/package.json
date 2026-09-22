@@ -1,6 +1,6 @@
 {
   "name": "@kankor/api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,12 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {"fastify": "5.12.5"},
+  "dependencies": {
+    "@fastify/rate-limit": "11.2.0",
+    "@kankor/database": "*",
+    "drizzle-orm": "0.45.3",
+    "fastify": "5.12.5"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.23.0",

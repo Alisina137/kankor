@@ -93,7 +93,6 @@ VALUES (
     "historicalFormsPerDay": 1,
     "maxQuestionsPerTargetedExam": 10,
     "progressHistoryLimit": 5,
-    "detailedExplanationsPerDay": 5,
     "mistakeNotebook": false,
     "weaknessPractice": false,
     "completeAnalytics": false

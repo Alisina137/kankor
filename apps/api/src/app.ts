@@ -13,7 +13,8 @@ import {
   adminCurriculumRoutes,
   adminQuestionRoutes,
   adminExamBlueprintRoutes,
-  adminHistoricalFormRoutes
+  adminHistoricalFormRoutes,
+  adminBillingRoutes
 } from "./modules/admin/index.js";
 
 export async function buildApp() {
@@ -58,6 +59,7 @@ export async function buildApp() {
   await app.register(adminQuestionRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminExamBlueprintRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminHistoricalFormRoutes, { prefix: "/api/v1/admin" });
+  await app.register(adminBillingRoutes, { prefix: "/api/v1/admin" });
 
   return app;
 }

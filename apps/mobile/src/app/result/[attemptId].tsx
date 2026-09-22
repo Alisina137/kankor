@@ -31,6 +31,12 @@ type ResultPayload = {
     unansweredCount: number;
     totalTimeSeconds: number;
   };
+  attempt?: {
+    id: string;
+    title: string;
+    mode: string;
+    historical: Record<string, unknown> | null;
+  } | null;
   analysis: {
     overall: Record<string, unknown>;
     bySubject: DimensionRow[];
@@ -64,7 +70,11 @@ const copy = {
     questions: "سوال",
     recommendation: "پیشنهاد بعدی",
     practiceTopic: "تمرین این موضوع",
-    anotherExam: "یک امتحان دیگر انجام دهید"
+    anotherExam: "یک امتحان دیگر انجام دهید",
+    historicalForm: "فورم تاریخی",
+    source: "منبع",
+    historicalScoring: "امتیازدهی تاریخی",
+    practiceFallback: "قانون تاریخی نامعلوم؛ امتیازدهی تمرینی استفاده شد"
   },
   ps: {
     title: "د ازموینې پایله",
@@ -86,7 +96,11 @@ const copy = {
     questions: "پوښتنې",
     recommendation: "بل وړاندیز",
     practiceTopic: "دا موضوع تمرین کړئ",
-    anotherExam: "بله ازموینه وکړئ"
+    anotherExam: "بله ازموینه وکړئ",
+    historicalForm: "تاریخي فورمه",
+    source: "سرچینه",
+    historicalScoring: "تاریخي نمره ورکول",
+    practiceFallback: "تاریخي قانون نامعلوم؛ تمریني نمره وکارول شوه"
   },
   en: {
     title: "Exam result",
@@ -108,7 +122,11 @@ const copy = {
     questions: "questions",
     recommendation: "Recommended next action",
     practiceTopic: "Practice this topic",
-    anotherExam: "Take another exam"
+    anotherExam: "Take another exam",
+    historicalForm: "Historical form",
+    source: "Source",
+    historicalScoring: "Historical scoring",
+    practiceFallback: "Historical scoring rule unknown; practice scoring was used"
   }
 } as const;
 
@@ -202,6 +220,24 @@ export default function ResultScreen() {
         <Ionicons name="trophy-outline" size={34} color={theme.colors.primary} />
         <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
       </View>
+
+      {data.attempt?.mode === "historical" && data.attempt.historical ? (
+        <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.historicalForm}</Text>
+          <Text style={[styles.bodyText, { textAlign: align }]}>
+            {String(data.attempt.historical.year ?? "")}
+            {data.attempt.historical.province ? ` · ${String(data.attempt.historical.province)}` : ""}
+            {data.attempt.historical.round ? ` · ${String(data.attempt.historical.round)}` : ""}
+            {data.attempt.historical.formCode ? ` · ${String(data.attempt.historical.formCode)}` : ""}
+          </Text>
+          <Text style={[styles.small, { textAlign: align }]}>
+            {text.source}: {String(data.attempt.historical.sourceStatus ?? "unverified")}
+          </Text>
+          {data.attempt.historical.scoringAuthority === "practice_fallback" ? (
+            <Text style={[styles.small, { textAlign: align }]}>{text.practiceFallback}</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.scoreCard}>
         <Text style={styles.scoreLabel}>{text.score}</Text>

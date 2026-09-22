@@ -4,13 +4,14 @@ import rateLimit from "@fastify/rate-limit";
 import { authRoutes } from "./modules/auth/index.js";
 import { curriculumRoutes } from "./modules/curriculum/index.js";
 import { questionRoutes } from "./modules/questions/index.js";
-import { examRoutes } from "./modules/exams/index.js";
+import { examRoutes, historicalExamRoutes } from "./modules/exams/index.js";
 import { attemptRoutes } from "./modules/attempts/index.js";
 import { resultRoutes } from "./modules/results/index.js";
 import {
   adminCurriculumRoutes,
   adminQuestionRoutes,
-  adminExamBlueprintRoutes
+  adminExamBlueprintRoutes,
+  adminHistoricalFormRoutes
 } from "./modules/admin/index.js";
 
 export async function buildApp() {
@@ -33,24 +34,26 @@ export async function buildApp() {
   app.get("/health", async () => ({
     status: "ok",
     service: "kankor-api",
-    phase: 5
+    phase: 6
   }));
 
   app.get("/api/v1", async () => ({
     name: "KankorPrep API",
     version: "v1",
-    status: "scoring-results-review"
+    status: "historical-form-library"
   }));
 
   await app.register(authRoutes, { prefix: "/api/v1/auth" });
   await app.register(curriculumRoutes, { prefix: "/api/v1" });
   await app.register(questionRoutes, { prefix: "/api/v1" });
   await app.register(examRoutes, { prefix: "/api/v1" });
+  await app.register(historicalExamRoutes, { prefix: "/api/v1" });
   await app.register(attemptRoutes, { prefix: "/api/v1" });
   await app.register(resultRoutes, { prefix: "/api/v1" });
   await app.register(adminCurriculumRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminQuestionRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminExamBlueprintRoutes, { prefix: "/api/v1/admin" });
+  await app.register(adminHistoricalFormRoutes, { prefix: "/api/v1/admin" });
 
   return app;
 }

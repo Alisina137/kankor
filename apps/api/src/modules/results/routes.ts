@@ -25,7 +25,18 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const stored = await ensureResult(request.params.id, auth.user.userId);
-      return stored;
+      const attempt = await getOwnedAttempt(request.params.id, auth.user.userId);
+      return {
+        ...stored,
+        attempt: attempt ? {
+          id: attempt.id,
+          title: attempt.examTitle,
+          mode: attempt.examMode,
+          historical: attempt.configurationSnapshot && typeof attempt.configurationSnapshot === "object"
+            ? (attempt.configurationSnapshot as Record<string, unknown>).historical ?? null
+            : null
+        } : null
+      };
     } catch (error) {
       const code = error instanceof Error ? error.message : "result_failed";
       if (code === "attempt_not_found") return reply.code(404).send({ error: code });

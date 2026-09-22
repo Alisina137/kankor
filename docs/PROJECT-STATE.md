@@ -41,7 +41,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 5 — Scoring, Results and Review completed in source.
+Phase 6 — Historical Form Library completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -80,6 +80,21 @@ Phase 5 — Scoring, Results and Review completed in source.
 - Admin UI for explicit full-Kankor scoring-rule configuration.
 - Phase 5 structural verifier.
 
+### Phase 6
+- HistoricalForm and HistoricalFormQuestion archive entities.
+- Year, cycle, province, round, form code, language, source reference, source confidence, original-order confidence, timing, scoring metadata, and verification lifecycle.
+- Historical form questions preserve original order and per-question provenance/scoring metadata.
+- Duplicate underlying questions are supported when a historical source genuinely repeats one.
+- Published historical forms are fixed and cannot randomize or silently replace their ordered question list.
+- Admin APIs/UI for form creation, metadata editing, bulk JSON import, ordered question assignment, review/approval/publication, and provenance.
+- Publication blocks empty, non-contiguous, or unpublished-question forms.
+- Student archive browsing/filtering by year, province, round, and language.
+- Authentic historical form start snapshots exact ordered questions into the existing resilient exam engine.
+- Historical attempts preserve form identity/provenance and scoring authority in configuration snapshots.
+- Unknown historical scoring rules are never invented; explicit practice fallback is marked in provenance.
+- Result page identifies historical form provenance and whether practice scoring fallback was used.
+- Phase 6 structural verifier.
+
 ## Verification status
 - Phase 2 account flow was locally verified by the user.
 - Phase 3 admin access was locally verified by the user.
@@ -95,10 +110,10 @@ Phase 5 — Scoring, Results and Review completed in source.
 - Targeted practice uses the documented internal marks-based scoring snapshot: correct = question marks, incorrect = 0, unanswered = 0.
 - The product owner still needs to supply/verify authoritative curriculum, questions, and annual Kankor scoring policy.
 - Mistake notebook and longitudinal mastery begin in Phase 7.
-- Historical fixed forms begin in Phase 6.
+- Historical archive infrastructure is complete, but no real historical Kankor papers have been imported yet because authoritative source forms have not been supplied.
 
 ## Latest source baseline
-Phase 5 branch awaiting merge to `main`.
+Phase 6 branch awaiting merge to `main`.
 
 ## Next phase
-Phase 6 — Historical Form Library.
+Phase 7 — Progress and Mistake System.

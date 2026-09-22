@@ -192,7 +192,7 @@ export default function ExamsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen scroll contentContainerStyle={styles.scrollContent}>
       <View style={styles.stack}>
         <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
 
@@ -274,6 +274,7 @@ export default function ExamsScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: 120 },
   stack: { gap: theme.spacing.lg },
   title: { color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "800" },
   card: { flexDirection: "row", gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },

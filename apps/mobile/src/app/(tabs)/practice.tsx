@@ -215,7 +215,7 @@ export default function PracticeScreen() {
     const body: Record<string, unknown> = {
       mode,
       title: selectedPath || text.title,
-      language: locale,
+      language: String(selectedBook?.sourceMetadata?.language ?? locale),
       questionCount,
       durationSeconds
     };

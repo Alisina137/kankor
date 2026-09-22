@@ -158,6 +158,48 @@ export const questionTranslations = pgTable("question_translations", {
 }));
 
 
+export const historicalForms = pgTable("historical_forms", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  archiveCode: varchar("archive_code", { length: 120 }).notNull().unique(),
+  year: integer("year").notNull(),
+  cycle: varchar("cycle", { length: 80 }),
+  province: varchar("province", { length: 120 }),
+  round: varchar("round", { length: 80 }),
+  formCode: varchar("form_code", { length: 120 }),
+  language: varchar("language", { length: 8 }).notNull(),
+  title: varchar("title", { length: 240 }).notNull(),
+  sourceReference: text("source_reference"),
+  sourceStatus: varchar("source_status", { length: 32 }).notNull().default("unverified"),
+  sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
+  verificationStatus: varchar("verification_status", { length: 24 }).notNull().default("draft"),
+  originalOrderStatus: varchar("original_order_status", { length: 24 }).notNull().default("uncertain"),
+  questionCount: integer("question_count").notNull().default(0),
+  durationSeconds: integer("duration_seconds"),
+  scoringRules: jsonb("scoring_rules").$type<Record<string, unknown>>(),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  yearIdx: index("historical_forms_year_idx").on(table.year),
+  provinceIdx: index("historical_forms_province_idx").on(table.province),
+  statusIdx: index("historical_forms_status_idx").on(table.verificationStatus)
+}));
+
+export const historicalFormQuestions = pgTable("historical_form_questions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  historicalFormId: uuid("historical_form_id").notNull().references(() => historicalForms.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id").notNull().references(() => questions.id, { onDelete: "restrict" }),
+  order: integer("question_order").notNull(),
+  historicalScoringMetadata: jsonb("historical_scoring_metadata").$type<Record<string, unknown>>().notNull().default({}),
+  sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  formOrderUnique: uniqueIndex("historical_form_questions_order_unique").on(table.historicalFormId, table.order),
+  formIdx: index("historical_form_questions_form_idx").on(table.historicalFormId),
+  questionIdx: index("historical_form_questions_question_idx").on(table.questionId)
+}));
+
 export const examBlueprints = pgTable("exam_blueprints", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 96 }).notNull().unique(),
@@ -184,6 +226,7 @@ export const exams = pgTable("exams", {
   title: varchar("title", { length: 220 }).notNull(),
   language: varchar("language", { length: 8 }).notNull().default("fa"),
   blueprintId: uuid("blueprint_id").references(() => examBlueprints.id, { onDelete: "set null" }),
+  historicalFormId: uuid("historical_form_id").references(() => historicalForms.id, { onDelete: "set null" }),
   questionCount: integer("question_count").notNull(),
   durationSeconds: integer("duration_seconds"),
   criteriaSnapshot: jsonb("criteria_snapshot").$type<Record<string, unknown>>().notNull().default({}),

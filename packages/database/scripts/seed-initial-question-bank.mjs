@@ -208,14 +208,62 @@ const client = new pg.Client({
   application_name: "kankorprep-initial-test-question-bank"
 });
 
+const BATCH_SIZE = 100;
+
+function buildBulkInsert(rows) {
+  const params = [];
+  const values = rows.map((row, rowIndex) => {
+    const base = rowIndex * 9;
+    params.push(
+      row.topicId,
+      row.language,
+      row.content,
+      JSON.stringify(row.choices),
+      row.correctChoice,
+      row.explanation,
+      row.explanation,
+      row.difficulty,
+      JSON.stringify(row.sourceMetadata)
+    );
+
+    return `($${base + 1}, $${base + 2}, 'single_choice', $${base + 3}, $${base + 4}::jsonb, $${base + 5},
+      $${base + 6}, $${base + 7}, NULL, $${base + 8},
+      '1', 'textbook_test', $${base + 9}::jsonb, 'published', 1,
+      now(), now())`;
+  });
+
+  return {
+    sql: `INSERT INTO questions (
+      topic_id, language, question_type, content, choices, correct_choice,
+      short_explanation, detailed_explanation, worked_solution, difficulty,
+      marks, source_type, source_metadata, verification_status, version,
+      created_at, updated_at
+    ) VALUES ${values.join(", ")}`,
+    params
+  };
+}
+
+console.log("→ Connecting to database...");
 await client.connect();
+console.log("✓ Database connected");
 
 try {
-  await client.query("BEGIN");
-  let inserted = 0;
+  const existingResult = await client.query(
+    `SELECT source_metadata->>'seedKey' AS seed_key
+     FROM questions
+     WHERE source_metadata->>'purpose' = 'initial_testing'
+       AND source_metadata ? 'seedKey'`
+  );
+  const existingKeys = new Set(existingResult.rows.map((row) => row.seed_key).filter(Boolean));
+
+  const pending = [];
   let skipped = 0;
 
+  console.log(`→ Existing seeded questions found: ${existingKeys.size}`);
+
   for (const [bookCode, config] of Object.entries(books)) {
+    console.log(`→ Preparing ${bookCode}...`);
+
     const result = await client.query(
       `SELECT
         t.id AS topic_id,
@@ -255,66 +303,68 @@ try {
         const item = questions[index];
         const seedKey = `initial-test-bank:${bookCode}:${topic.topic_code}:q${String(index + 1).padStart(2, "0")}`;
 
-        const existing = await client.query(
-          `SELECT id FROM questions WHERE source_metadata->>'seedKey' = $1 LIMIT 1`,
-          [seedKey]
-        );
-        if (existing.rowCount) {
+        if (existingKeys.has(seedKey)) {
           skipped += 1;
           continue;
         }
 
         const answerIndex = (topicIndex + index) % 4;
         const { choices, correctChoice } = makeChoices(item.correct, item.wrong, answerIndex);
-        const sourceMetadata = {
-          seedKey,
-          sourceBookCode: bookCode,
-          sourceFilename: config.sourceFilename,
-          sourceType: "official_textbook",
-          sourcePage: page,
-          lessonNumber: topic.sort_order,
-          lessonCode: topic.topic_code,
-          purpose: "initial_testing",
-          generationMethod: "curriculum_metadata",
-          productionReady: false
-        };
 
-        await client.query(
-          `INSERT INTO questions (
-            topic_id, language, question_type, content, choices, correct_choice,
-            short_explanation, detailed_explanation, worked_solution, difficulty,
-            marks, source_type, source_metadata, verification_status, version,
-            created_at, updated_at
-          ) VALUES (
-            $1, $2, 'single_choice', $3, $4::jsonb, $5,
-            $6, $7, NULL, $8,
-            '1', 'textbook_test', $9::jsonb, 'published', 1,
-            now(), now()
-          )`,
-          [
-            topic.topic_id,
-            config.language,
-            item.q,
-            JSON.stringify(choices),
-            correctChoice,
-            item.explanation,
-            item.explanation,
-            index < 5 ? "easy" : "medium",
-            JSON.stringify(sourceMetadata)
-          ]
-        );
-        inserted += 1;
+        pending.push({
+          topicId: topic.topic_id,
+          language: config.language,
+          content: item.q,
+          choices,
+          correctChoice,
+          explanation: item.explanation,
+          difficulty: index < 5 ? "easy" : "medium",
+          sourceMetadata: {
+            seedKey,
+            sourceBookCode: bookCode,
+            sourceFilename: config.sourceFilename,
+            sourceType: "official_textbook",
+            sourcePage: page,
+            lessonNumber: topic.sort_order,
+            lessonCode: topic.topic_code,
+            purpose: "initial_testing",
+            generationMethod: "curriculum_metadata",
+            productionReady: false
+          }
+        });
       }
+    }
+
+    console.log(`✓ Prepared ${topics.length * 10} questions for ${bookCode}`);
+  }
+
+  if (!pending.length) {
+    console.log(`✓ Question bank is already complete. ${skipped} questions already present.`);
+  } else {
+    console.log(`→ Inserting ${pending.length} questions in batches of ${BATCH_SIZE}...`);
+    await client.query("BEGIN");
+
+    try {
+      let inserted = 0;
+
+      for (let offset = 0; offset < pending.length; offset += BATCH_SIZE) {
+        const batch = pending.slice(offset, offset + BATCH_SIZE);
+        const { sql, params } = buildBulkInsert(batch);
+        await client.query(sql, params);
+        inserted += batch.length;
+        console.log(`  ✓ Inserted ${inserted}/${pending.length}`);
+      }
+
+      await client.query("COMMIT");
+      console.log(`✓ Initial published test bank ready: ${pending.length} inserted, ${skipped} already present.`);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
     }
   }
 
-  await client.query("COMMIT");
-  console.log(`✓ Initial published test bank ready: ${inserted} inserted, ${skipped} already present.`);
   console.log("✓ Expected coverage: 10 published questions per imported lesson for Grade 10 History and Grade 10 Pashto.");
   console.log("ℹ These questions are for initial application testing and are tagged productionReady=false.");
-} catch (error) {
-  await client.query("ROLLBACK");
-  throw error;
 } finally {
   await client.end();
 }

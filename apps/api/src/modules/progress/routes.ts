@@ -65,17 +65,20 @@ async function startTopicPractice(userId: string, topicId: string, language?: st
   const topic = topicRows[0];
   if (!topic) return { ok: false as const, error: "topic_not_found" };
 
-  const pool = await selectPublishedQuestions({ topicIds: [topicId], language }, 10);
+  const initialPool = await selectPublishedQuestions({ topicIds: [topicId], language }, 10);
+  if (!initialPool.length) return { ok: false as const, error: "insufficient_question_pool" };
+  const selectedLanguage = language ?? initialPool[0].language;
+  const pool = language ? initialPool : await selectPublishedQuestions({ topicIds: [topicId], language: selectedLanguage }, 10);
   if (!pool.length) return { ok: false as const, error: "insufficient_question_pool" };
   const questionCount = Math.min(10, pool.length);
 
   const generated = await createGeneratedExam({
     mode: "topic",
     title: `Topic practice — ${topic.titleFa}`,
-    language: language ?? pool[0].language,
+    language: selectedLanguage,
     questionCount,
     durationSeconds: null,
-    criteria: { topicIds: [topicId], language: language ?? pool[0].language },
+    criteria: { topicIds: [topicId], language: selectedLanguage },
     scoringRules: PRACTICE_SCORING_RULES,
     userId
   });
@@ -189,7 +192,7 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
         correct: item.correct,
         incorrect: item.incorrect,
         unanswered: item.unanswered,
-        accuracyPercentage: answered ? Math.round((item.correct / answered) * 10000) / 100 : 0,
+        accuracyPercentage: item.total ? Math.round((item.correct / item.total) * 10000) / 100 : 0,
         averageTimeSeconds: item.total ? Math.round((item.weightedTime / item.total) * 100) / 100 : 0
       };
     }).sort((a,b) => a.accuracyPercentage - b.accuracyPercentage);

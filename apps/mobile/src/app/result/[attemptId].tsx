@@ -61,7 +61,10 @@ const copy = {
     loading: "نتیجه در حال بارگیری است...",
     error: "نتیجه بارگیری نشد.",
     retry: "تلاش دوباره",
-    questions: "سوال"
+    questions: "سوال",
+    recommendation: "پیشنهاد بعدی",
+    practiceTopic: "تمرین این موضوع",
+    anotherExam: "یک امتحان دیگر انجام دهید"
   },
   ps: {
     title: "د ازموینې پایله",
@@ -80,7 +83,10 @@ const copy = {
     loading: "پایله پورته کېږي...",
     error: "پایله پورته نه شوه.",
     retry: "بیا هڅه",
-    questions: "پوښتنې"
+    questions: "پوښتنې",
+    recommendation: "بل وړاندیز",
+    practiceTopic: "دا موضوع تمرین کړئ",
+    anotherExam: "بله ازموینه وکړئ"
   },
   en: {
     title: "Exam result",
@@ -99,7 +105,10 @@ const copy = {
     loading: "Loading result...",
     error: "The result could not be loaded.",
     retry: "Retry",
-    questions: "questions"
+    questions: "questions",
+    recommendation: "Recommended next action",
+    practiceTopic: "Practice this topic",
+    anotherExam: "Take another exam"
   }
 } as const;
 
@@ -176,7 +185,7 @@ export default function ResultScreen() {
               <Text style={styles.performanceValue}>{row.percentage.toFixed(1)}%</Text>
             </View>
             <View style={styles.track}>
-              <View style={[styles.fill, { width: `${Math.max(0, Math.min(100, row.percentage))}%` }]} />
+              <View style={[styles.fill, { width: `${Math.max(0, Math.min(100, row.percentage))}%` as `${number}%` }]} />
             </View>
             <Text style={[styles.small, { textAlign: align }]}>
               {row.correct}/{row.total} {text.questions}
@@ -213,6 +222,17 @@ export default function ResultScreen() {
       {strongest.length ? <PerformanceList title={text.strongest} rows={strongest} /> : null}
       {weakest.length ? <PerformanceList title={text.weakest} rows={weakest} /> : null}
 
+      {data.analysis?.recommendation ? (
+        <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.recommendation}</Text>
+          <Text style={[styles.bodyText, { textAlign: align }]}>
+            {data.analysis.recommendation.type === "practice_topic"
+              ? `${text.practiceTopic}: ${String(data.analysis.recommendation.label ?? "")}`
+              : text.anotherExam}
+          </Text>
+        </View>
+      ) : null}
+
       <Pressable style={styles.primaryButton} onPress={() => router.push(`/review/${attemptId}`)}>
         <Text style={styles.primaryText}>{text.review}</Text>
       </Pressable>
@@ -246,6 +266,7 @@ const styles = StyleSheet.create({
   track: { height: 8, borderRadius: 4, overflow: "hidden", backgroundColor: theme.colors.background },
   fill: { height: 8, borderRadius: 4, backgroundColor: theme.colors.primary },
   small: { color: theme.colors.mutedText, fontSize: theme.typography.small },
+  bodyText: { color: theme.colors.text, lineHeight: 24 },
   primaryButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: theme.radius.md, backgroundColor: theme.colors.primary, paddingHorizontal: theme.spacing.md },
   primaryText: { color: "#FFFFFF", fontWeight: "800" },
   secondaryButton: { minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },

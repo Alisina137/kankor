@@ -55,3 +55,6 @@ ALTER TABLE "exams"
   ADD COLUMN IF NOT EXISTS "historical_form_id" uuid REFERENCES "historical_forms"("id") ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS "exams_historical_form_idx" ON "exams" ("historical_form_id");
+
+DROP INDEX IF EXISTS "exam_questions_exam_question_unique";
+CREATE INDEX IF NOT EXISTS "exam_questions_exam_question_idx" ON "exam_questions" ("exam_id", "question_id");

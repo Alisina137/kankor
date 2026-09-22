@@ -35,6 +35,7 @@ export default function ProfileScreen() {
           <Text style={[styles.email, { textAlign: align }]}>{user?.email}</Text>
           <Text style={[styles.meta, { textAlign: align }]}>{text.targetLabel}: {user?.targetExamYear ?? "—"}</Text>
         </SectionCard>
+        <AppButton label="Premium" onPress={() => router.push("/premium")} />
         <AppButton label={text.logout} variant="secondary" onPress={() => void signOut()} />
         <AppButton label={text.deleteAccount} variant="danger" onPress={confirmDelete} />
       </View>

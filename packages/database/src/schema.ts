@@ -165,15 +165,7 @@ export const examBlueprints = pgTable("exam_blueprints", {
   effectiveYear: integer("effective_year"),
   questionCount: integer("question_count").notNull(),
   durationSeconds: integer("duration_seconds"),
-  criteria: jsonb("criteria").$type<{
-    subjectIds?: string[];
-    gradeIds?: string[];
-    bookIds?: string[];
-    chapterIds?: string[];
-    topicIds?: string[];
-    difficulties?: string[];
-    language?: string;
-  }>().notNull().default({}),
+  criteria: jsonb("criteria").$type<Record<string, unknown>>().notNull().default({}),
   active: boolean("active").notNull().default(false),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),

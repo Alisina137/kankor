@@ -6,7 +6,7 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").rep
 
 type Grade = { id: string; number: number; nameFa: string };
 type Subject = { id: string; code: string; nameFa: string };
-type Book = { id: string; subjectId: string; gradeId: string; code: string; titleFa: string };
+type Book = { id: string; subjectId: string; gradeId: string; code: string; titleFa: string; editionYear: number | null; sourceMetadata: Record<string, unknown> };
 type Chapter = { id: string; bookId: string; number: number; titleFa: string };
 type Topic = { id: string; chapterId: string; titleFa: string };
 type Question = { id: string; content: string; verificationStatus: string; difficulty: string };
@@ -174,6 +174,31 @@ export default function AdminHome() {
         <div><strong>{curriculum.chapters.length}</strong><span>فصل</span></div>
         <div><strong>{curriculum.topics.length}</strong><span>موضوع</span></div>
         <div><strong>{questions.length}</strong><span>سوال</span></div>
+      </section>
+
+      <section className="card">
+        <h2>کتاب‌های نصاب واردشده</h2>
+        <div className="list">
+          {curriculum.books.length ? curriculum.books.map((book) => {
+            const grade = curriculum.grades.find((item) => item.id === book.gradeId);
+            const chapterCount = curriculum.chapters.filter((item) => item.bookId === book.id).length;
+            const lessonCount = curriculum.topics.filter((topic) =>
+              curriculum.chapters.some((chapter) => chapter.id === topic.chapterId && chapter.bookId === book.id)
+            ).length;
+            return (
+              <div className="list-item" key={book.id}>
+                <div>
+                  <strong>{book.titleFa}</strong>
+                  <small>
+                    صنف {grade?.number ?? "—"} · چاپ {book.editionYear ?? "—"} · {chapterCount} فصل · {lessonCount} درس
+                  </small>
+                  <small>منبع: {String(book.sourceMetadata?.publisher ?? "ثبت نشده")}</small>
+                </div>
+                <span className="badge">{String(book.sourceMetadata?.sourceType ?? "curriculum")}</span>
+              </div>
+            );
+          }) : <p>هنوز کتاب نصاب وارد نشده است.</p>}
+        </div>
       </section>
 
       <section className="grid">

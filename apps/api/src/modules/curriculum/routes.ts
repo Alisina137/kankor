@@ -46,6 +46,7 @@ export const curriculumRoutes: FastifyPluginAsync = async (app) => {
         titleFa: schema.books.titleFa,
         titlePs: schema.books.titlePs,
         editionYear: schema.books.editionYear,
+        sourceMetadata: schema.books.sourceMetadata,
         sortOrder: schema.books.sortOrder
       }).from(schema.books)
         .where(and(...conditions))

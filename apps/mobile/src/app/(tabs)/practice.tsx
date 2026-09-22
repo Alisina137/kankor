@@ -9,7 +9,7 @@ import { useLocale } from "../../providers/locale-provider";
 
 type Grade = { id: string; number: number; nameFa: string; namePs: string | null };
 type Subject = { id: string; code: string; nameFa: string; namePs: string | null };
-type Book = { id: string; subjectId: string; gradeId: string; titleFa: string; titlePs: string | null };
+type Book = { id: string; subjectId: string; gradeId: string; code: string; titleFa: string; titlePs: string | null; editionYear: number | null; sourceMetadata: Record<string, unknown> };
 type Chapter = { id: string; bookId: string; number: number; titleFa: string; titlePs: string | null };
 type Topic = { id: string; chapterId: string; titleFa: string; titlePs: string | null };
 
@@ -37,7 +37,11 @@ const copy = {
     starting: "در حال ساخت امتحان...",
     selectPath: "حداقل یک مضمون را انتخاب کنید.",
     insufficient: "برای این مسیر هنوز سوالات منتشرشده کافی نیست.",
-    startError: "امتحان شروع نشد. دوباره تلاش کنید."
+    startError: "امتحان شروع نشد. دوباره تلاش کنید.",
+    officialBook: "کتاب درسی رسمی",
+    edition: "چاپ",
+    publisher: "ناشر",
+    lessons: "درس"
   },
   ps: {
     title: "د نصاب له مخې تمرین",
@@ -59,7 +63,11 @@ const copy = {
     starting: "ازموینه جوړېږي...",
     selectPath: "لږ تر لږه یو مضمون وټاکئ.",
     insufficient: "د دې مسیر لپاره کافي خپرې شوې پوښتنې نشته.",
-    startError: "ازموینه پیل نه شوه. بیا هڅه وکړئ."
+    startError: "ازموینه پیل نه شوه. بیا هڅه وکړئ.",
+    officialBook: "رسمي درسي کتاب",
+    edition: "چاپ",
+    publisher: "خپرونکی",
+    lessons: "درسونه"
   },
   en: {
     title: "Practice by curriculum",
@@ -81,7 +89,11 @@ const copy = {
     starting: "Creating exam...",
     selectPath: "Select at least a subject.",
     insufficient: "There are not enough published questions for this path yet.",
-    startError: "The exam could not be started. Try again."
+    startError: "The exam could not be started. Try again.",
+    officialBook: "Official textbook",
+    edition: "Edition",
+    publisher: "Publisher",
+    lessons: "lessons"
   }
 } as const;
 
@@ -142,6 +154,7 @@ export default function PracticeScreen() {
   }, [chapterId, text.error]);
 
   const displayName = (fa: string, ps: string | null) => locale === "ps" ? (ps || fa) : fa;
+  const selectedBook = books.find((item) => item.id === bookId) ?? null;
   const selectedPath = useMemo(() => {
     const subject = subjects.find((item) => item.id === subjectId);
     const book = books.find((item) => item.id === bookId);
@@ -259,6 +272,23 @@ export default function PracticeScreen() {
           </>
         ) : null}
 
+        {selectedBook ? (
+          <View style={styles.sourceCard}>
+            <View style={styles.sourceHeader}>
+              <Text style={[styles.sourceBadge, { textAlign: align }]}>{text.officialBook}</Text>
+              {selectedBook.editionYear ? (
+                <Text style={styles.sourceEdition}>{text.edition} {selectedBook.editionYear}</Text>
+              ) : null}
+            </View>
+            <Text style={[styles.sourceTitle, { textAlign: align }]}>
+              {displayName(selectedBook.titleFa, selectedBook.titlePs)}
+            </Text>
+            <Text style={[styles.sourceMeta, { textAlign: align }]}>
+              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chapters.length} {text.chapter}
+            </Text>
+          </View>
+        ) : null}
+
         {selectedPath ? (
           <View style={styles.pathCard}>
             <Text style={[styles.pathLabel, { textAlign: align }]}>{text.selected}</Text>
@@ -314,6 +344,12 @@ const styles = StyleSheet.create({
   chipTextActive: { color: theme.colors.primary, fontWeight: "700" },
   empty: { color: theme.colors.mutedText, fontSize: theme.typography.small },
   error: { color: theme.colors.danger },
+  sourceCard: { padding: theme.spacing.md, gap: 8, backgroundColor: theme.colors.primarySoft, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radius.lg },
+  sourceHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.sm },
+  sourceBadge: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "800" },
+  sourceEdition: { color: theme.colors.mutedText, fontSize: theme.typography.small, fontWeight: "700" },
+  sourceTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
+  sourceMeta: { color: theme.colors.mutedText, lineHeight: 22 },
   pathCard: { padding: theme.spacing.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, gap: theme.spacing.xs },
   pathLabel: { color: theme.colors.mutedText, fontSize: theme.typography.small, fontWeight: "600" },
   path: { color: theme.colors.text, fontWeight: "700", lineHeight: 24 },

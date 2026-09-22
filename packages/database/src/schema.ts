@@ -77,6 +77,7 @@ export const books = pgTable("books", {
   titleFa: varchar("title_fa", { length: 220 }).notNull(),
   titlePs: varchar("title_ps", { length: 220 }),
   editionYear: integer("edition_year"),
+  sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

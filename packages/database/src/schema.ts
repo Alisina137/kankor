@@ -420,6 +420,7 @@ export const paymentTransactions = pgTable("payment_transactions", {
   subscriptionId: uuid("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
   provider: varchar("provider", { length: 32 }).notNull(),
   providerPaymentId: varchar("provider_payment_id", { length: 180 }).notNull().unique(),
+  idempotencyKey: varchar("idempotency_key", { length: 160 }),
   status: varchar("status", { length: 24 }).notNull().default("pending"),
   amountAfn: integer("amount_afn").notNull(),
   providerPayload: jsonb("provider_payload").$type<Record<string, unknown>>().notNull().default({}),
@@ -428,6 +429,7 @@ export const paymentTransactions = pgTable("payment_transactions", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
   userIdx: index("payment_transactions_user_idx").on(table.userId),
+  userIdempotencyUnique: uniqueIndex("payment_transactions_user_idempotency_unique").on(table.userId, table.idempotencyKey),
   statusIdx: index("payment_transactions_status_idx").on(table.status)
 }));
 

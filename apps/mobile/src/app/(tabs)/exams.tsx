@@ -154,7 +154,7 @@ export default function ExamsScreen() {
               <Text style={[styles.cardTitle, { textAlign: align }]}>{text.resume}</Text>
               <Text style={[styles.body, { textAlign: align }]}>{text.resumeBody}</Text>
               <Text style={[styles.meta, { textAlign: align }]}>
-                {activeAttempt.answered ?? activeAttempt.summary?.answered ?? 0}/{activeAttempt.questionCount} {text.answered}
+                {activeAttempt.summary.answered}/{activeAttempt.questionCount} {text.answered}
               </Text>
               <Pressable style={styles.primaryButton} onPress={() => router.push(`/exam/${activeAttempt.id}`)}>
                 <Text style={styles.primaryButtonText}>{text.resume}</Text>

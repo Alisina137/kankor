@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PREFIX = "kankorprep.exam.";
+const ACTIVE_KEY = "kankorprep.exam.active";
 
 export type ChoiceKey = "A" | "B" | "C" | "D";
 
@@ -72,11 +73,25 @@ export async function loadPersistedExam(attemptId: string): Promise<PersistedExa
 }
 
 export async function savePersistedExam(value: PersistedExam) {
-  await AsyncStorage.setItem(key(value.attemptId), JSON.stringify(value));
+  await AsyncStorage.multiSet([
+    [key(value.attemptId), JSON.stringify(value)],
+    [ACTIVE_KEY, value.attemptId]
+  ]);
+}
+
+export async function getActivePersistedExam(): Promise<PersistedExam | null> {
+  const attemptId = await AsyncStorage.getItem(ACTIVE_KEY);
+  if (!attemptId) return null;
+  const value = await loadPersistedExam(attemptId);
+  if (!value) await AsyncStorage.removeItem(ACTIVE_KEY);
+  return value;
 }
 
 export async function removePersistedExam(attemptId: string) {
-  await AsyncStorage.removeItem(key(attemptId));
+  const activeId = await AsyncStorage.getItem(ACTIVE_KEY);
+  const keys = [key(attemptId)];
+  if (activeId === attemptId) keys.push(ACTIVE_KEY);
+  await AsyncStorage.multiRemove(keys);
 }
 
 export function mergeExamAnswers(

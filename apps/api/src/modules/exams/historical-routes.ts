@@ -3,10 +3,13 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { parseScoringRules, PRACTICE_SCORING_RULES } from "./service.js";
+import { authorizeHistoricalStart, getEntitlementState, recordHistoricalStart } from "../billing/service.js";
 
 export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
   app.get<{ Querystring: { year?: string; province?: string; round?: string; language?: string } }>("/exams/history", async (request, reply) => {
-    if (!(await requireUser(request, reply))) return;
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
     const db = createDatabase();
     const conditions = [eq(schema.historicalForms.verificationStatus, "published")];
 
@@ -28,6 +31,7 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
       formCode: schema.historicalForms.formCode,
       language: schema.historicalForms.language,
       title: schema.historicalForms.title,
+      accessTier: schema.historicalForms.accessTier,
       sourceStatus: schema.historicalForms.sourceStatus,
       originalOrderStatus: schema.historicalForms.originalOrderStatus,
       questionCount: schema.historicalForms.questionCount,
@@ -36,7 +40,12 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
       .where(and(...conditions))
       .orderBy(desc(schema.historicalForms.year), asc(schema.historicalForms.province), asc(schema.historicalForms.formCode));
 
-    return { items };
+    return {
+      items: items.map((item) => ({
+        ...item,
+        locked: entitlement.tier !== "premium" && item.accessTier === "premium"
+      }))
+    };
   });
 
   app.get<{ Params: { id: string } }>("/exams/history/:id", async (request, reply) => {
@@ -95,6 +104,16 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
         eq(schema.exams.historicalFormId, form.id)
       )).limit(1);
     if (existing[0]) return { attempt: { id: existing[0].attemptId, resumed: true } };
+
+    const access = await authorizeHistoricalStart(auth.user.userId, form.accessTier);
+    if (!access.allowed) {
+      return reply.code(402).send({
+        error: access.error,
+        reason: access.reason,
+        limit: "limit" in access ? access.limit : undefined,
+        used: "used" in access ? access.used : undefined
+      });
+    }
 
     const rows = await db.select({
       questionId: schema.questions.id,
@@ -220,6 +239,8 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
         historical: provenance
       }
     }).returning({ id: schema.examAttempts.id });
+
+    await recordHistoricalStart(auth.user.userId);
 
     return reply.code(201).send({
       attempt: { id: attempt.id, resumed: false },

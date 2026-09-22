@@ -45,7 +45,14 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(409).send({ error: "attempt_not_submitted" });
     }
 
-    await ensureResult(attempt.id, auth.user.userId);
+    try {
+      await ensureResult(attempt.id, auth.user.userId);
+    } catch (error) {
+      if (error instanceof Error && error.message === "scoring_configuration_missing") {
+        return reply.code(409).send({ error: "scoring_configuration_missing" });
+      }
+      throw error;
+    }
 
     const filter = request.query.filter && FILTERS.has(request.query.filter)
       ? request.query.filter

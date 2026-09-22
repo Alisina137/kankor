@@ -140,7 +140,10 @@ export async function scoreAttempt(attemptId: string, userId: string) {
     throw new Error("attempt_not_submitted");
   }
 
-  const rules = parseScoringRules(attempt.scoringSnapshot);
+  const configuration = attempt.configurationSnapshot && typeof attempt.configurationSnapshot === "object"
+    ? attempt.configurationSnapshot as Record<string, unknown>
+    : {};
+  const rules = parseScoringRules(configuration.scoring ?? attempt.scoringSnapshot);
   if (!rules) throw new Error("scoring_configuration_missing");
 
   const db = createDatabase();

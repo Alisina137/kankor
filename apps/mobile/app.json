@@ -7,7 +7,6 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "plugins": ["expo-router"],
-    "experiments": {"typedRoutes": true},
     "android": {"package": "com.kankorprep.afghanistan"},
     "ios": {"bundleIdentifier": "com.kankorprep.afghanistan"}
   }

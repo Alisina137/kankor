@@ -15,6 +15,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Fastify 5.12.5 / Node.js 22+
 - PostgreSQL / Drizzle ORM 0.45.3
 - npm workspaces
+- AsyncStorage 2.2.0 for resilient non-secret exam state
 
 ## Architecture decisions
 - Monorepo with `apps/mobile`, `apps/admin`, `apps/api`, shared packages.
@@ -25,13 +26,18 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Native mobile session tokens use Expo SecureStore.
 - Curriculum is relational and traceable: Subject + Grade → Book → Chapter → Topic → Question.
 - Questions preserve source metadata, language, difficulty, marks, explanations, worked solutions, verification state, and version.
-- Student-facing question endpoints never expose answer keys.
-- Content-admin APIs require an admin role or a bootstrap email from `ADMIN_BOOTSTRAP_EMAILS`.
-- Annual Kankor rules remain versioned/configurable rather than hard-coded.
+- Student-facing question and exam-session APIs never expose answer keys.
+- Content-admin APIs require an admin role or bootstrap email.
+- Annual Kankor rules remain administrator-configurable and are not hard-coded.
+- Generated exams snapshot question content, choices, version, marks, correct answer, and curriculum metadata server-side.
+- Active attempts are owned by the authenticated student and use server timestamps for timer recovery.
+- Client answers are saved locally first and synchronized with monotonically increasing revisions.
+- PostgreSQL atomically rejects delayed older revisions from overwriting newer answers.
+- Submission uses a deterministic idempotency key and completed attempts are locked.
 - Database remains Neon-compatible PostgreSQL with Drizzle ORM and deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 3 — Curriculum and Question System completed in source.
+Phase 4 — Examination Engine completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -50,41 +56,58 @@ Phase 3 — Curriculum and Question System completed in source.
 - User/session/password-reset database schema and migration.
 - Language, target Kankor year, and optional preparation-level onboarding.
 - Auth/onboarding route guards.
-- Personalized post-onboarding Home and Profile account controls.
+- Personalized Home and Profile account controls.
 - Secure native session persistence with Expo SecureStore.
-- Local user verification confirmed the app, registration flow, and connectivity work after fixes.
+- Local user verification confirmed account creation and normal connectivity.
 
 ### Phase 3
 - Grade, Subject, Book, Chapter, Topic, Question, and QuestionTranslation database entities.
-- Seeded Grade 10, 11, and 12 structural records only; no invented subject/question content.
-- Curriculum migration with relational constraints and indexes.
-- Public curriculum APIs for grades, subjects, books, chapters, and topics.
+- Grade 10–12 structural records without inventing official subject/question content.
+- Public curriculum APIs and protected content-admin management.
 - Published-question APIs that omit correct answers.
-- Full question trace response through subject, grade, book, chapter, and topic.
-- Protected content-admin CRUD APIs for curriculum.
-- Protected question create/edit APIs with draft lifecycle, version increments, source metadata, explanations, worked solutions, and translations.
-- Admin authorization with permanent roles plus development/bootstrap email support.
-- Web admin console for curriculum and draft-question creation.
-- Mobile Practice curriculum browser from grade/subject through topic.
-- Phase 3 structural verification script.
+- Full question trace through subject, grade, book, chapter, and topic.
+- Web admin console and mobile Practice curriculum browser.
+- Admin bootstrap access and question lifecycle controls.
+
+### Phase 4
+- Configurable ExamBlueprint, Exam, ExamQuestion, ExamAttempt, and AttemptAnswer entities.
+- Configurable full-Kankor blueprint with effective year, question count, optional duration, criteria, and distribution segments.
+- No hard-coded annual duration, scoring, or subject distribution.
+- Full Kankor generation and targeted subject/book/chapter/topic/custom generation from published active curriculum content.
+- Immutable per-exam question snapshots so later question edits cannot mutate an existing exam.
+- Attempt ownership enforcement.
+- Start/resume API with server-owned timer timestamps and remaining-time recovery.
+- Batch answer autosave with selected choice, flag, per-question time, and client revision.
+- Atomic PostgreSQL revision guard against delayed older autosaves.
+- Idempotent submission and attempt locking.
+- Answered/unanswered/flagged submit summary.
+- Expo local-first attempt persistence with active-attempt index for relaunch/offline resume.
+- Dedicated distraction-minimized exam route outside normal bottom navigation.
+- Mobile timer, answer choices, flagging, navigator, previous/next navigation, submit confirmation, and automatic expiry submission attempt.
+- Exams tab with active-attempt resume and full-Kankor entry.
+- Practice tab with targeted exam setup, configurable question count, and optional timer.
+- Admin blueprint management page.
+- Admin question lifecycle controls through Draft → Review → Approved → Published → Deprecated.
+- Phase 4 structural verifier.
 
 ## Verification status
-- Phase 2 was locally verified by the user after dependency, database, Expo, and API fixes.
-- Phase 3 critical files were reviewed after GitHub writes.
-- `scripts/verify-phase3.mjs` validates required files, schema entities, migration coverage, API registration, question traceability, and answer-key non-exposure.
-- Full Phase 3 dependency install, typecheck, builds, migration execution, and runtime content-admin flow still require local verification after pull.
+- Phase 2 was locally verified by the user.
+- Phase 3 admin login and content-admin access were locally verified by the user.
+- Phase 4 critical files were reviewed after GitHub writes.
+- `scripts/verify-phase4.mjs` checks database entities/migration, 160-question capacity, published/active question eligibility, snapshots, ownership-sensitive attempt routes, atomic revision protection, idempotent submission, timer recovery, local persistence, and mobile exam controls.
+- Full dependency install, database migration, TypeScript checks, production builds, and runtime 160-question disruption testing require local verification after pull.
 
 ## Known issues / external requirements
-- Run `npm run db:migrate` after pulling Phase 3.
-- Add the email of an existing account to `ADMIN_BOOTSTRAP_EMAILS` in the local root `.env` before first admin-console login.
-- The bootstrap email mechanism is for initial administration setup; permanent role management and deeper approval/audit workflows belong to later administration phases.
-- Production password-recovery delivery (email/SMS) is not configured.
-- Phone-number authentication remains optional and was not introduced because no regional SMS provider was approved.
-- Diagnostic testing waits for the examination engine.
-- Phase 3 does not invent official subjects, textbooks, chapters, topics, or questions; content must be entered/imported from verified sources.
+- Run `npm run db:migrate` after pulling Phase 4.
+- Full Kankor requires an active exam blueprint created in the admin panel.
+- Exams require enough questions in `Published` state for the selected language/criteria.
+- The product owner still needs to supply/verify the authoritative curriculum and question content.
+- Exact annual Kankor duration, scoring weights, and subject distribution remain configuration data, not code constants.
+- Phase 4 intentionally stops at reliable submission. Scoring, results, answer review, explanations, and worked-solution presentation begin in Phase 5.
+- Historical fixed forms begin in Phase 6.
 
 ## Latest source baseline
-Phase 3 branch awaiting merge to `main`.
+Phase 4 branch awaiting merge to `main`.
 
 ## Next phase
-Phase 4 — Examination Engine.
+Phase 5 — Scoring, Results and Review.

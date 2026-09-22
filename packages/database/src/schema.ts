@@ -155,3 +155,90 @@ export const questionTranslations = pgTable("question_translations", {
 }, (table) => ({
   questionLanguageUnique: uniqueIndex("question_translations_question_language_unique").on(table.questionId, table.language)
 }));
+
+
+export const examBlueprints = pgTable("exam_blueprints", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 96 }).notNull().unique(),
+  name: varchar("name", { length: 180 }).notNull(),
+  mode: varchar("mode", { length: 32 }).notNull().default("full_kankor"),
+  effectiveYear: integer("effective_year"),
+  questionCount: integer("question_count").notNull(),
+  durationSeconds: integer("duration_seconds"),
+  criteria: jsonb("criteria").$type<Record<string, unknown>>().notNull().default({}),
+  active: boolean("active").notNull().default(false),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  activeIdx: index("exam_blueprints_active_idx").on(table.active),
+  yearIdx: index("exam_blueprints_year_idx").on(table.effectiveYear)
+}));
+
+export const exams = pgTable("exams", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  mode: varchar("mode", { length: 32 }).notNull(),
+  title: varchar("title", { length: 220 }).notNull(),
+  language: varchar("language", { length: 8 }).notNull().default("fa"),
+  blueprintId: uuid("blueprint_id").references(() => examBlueprints.id, { onDelete: "set null" }),
+  questionCount: integer("question_count").notNull(),
+  durationSeconds: integer("duration_seconds"),
+  criteriaSnapshot: jsonb("criteria_snapshot").$type<Record<string, unknown>>().notNull().default({}),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  modeIdx: index("exams_mode_idx").on(table.mode),
+  createdByIdx: index("exams_created_by_idx").on(table.createdByUserId)
+}));
+
+export const examQuestions = pgTable("exam_questions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  examId: uuid("exam_id").notNull().references(() => exams.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id").notNull().references(() => questions.id, { onDelete: "restrict" }),
+  order: integer("question_order").notNull(),
+  questionVersion: integer("question_version").notNull(),
+  contentSnapshot: text("content_snapshot").notNull(),
+  choicesSnapshot: jsonb("choices_snapshot").$type<Array<{ key: "A" | "B" | "C" | "D"; text: string }>>().notNull(),
+  correctChoiceSnapshot: varchar("correct_choice_snapshot", { length: 1 }).notNull(),
+  marksSnapshot: numeric("marks_snapshot", { precision: 8, scale: 2 }).notNull(),
+  curriculumSnapshot: jsonb("curriculum_snapshot").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  examOrderUnique: uniqueIndex("exam_questions_exam_order_unique").on(table.examId, table.order),
+  examQuestionUnique: uniqueIndex("exam_questions_exam_question_unique").on(table.examId, table.questionId),
+  examIdx: index("exam_questions_exam_idx").on(table.examId)
+}));
+
+export const examAttempts = pgTable("exam_attempts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  examId: uuid("exam_id").notNull().references(() => exams.id, { onDelete: "restrict" }),
+  status: varchar("status", { length: 24 }).notNull().default("created"),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  configurationSnapshot: jsonb("configuration_snapshot").$type<Record<string, unknown>>().notNull().default({}),
+  submissionKey: varchar("submission_key", { length: 96 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userIdx: index("exam_attempts_user_idx").on(table.userId),
+  examIdx: index("exam_attempts_exam_idx").on(table.examId),
+  statusIdx: index("exam_attempts_status_idx").on(table.status),
+  submissionUnique: uniqueIndex("exam_attempts_submission_key_unique").on(table.userId, table.submissionKey)
+}));
+
+export const attemptAnswers = pgTable("attempt_answers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  attemptId: uuid("attempt_id").notNull().references(() => examAttempts.id, { onDelete: "cascade" }),
+  examQuestionId: uuid("exam_question_id").notNull().references(() => examQuestions.id, { onDelete: "cascade" }),
+  selectedChoice: varchar("selected_choice", { length: 1 }),
+  flagged: boolean("flagged").notNull().default(false),
+  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+  clientRevision: integer("client_revision").notNull().default(0),
+  savedAt: timestamp("saved_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  attemptQuestionUnique: uniqueIndex("attempt_answers_attempt_question_unique").on(table.attemptId, table.examQuestionId),
+  attemptIdx: index("attempt_answers_attempt_idx").on(table.attemptId)
+}));

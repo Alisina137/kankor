@@ -1,8 +1,10 @@
 import { theme } from "@kankor/config";
+import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
-import { apiRequest } from "../../lib/api";
+import { apiRequest, ApiError } from "../../lib/api";
+import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
 type Grade = { id: string; number: number; nameFa: string; namePs: string | null };
@@ -11,10 +13,13 @@ type Book = { id: string; subjectId: string; gradeId: string; titleFa: string; t
 type Chapter = { id: string; bookId: string; number: number; titleFa: string; titlePs: string | null };
 type Topic = { id: string; chapterId: string; titleFa: string; titlePs: string | null };
 
+const questionCounts = [5, 10, 20, 30];
+const timerOptions = [null, 900, 1800, 3600] as const;
+
 const copy = {
   fa: {
     title: "تمرین بر اساس نصاب",
-    body: "موضوع درسی خود را مرحله‌به‌مرحله انتخاب کنید.",
+    body: "مسیر درسی خود را انتخاب کنید و یک امتحان هدفمند بسازید.",
     grade: "صنف",
     subject: "مضمون",
     book: "کتاب",
@@ -22,11 +27,21 @@ const copy = {
     topic: "موضوع",
     empty: "هنوز محتوایی برای این بخش اضافه نشده است.",
     error: "محتوای درسی بارگیری نشد. دوباره تلاش کنید.",
-    selected: "مسیر انتخاب‌شده"
+    selected: "مسیر انتخاب‌شده",
+    examSetup: "تنظیم امتحان",
+    questionCount: "تعداد سوال",
+    timer: "زمان",
+    noTimer: "بدون زمان",
+    minutes: "دقیقه",
+    start: "شروع امتحان",
+    starting: "در حال ساخت امتحان...",
+    selectPath: "حداقل یک مضمون را انتخاب کنید.",
+    insufficient: "برای این مسیر هنوز سوالات منتشرشده کافی نیست.",
+    startError: "امتحان شروع نشد. دوباره تلاش کنید."
   },
   ps: {
     title: "د نصاب له مخې تمرین",
-    body: "خپل درسي مسیر ګام په ګام وټاکئ.",
+    body: "خپل درسي مسیر وټاکئ او هدفمنده ازموینه جوړه کړئ.",
     grade: "ټولګی",
     subject: "مضمون",
     book: "کتاب",
@@ -34,11 +49,21 @@ const copy = {
     topic: "موضوع",
     empty: "تر اوسه دې برخې ته محتوا نه ده اضافه شوې.",
     error: "درسي محتوا پورته نه شوه. بیا هڅه وکړئ.",
-    selected: "ټاکل شوې لاره"
+    selected: "ټاکل شوې لاره",
+    examSetup: "د ازموینې تنظیم",
+    questionCount: "د پوښتنو شمېر",
+    timer: "وخت",
+    noTimer: "بې وخته",
+    minutes: "دقیقې",
+    start: "ازموینه پیل کړئ",
+    starting: "ازموینه جوړېږي...",
+    selectPath: "لږ تر لږه یو مضمون وټاکئ.",
+    insufficient: "د دې مسیر لپاره کافي خپرې شوې پوښتنې نشته.",
+    startError: "ازموینه پیل نه شوه. بیا هڅه وکړئ."
   },
   en: {
     title: "Practice by curriculum",
-    body: "Choose your curriculum path step by step.",
+    body: "Choose a curriculum path and build a targeted exam.",
     grade: "Grade",
     subject: "Subject",
     book: "Book",
@@ -46,11 +71,22 @@ const copy = {
     topic: "Topic",
     empty: "No content has been added here yet.",
     error: "Curriculum could not be loaded. Try again.",
-    selected: "Selected path"
+    selected: "Selected path",
+    examSetup: "Exam setup",
+    questionCount: "Questions",
+    timer: "Timer",
+    noTimer: "No timer",
+    minutes: "min",
+    start: "Start exam",
+    starting: "Creating exam...",
+    selectPath: "Select at least a subject.",
+    insufficient: "There are not enough published questions for this path yet.",
+    startError: "The exam could not be started. Try again."
   }
 } as const;
 
 export default function PracticeScreen() {
+  const { token } = useAuth();
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
@@ -65,7 +101,10 @@ export default function PracticeScreen() {
   const [bookId, setBookId] = useState<string | null>(null);
   const [chapterId, setChapterId] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState(10);
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -104,12 +143,16 @@ export default function PracticeScreen() {
 
   const displayName = (fa: string, ps: string | null) => locale === "ps" ? (ps || fa) : fa;
   const selectedPath = useMemo(() => {
+    const subject = subjects.find((item) => item.id === subjectId);
+    const book = books.find((item) => item.id === bookId);
+    const chapter = chapters.find((item) => item.id === chapterId);
+    const topic = topics.find((item) => item.id === topicId);
     const parts = [
-      subjects.find((item) => item.id === subjectId) && displayName(subjects.find((item) => item.id === subjectId)!.nameFa, subjects.find((item) => item.id === subjectId)!.namePs),
+      subject && displayName(subject.nameFa, subject.namePs),
       grades.find((item) => item.id === gradeId)?.number,
-      books.find((item) => item.id === bookId) && displayName(books.find((item) => item.id === bookId)!.titleFa, books.find((item) => item.id === bookId)!.titlePs),
-      chapters.find((item) => item.id === chapterId) && displayName(chapters.find((item) => item.id === chapterId)!.titleFa, chapters.find((item) => item.id === chapterId)!.titlePs),
-      topics.find((item) => item.id === topicId) && displayName(topics.find((item) => item.id === topicId)!.titleFa, topics.find((item) => item.id === topicId)!.titlePs)
+      book && displayName(book.titleFa, book.titlePs),
+      chapter && displayName(chapter.titleFa, chapter.titlePs),
+      topic && displayName(topic.titleFa, topic.titlePs)
     ].filter(Boolean);
     return parts.join(" • ");
   }, [subjects, grades, books, chapters, topics, subjectId, gradeId, bookId, chapterId, topicId, locale]);
@@ -149,6 +192,52 @@ export default function PracticeScreen() {
     );
   }
 
+  async function startTargetedExam() {
+    if (!token || !subjectId || starting) {
+      if (!subjectId) setError(text.selectPath);
+      return;
+    }
+
+    const mode = topicId ? "topic" : chapterId ? "chapter" : bookId ? "book" : "subject";
+    const body: Record<string, unknown> = {
+      mode,
+      title: selectedPath || text.title,
+      language: locale,
+      questionCount,
+      durationSeconds
+    };
+
+    if (topicId) body.topicIds = [topicId];
+    else if (chapterId) body.chapterIds = [chapterId];
+    else if (bookId) body.bookIds = [bookId];
+    else {
+      body.subjectIds = [subjectId];
+      if (gradeId) body.gradeIds = [gradeId];
+    }
+
+    setStarting(true);
+    setError("");
+
+    try {
+      const generated = await apiRequest<{ exam: { id: string } }>("/exams/generate", {
+        method: "POST",
+        body: JSON.stringify(body)
+      }, token);
+
+      const started = await apiRequest<{ attempt: { id: string } }>("/attempts", {
+        method: "POST",
+        body: JSON.stringify({ examId: generated.exam.id })
+      }, token);
+
+      router.push(`/exam/${started.attempt.id}`);
+    } catch (cause) {
+      const code = cause instanceof ApiError ? cause.code : "";
+      setError(code === "insufficient_question_pool" ? text.insufficient : text.startError);
+    } finally {
+      setStarting(false);
+    }
+  }
+
   return (
     <Screen>
       <View style={styles.stack}>
@@ -176,6 +265,36 @@ export default function PracticeScreen() {
             <Text style={[styles.path, { textAlign: align }]}>{selectedPath}</Text>
           </View>
         ) : null}
+
+        {subjectId ? (
+          <View style={styles.setupCard}>
+            <Text style={[styles.setupTitle, { textAlign: align }]}>{text.examSetup}</Text>
+
+            <Text style={[styles.label, { textAlign: align }]}>{text.questionCount}</Text>
+            <View style={styles.chips}>
+              {questionCounts.map((count) => (
+                <Pressable key={count} onPress={() => setQuestionCount(count)} style={[styles.chip, questionCount === count && styles.chipActive]}>
+                  <Text style={questionCount === count ? styles.chipTextActive : styles.chipText}>{count}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { textAlign: align }]}>{text.timer}</Text>
+            <View style={styles.chips}>
+              {timerOptions.map((seconds) => (
+                <Pressable key={String(seconds)} onPress={() => setDurationSeconds(seconds)} style={[styles.chip, durationSeconds === seconds && styles.chipActive]}>
+                  <Text style={durationSeconds === seconds ? styles.chipTextActive : styles.chipText}>
+                    {seconds == null ? text.noTimer : `${seconds / 60} ${text.minutes}`}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable disabled={starting} onPress={() => void startTargetedExam()} style={[styles.startButton, starting && styles.disabled]}>
+              {starting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.startButtonText}>{text.start}</Text>}
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </Screen>
   );
@@ -197,5 +316,10 @@ const styles = StyleSheet.create({
   error: { color: theme.colors.danger },
   pathCard: { padding: theme.spacing.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, gap: theme.spacing.xs },
   pathLabel: { color: theme.colors.mutedText, fontSize: theme.typography.small, fontWeight: "600" },
-  path: { color: theme.colors.text, fontWeight: "700", lineHeight: 24 }
+  path: { color: theme.colors.text, fontWeight: "700", lineHeight: 24 },
+  setupCard: { padding: theme.spacing.md, gap: theme.spacing.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg },
+  setupTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
+  startButton: { minHeight: 48, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.primary, borderRadius: theme.radius.md },
+  startButtonText: { color: "#FFFFFF", fontWeight: "800" },
+  disabled: { opacity: 0.5 }
 });

@@ -41,6 +41,7 @@ export async function getSessionUser(token: string) {
       sessionId: schema.sessions.id,
       userId: schema.users.id,
       email: schema.users.email,
+      role: schema.users.role,
       preferredLanguage: schema.users.preferredLanguage,
       targetExamYear: schema.users.targetExamYear,
       preparationLevel: schema.users.preparationLevel,

@@ -12,7 +12,6 @@ export type FreeEntitlements = {
   historicalFormsPerDay: number;
   maxQuestionsPerTargetedExam: number;
   progressHistoryLimit: number;
-  detailedExplanationsPerDay: number;
   mistakeNotebook: boolean;
   weaknessPractice: boolean;
   completeAnalytics: boolean;
@@ -29,7 +28,6 @@ const DEFAULT_FREE: FreeEntitlements = {
   historicalFormsPerDay: 1,
   maxQuestionsPerTargetedExam: 10,
   progressHistoryLimit: 5,
-  detailedExplanationsPerDay: 5,
   mistakeNotebook: false,
   weaknessPractice: false,
   completeAnalytics: false
@@ -68,7 +66,6 @@ export async function getFreeEntitlements(): Promise<FreeEntitlements> {
     historicalFormsPerDay: numberValue(value.historicalFormsPerDay, DEFAULT_FREE.historicalFormsPerDay),
     maxQuestionsPerTargetedExam: numberValue(value.maxQuestionsPerTargetedExam, DEFAULT_FREE.maxQuestionsPerTargetedExam),
     progressHistoryLimit: numberValue(value.progressHistoryLimit, DEFAULT_FREE.progressHistoryLimit),
-    detailedExplanationsPerDay: numberValue(value.detailedExplanationsPerDay, DEFAULT_FREE.detailedExplanationsPerDay),
     mistakeNotebook: boolValue(value.mistakeNotebook, DEFAULT_FREE.mistakeNotebook),
     weaknessPractice: boolValue(value.weaknessPractice, DEFAULT_FREE.weaknessPractice),
     completeAnalytics: boolValue(value.completeAnalytics, DEFAULT_FREE.completeAnalytics)

@@ -1,8 +1,11 @@
 {
   "name": "kankorprep",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev:mobile": "npm --workspace @kankor/mobile run start",
     "dev:admin": "npm --workspace @kankor/admin run dev",
@@ -13,7 +16,10 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "verify:foundation": "node scripts/verify-foundation.mjs",
     "verify:phase2": "node scripts/verify-phase2.mjs",
-    "verify:phase3": "node scripts/verify-phase3.mjs"
+    "verify:phase3": "node scripts/verify-phase3.mjs",
+    "verify:phase4": "node scripts/verify-phase4.mjs"
   },
-  "engines": {"node": ">=22.13.0"}
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }

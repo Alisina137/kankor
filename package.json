@@ -19,7 +19,9 @@
     "verify:phase3": "node scripts/verify-phase3.mjs",
     "verify:phase4": "node scripts/verify-phase4.mjs",
     "verify:phase5": "node scripts/verify-phase5.mjs",
-    "verify:history-g10": "node scripts/verify-history-grade10.mjs"
+    "verify:history-g10": "node scripts/verify-history-grade10.mjs",
+    "db:seed:test-questions": "npm --workspace @kankor/database run db:seed:test-questions",
+    "db:setup:test-content": "npm run db:migrate && npm run db:seed:test-questions"
   },
   "engines": {
     "node": ">=22.13.0"

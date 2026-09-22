@@ -4,6 +4,7 @@ import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { createGeneratedExam, PRACTICE_SCORING_RULES, selectPublishedQuestions } from "../exams/service.js";
 import { rebuildAllProgress } from "./service.js";
+import { getEntitlementState, getFreeEntitlements } from "../billing/service.js";
 
 type AggregateRow = {
   id: string;
@@ -203,6 +204,7 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.get("/progress/topics", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
     const db = createDatabase();
 
     const items = await db.select({
@@ -228,18 +230,22 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
       .where(eq(schema.topicMastery.userId, auth.user.userId))
       .orderBy(asc(schema.topicMastery.accuracyPercentage));
 
+    const normalized = items.map((item) => ({
+      ...item,
+      accuracyPercentage: Number(item.accuracyPercentage),
+      averageTimeSeconds: Number(item.averageTimeSeconds)
+    }));
     return {
-      items: items.map((item) => ({
-        ...item,
-        accuracyPercentage: Number(item.accuracyPercentage),
-        averageTimeSeconds: Number(item.averageTimeSeconds)
-      }))
+      items: entitlement.tier === "premium" ? normalized : normalized.slice(0, 3),
+      limited: entitlement.tier !== "premium"
     };
   });
 
   app.get("/progress/history", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
+    const free = entitlement.tier === "free" ? await getFreeEntitlements() : null;
     const db = createDatabase();
 
     const items = await db.select({
@@ -258,7 +264,7 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
       .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))
       .where(eq(schema.examAttempts.userId, auth.user.userId))
       .orderBy(desc(schema.examAttempts.submittedAt))
-      .limit(100);
+      .limit(entitlement.tier === "premium" ? 100 : Math.max(1, free?.progressHistoryLimit ?? 5));
 
     return {
       items: items.map((item) => ({
@@ -273,6 +279,10 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.get("/mistakes", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
+    if (entitlement.tier !== "premium") {
+      return reply.code(402).send({ error: "premium_required", reason: "mistake_notebook" });
+    }
     const db = createDatabase();
 
     const items = await db.select({
@@ -305,6 +315,10 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Params: { questionId: string } }>("/mistakes/:questionId/practice", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
+    if (entitlement.tier !== "premium") {
+      return reply.code(402).send({ error: "premium_required", reason: "weakness_practice" });
+    }
     const db = createDatabase();
 
     const rows = await db.select({
@@ -326,6 +340,10 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Params: { topicId: string }; Body: { language?: string } }>("/progress/topics/:topicId/practice", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
+    const entitlement = await getEntitlementState(auth.user.userId);
+    if (entitlement.tier !== "premium") {
+      return reply.code(402).send({ error: "premium_required", reason: "weakness_practice" });
+    }
     const language = typeof request.body?.language === "string" ? request.body.language : undefined;
     const started = await startTopicPractice(auth.user.userId, request.params.topicId, language);
     if (!started.ok) return reply.code(started.error === "topic_not_found" ? 404 : 409).send({ error: started.error });

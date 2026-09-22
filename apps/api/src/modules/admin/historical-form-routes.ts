@@ -71,6 +71,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
     const title = stringValue(request.body.title);
     const sourceStatus = stringValue(request.body.sourceStatus) || "unverified";
     const originalOrderStatus = stringValue(request.body.originalOrderStatus) || "uncertain";
+    const accessTier = stringValue(request.body.accessTier) || "free";
     const durationSeconds = optionalPositiveInt(request.body.durationSeconds);
     const scoringRules = request.body.scoringRules == null ? null : parseScoringRules(request.body.scoringRules);
 
@@ -79,6 +80,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
       || !LANGUAGES.has(language)
       || !SOURCE_STATUSES.has(sourceStatus)
       || !ORDER_STATUSES.has(originalOrderStatus)
+      || !["free", "premium"].includes(accessTier)
     ) {
       return reply.code(400).send({ error: "invalid_historical_form" });
     }
@@ -99,6 +101,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
       formCode: optionalString(request.body.formCode),
       language,
       title,
+      accessTier,
       sourceReference: optionalString(request.body.sourceReference),
       sourceStatus,
       sourceMetadata: objectValue(request.body.sourceMetadata),
@@ -145,6 +148,11 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
       const title = stringValue(request.body.title);
       if (!title) return reply.code(400).send({ error: "invalid_title" });
       values.title = title;
+    }
+    if ("accessTier" in request.body) {
+      const accessTier = stringValue(request.body.accessTier);
+      if (!["free", "premium"].includes(accessTier)) return reply.code(400).send({ error: "invalid_access_tier" });
+      values.accessTier = accessTier;
     }
     if ("sourceReference" in request.body) values.sourceReference = optionalString(request.body.sourceReference);
     if ("sourceStatus" in request.body) {

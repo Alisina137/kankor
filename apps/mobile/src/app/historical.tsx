@@ -18,6 +18,8 @@ type HistoricalForm = {
   formCode: string | null;
   language: string;
   title: string;
+  accessTier: "free" | "premium";
+  locked: boolean;
   sourceStatus: "official" | "verified_secondary" | "unverified";
   originalOrderStatus: "confirmed" | "uncertain";
   questionCount: number;
@@ -141,6 +143,11 @@ export default function HistoricalFormsScreen() {
   const years = useMemo(() => [...new Set(forms.map((item) => item.year))], [forms]);
 
   async function startForm(id: string) {
+    const selected = forms.find((item) => item.id === id);
+    if (selected?.locked) {
+      router.push("/premium");
+      return;
+    }
     if (!token || startingId) return;
     setStartingId(id);
     setError("");
@@ -153,7 +160,8 @@ export default function HistoricalFormsScreen() {
       router.push(`/exam/${response.attempt.id}`);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
-      setError(code === "historical_form_incomplete" ? text.incomplete : text.startError);
+      if (code === "premium_required") router.push("/premium");
+      else setError(code === "historical_form_incomplete" ? text.incomplete : text.startError);
     } finally {
       setStartingId(null);
     }
@@ -247,6 +255,7 @@ export default function HistoricalFormsScreen() {
           <View style={styles.badges}>
             <Text style={styles.badge}>{text[form.sourceStatus]}</Text>
             <Text style={styles.badge}>{text[form.originalOrderStatus]}</Text>
+            {form.accessTier === "premium" ? <Text style={styles.premiumBadge}>Premium</Text> : null}
           </View>
 
           <View style={styles.stats}>
@@ -298,6 +307,7 @@ const styles = StyleSheet.create({
   archiveCode: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "700" },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
   badge: { color: theme.colors.mutedText, backgroundColor: theme.colors.background, borderRadius: theme.radius.pill, paddingHorizontal: 9, paddingVertical: 5, fontSize: 12, fontWeight: "700" },
+  premiumBadge: { color: theme.colors.primary, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.pill, paddingHorizontal: 9, paddingVertical: 5, fontSize: 12, fontWeight: "800" },
   stats: { flexDirection: "row", gap: theme.spacing.lg },
   stat: { color: theme.colors.text, fontWeight: "700" },
   startButton: { minHeight: 48, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.primary, borderRadius: theme.radius.md },

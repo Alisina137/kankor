@@ -14,6 +14,7 @@ type HistoricalForm = {
   formCode: string | null;
   language: string;
   title: string;
+  accessTier: "free" | "premium";
   sourceReference: string | null;
   sourceStatus: string;
   verificationStatus: string;
@@ -100,6 +101,7 @@ export default function HistoricalFormsAdminPage() {
           formCode: data.get("formCode"),
           language: data.get("language"),
           title: data.get("title"),
+          accessTier: data.get("accessTier"),
           sourceReference: data.get("sourceReference"),
           sourceStatus: data.get("sourceStatus"),
           originalOrderStatus: data.get("originalOrderStatus"),
@@ -139,6 +141,24 @@ export default function HistoricalFormsAdminPage() {
       setStatus(`${result.imported} سوال با ترتیب تاریخی وارد شد.`);
     } catch (error) {
       setStatus(`واردسازی ناموفق بود: ${error instanceof Error ? error.message : "خطا"}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setAccessTier(id: string, accessTier: "free" | "premium") {
+    if (!token) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      await request(`/admin/historical-forms/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ accessTier })
+      }, token);
+      await load(token);
+      setStatus(`سطح دسترسی فورم به ${accessTier} تغییر کرد.`);
+    } catch (error) {
+      setStatus(`تغییر سطح دسترسی ناموفق بود: ${error instanceof Error ? error.message : "خطا"}`);
     } finally {
       setBusy(false);
     }
@@ -184,6 +204,7 @@ export default function HistoricalFormsAdminPage() {
         <div className="inline-actions">
           <a href="/">مدیریت محتوا</a>
           <a href="/exams">طرح امتحان</a>
+          <a href="/billing">Billing</a>
         </div>
       </header>
 
@@ -203,6 +224,12 @@ export default function HistoricalFormsAdminPage() {
           </label>
         </div>
         <label>عنوان<input name="title" required placeholder="کانکور کابل ۱۴۰۴ — فورم ۱۷" /></label>
+        <label>سطح دسترسی
+          <select name="accessTier" defaultValue="free">
+            <option value="free">Free — فورم منتخب رایگان</option>
+            <option value="premium">Premium — آرشیف کامل</option>
+          </select>
+        </label>
         <div className="three">
           <label>دوره<input name="cycle" /></label>
           <label>ولایت<input name="province" /></label>
@@ -249,11 +276,19 @@ export default function HistoricalFormsAdminPage() {
                   {item.year} · {item.province ?? "ولایت نامشخص"} · {item.round ?? "دور نامشخص"} · {item.questionCount} سوال
                 </small>
                 <small>
-                  {item.archiveCode} · source={item.sourceStatus} · order={item.originalOrderStatus}
+                  {item.archiveCode} · source={item.sourceStatus} · order={item.originalOrderStatus} · access={item.accessTier}
                 </small>
               </div>
               <div className="inline-actions">
                 <span className="badge">{item.verificationStatus}</span>
+                <span className="badge">{item.accessTier}</span>
+                <button
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => void setAccessTier(item.id, item.accessTier === "free" ? "premium" : "free")}
+                >
+                  {item.accessTier === "free" ? "تبدیل به Premium" : "تبدیل به Free"}
+                </button>
                 <button className="secondary" onClick={() => setSelectedId(item.id)}>انتخاب برای Import</button>
                 {item.verificationStatus !== "published" ? (
                   <>

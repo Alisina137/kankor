@@ -251,7 +251,11 @@ export default function PracticeScreen() {
       router.push(`/exam/${started.attempt.id}`);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
-      setError(code === "insufficient_question_pool" ? text.insufficient : text.startError);
+      if (code === "premium_required") {
+        router.push("/premium");
+      } else {
+        setError(code === "insufficient_question_pool" ? text.insufficient : text.startError);
+      }
     } finally {
       setStarting(false);
     }

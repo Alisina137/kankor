@@ -4,6 +4,7 @@ import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { getOwnedAttempt } from "../exams/service.js";
 import { getStoredResult, scoreAttempt } from "./service.js";
+import { getEntitlementState } from "../billing/service.js";
 
 const FILTERS = new Set(["all", "incorrect", "correct", "unanswered", "flagged"]);
 
@@ -26,8 +27,26 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
     try {
       const stored = await ensureResult(request.params.id, auth.user.userId);
       const attempt = await getOwnedAttempt(request.params.id, auth.user.userId);
+      const entitlement = await getEntitlementState(auth.user.userId);
+      const analysis = entitlement.tier === "premium"
+        ? stored.analysis
+        : stored.analysis ? {
+            overall: stored.analysis.overall,
+            bySubject: stored.analysis.bySubject,
+            byGrade: [],
+            byBook: [],
+            byChapter: [],
+            byTopic: [],
+            byDifficulty: [],
+            timing: stored.analysis.timing,
+            strongestAreas: [],
+            weakestAreas: [],
+            recommendation: null
+          } : null;
       return {
         ...stored,
+        analysis,
+        premiumLocked: entitlement.tier !== "premium",
         attempt: attempt ? {
           id: attempt.id,
           title: attempt.examTitle,
@@ -68,6 +87,7 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
     const filter = request.query.filter && FILTERS.has(request.query.filter)
       ? request.query.filter
       : "all";
+    const entitlement = await getEntitlementState(auth.user.userId);
 
     const db = createDatabase();
     const rows = await db.select({
@@ -99,6 +119,13 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
 
     const items = rows.map((row) => ({
       ...row,
+      explanation: entitlement.tier === "premium"
+        ? row.explanation
+        : {
+            shortExplanation: row.explanation?.shortExplanation ?? null,
+            detailedExplanation: null,
+            workedSolution: null
+          },
       selectedChoice: row.selectedChoice ?? null,
       flagged: row.flagged ?? false,
       timeSpentSeconds: row.timeSpentSeconds ?? 0,
@@ -120,6 +147,7 @@ export const resultRoutes: FastifyPluginAsync = async (app) => {
         status: attempt.status
       },
       filter,
+      premiumLocked: entitlement.tier !== "premium",
       items
     };
   });

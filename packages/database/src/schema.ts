@@ -168,6 +168,7 @@ export const historicalForms = pgTable("historical_forms", {
   formCode: varchar("form_code", { length: 120 }),
   language: varchar("language", { length: 8 }).notNull(),
   title: varchar("title", { length: 240 }).notNull(),
+  accessTier: varchar("access_tier", { length: 16 }).notNull().default("free"),
   sourceReference: text("source_reference"),
   sourceStatus: varchar("source_status", { length: 32 }).notNull().default("unverified"),
   sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
@@ -373,3 +374,73 @@ export const topicMastery = pgTable("topic_mastery", {
   topicIdx: index("topic_mastery_topic_idx").on(table.topicId)
 }));
 
+
+
+export const billingPlans = pgTable("billing_plans", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 96 }).notNull().unique(),
+  nameFa: varchar("name_fa", { length: 180 }).notNull(),
+  namePs: varchar("name_ps", { length: 180 }),
+  nameEn: varchar("name_en", { length: 180 }),
+  billingPeriod: varchar("billing_period", { length: 32 }).notNull(),
+  durationDays: integer("duration_days").notNull(),
+  priceAfn: integer("price_afn").notNull(),
+  entitlements: jsonb("entitlements").$type<Record<string, unknown>>().notNull().default({}),
+  active: boolean("active").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  activeIdx: index("billing_plans_active_idx").on(table.active)
+}));
+
+export const subscriptions = pgTable("subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  planId: uuid("plan_id").notNull().references(() => billingPlans.id, { onDelete: "restrict" }),
+  status: varchar("status", { length: 24 }).notNull().default("pending"),
+  provider: varchar("provider", { length: 32 }).notNull(),
+  providerSubscriptionId: varchar("provider_subscription_id", { length: 160 }),
+  currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  canceledAt: timestamp("canceled_at", { withTimezone: true }),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  entitlementSnapshot: jsonb("entitlement_snapshot").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userIdx: index("subscriptions_user_idx").on(table.userId),
+  statusIdx: index("subscriptions_status_idx").on(table.status)
+}));
+
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  planId: uuid("plan_id").notNull().references(() => billingPlans.id, { onDelete: "restrict" }),
+  subscriptionId: uuid("subscription_id").references(() => subscriptions.id, { onDelete: "set null" }),
+  provider: varchar("provider", { length: 32 }).notNull(),
+  providerPaymentId: varchar("provider_payment_id", { length: 180 }).notNull().unique(),
+  idempotencyKey: varchar("idempotency_key", { length: 160 }),
+  status: varchar("status", { length: 24 }).notNull().default("pending"),
+  amountAfn: integer("amount_afn").notNull(),
+  providerPayload: jsonb("provider_payload").$type<Record<string, unknown>>().notNull().default({}),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userIdx: index("payment_transactions_user_idx").on(table.userId),
+  userIdempotencyUnique: uniqueIndex("payment_transactions_user_idempotency_unique").on(table.userId, table.idempotencyKey),
+  statusIdx: index("payment_transactions_status_idx").on(table.status)
+}));
+
+export const entitlementUsage = pgTable("entitlement_usage", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  usageDate: varchar("usage_date", { length: 10 }).notNull(),
+  key: varchar("key", { length: 96 }).notNull(),
+  count: integer("count").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userDateKeyUnique: uniqueIndex("entitlement_usage_user_date_key_unique").on(table.userId, table.usageDate, table.key),
+  userIdx: index("entitlement_usage_user_idx").on(table.userId)
+}));

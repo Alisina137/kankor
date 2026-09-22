@@ -3,6 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { createGeneratedExam, parseScoringRules, PRACTICE_SCORING_RULES, type ExamCriteria, type ScoringRules } from "./service.js";
+import { authorizeExamStart } from "../billing/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 
@@ -115,6 +116,16 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       if (requestedMode === "book" && !criteria.bookIds?.length) return reply.code(400).send({ error: "book_required" });
       if (requestedMode === "chapter" && !criteria.chapterIds?.length) return reply.code(400).send({ error: "chapter_required" });
       if (requestedMode === "topic" && !criteria.topicIds?.length) return reply.code(400).send({ error: "topic_required" });
+    }
+
+    const access = await authorizeExamStart(auth.user.userId, requestedMode, questionCount);
+    if (!access.allowed) {
+      return reply.code(402).send({
+        error: access.error,
+        reason: access.reason,
+        limit: access.limit,
+        used: "used" in access ? access.used : undefined
+      });
     }
 
     const generated = await createGeneratedExam({

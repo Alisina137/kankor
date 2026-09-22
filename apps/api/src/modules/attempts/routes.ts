@@ -4,6 +4,7 @@ import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { getOwnedAttempt } from "../exams/service.js";
 import { scoreAttempt } from "../results/service.js";
+import { authorizeExamStart, recordExamStart } from "../billing/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 const CHOICES = new Set(["A", "B", "C", "D"]);
@@ -112,6 +113,16 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
       return reply.send(await attemptPayload(existing[0].id, auth.user.userId));
     }
 
+    const access = await authorizeExamStart(auth.user.userId, exam.mode, exam.questionCount);
+    if (!access.allowed) {
+      return reply.code(402).send({
+        error: access.error,
+        reason: access.reason,
+        limit: access.limit,
+        used: "used" in access ? access.used : undefined
+      });
+    }
+
     const startedAt = new Date();
     const expiresAt = exam.durationSeconds
       ? new Date(startedAt.getTime() + exam.durationSeconds * 1000)
@@ -133,6 +144,7 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
       }
     }).returning({ id: schema.examAttempts.id });
 
+    await recordExamStart(auth.user.userId, exam.mode, exam.questionCount);
     return reply.code(201).send(await attemptPayload(created.id, auth.user.userId));
   });
 

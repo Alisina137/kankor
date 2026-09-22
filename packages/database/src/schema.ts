@@ -168,6 +168,7 @@ export const historicalForms = pgTable("historical_forms", {
   formCode: varchar("form_code", { length: 120 }),
   language: varchar("language", { length: 8 }).notNull(),
   title: varchar("title", { length: 240 }).notNull(),
+  accessTier: varchar("access_tier", { length: 16 }).notNull().default("free"),
   sourceReference: text("source_reference"),
   sourceStatus: varchar("source_status", { length: 32 }).notNull().default("unverified"),
   sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),

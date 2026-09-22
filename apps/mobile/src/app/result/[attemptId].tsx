@@ -199,7 +199,7 @@ export default function ResultScreen() {
     try {
       const response = await apiRequest<{ attempt: { id: string } }>(
         `/progress/topics/${topicId}/practice`,
-        { method: "POST", body: JSON.stringify({ language: locale }) },
+        { method: "POST", body: JSON.stringify({}) },
         token
       );
       router.push(`/exam/${response.attempt.id}`);

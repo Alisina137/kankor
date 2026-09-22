@@ -119,9 +119,8 @@ export async function refreshProgressForAttempt(attemptId: string, userId: strin
     const correctCount = rows.filter((row) => row.correct === true).length;
     const incorrectCount = rows.filter((row) => row.correct === false).length;
     const unansweredCount = rows.filter((row) => row.correct === null).length;
-    const answeredForAccuracy = correctCount + incorrectCount;
-    const accuracyPercentage = answeredForAccuracy > 0
-      ? (correctCount / answeredForAccuracy) * 100
+    const accuracyPercentage = rows.length > 0
+      ? (correctCount / rows.length) * 100
       : 0;
     const averageTimeSeconds = rows.reduce((sum, row) => sum + row.timeSpentSeconds, 0) / rows.length;
     const timestamps = rows.map((row) => row.submittedAt).filter((value): value is Date => Boolean(value));

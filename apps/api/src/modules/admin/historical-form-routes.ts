@@ -270,7 +270,6 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
     const questions = Array.isArray(payload.questions) ? payload.questions : [];
     if (!questions.length) return reply.code(400).send({ error: "import_questions_required" });
 
-    request.body = { questions };
     const db = createDatabase();
     const forms = await db.select().from(schema.historicalForms)
       .where(eq(schema.historicalForms.id, request.params.id)).limit(1);
@@ -300,22 +299,21 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
       .where(inArray(schema.questions.id, uniqueIds));
     if (existing.length !== uniqueIds.length) return reply.code(400).send({ error: "historical_question_not_found" });
 
-    await db.transaction(async (tx) => {
-      await tx.delete(schema.historicalFormQuestions).where(eq(schema.historicalFormQuestions.historicalFormId, form.id));
-      await tx.insert(schema.historicalFormQuestions).values(normalized.map((item) => ({
-        historicalFormId: form.id,
-        questionId: item.questionId,
-        order: item.order,
-        sourceMetadata: item.sourceMetadata,
-        historicalScoringMetadata: item.historicalScoringMetadata
-      })));
-      await tx.update(schema.historicalForms).set({
-        questionCount: normalized.length,
-        sourceMetadata: { ...form.sourceMetadata, importMetadata: objectValue(payload.importMetadata) },
-        updatedAt: new Date(),
-        updatedBy: admin.user.userId
-      }).where(eq(schema.historicalForms.id, form.id));
-    });
+    await db.delete(schema.historicalFormQuestions)
+      .where(eq(schema.historicalFormQuestions.historicalFormId, form.id));
+    await db.insert(schema.historicalFormQuestions).values(normalized.map((item) => ({
+      historicalFormId: form.id,
+      questionId: item.questionId,
+      order: item.order,
+      sourceMetadata: item.sourceMetadata,
+      historicalScoringMetadata: item.historicalScoringMetadata
+    })));
+    await db.update(schema.historicalForms).set({
+      questionCount: normalized.length,
+      sourceMetadata: { ...(form.sourceMetadata as Record<string, unknown>), importMetadata: objectValue(payload.importMetadata) },
+      updatedAt: new Date(),
+      updatedBy: admin.user.userId
+    }).where(eq(schema.historicalForms.id, form.id));
 
     return { imported: normalized.length };
   });

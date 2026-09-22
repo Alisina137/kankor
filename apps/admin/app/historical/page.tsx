@@ -146,6 +146,24 @@ export default function HistoricalFormsAdminPage() {
     }
   }
 
+  async function setAccessTier(id: string, accessTier: "free" | "premium") {
+    if (!token) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      await request(`/admin/historical-forms/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ accessTier })
+      }, token);
+      await load(token);
+      setStatus(`سطح دسترسی فورم به ${accessTier} تغییر کرد.`);
+    } catch (error) {
+      setStatus(`تغییر سطح دسترسی ناموفق بود: ${error instanceof Error ? error.message : "خطا"}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function setVerification(id: string, verificationStatus: string) {
     if (!token) return;
     setBusy(true);
@@ -263,6 +281,14 @@ export default function HistoricalFormsAdminPage() {
               </div>
               <div className="inline-actions">
                 <span className="badge">{item.verificationStatus}</span>
+                <span className="badge">{item.accessTier}</span>
+                <button
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => void setAccessTier(item.id, item.accessTier === "free" ? "premium" : "free")}
+                >
+                  {item.accessTier === "free" ? "تبدیل به Premium" : "تبدیل به Free"}
+                </button>
                 <button className="secondary" onClick={() => setSelectedId(item.id)}>انتخاب برای Import</button>
                 {item.verificationStatus !== "published" ? (
                   <>

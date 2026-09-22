@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
 const icons = {
@@ -12,7 +14,15 @@ const icons = {
 } as const;
 
 export default function TabsLayout() {
+  const { user, loading } = useAuth();
   const { text } = useLocale();
+
+  if (loading) {
+    return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.background }}><ActivityIndicator color={theme.colors.primary} /></View>;
+  }
+  if (!user) return <Redirect href="/(auth)/welcome" />;
+  if (!user.onboardingCompleted) return <Redirect href="/onboarding" />;
+
   const items = [
     ["index", text.home],
     ["practice", text.practice],
@@ -26,12 +36,7 @@ export default function TabsLayout() {
       headerShown: false,
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.mutedText,
-      tabBarStyle: {
-        height: 68,
-        paddingTop: 7,
-        paddingBottom: 8,
-        borderTopColor: theme.colors.border
-      }
+      tabBarStyle: { height: 68, paddingTop: 7, paddingBottom: 8, borderTopColor: theme.colors.border }
     }}>
       {items.map(([name, title]) => (
         <Tabs.Screen
@@ -39,9 +44,7 @@ export default function TabsLayout() {
           name={name}
           options={{
             title,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name={icons[name]} color={color} size={size} />
-            )
+            tabBarIcon: ({ color, size }) => <Ionicons name={icons[name]} color={color} size={size} />
           }}
         />
       ))}

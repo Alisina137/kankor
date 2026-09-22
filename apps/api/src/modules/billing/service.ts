@@ -259,3 +259,94 @@ export async function recordHistoricalStart(userId: string) {
   const state = await getEntitlementState(userId);
   if (state.tier === "free") await consumeUsage(userId, "historical", 1);
 }
+
+
+export async function confirmPayment(providerPaymentId: string, providerPayload: Record<string, unknown> = {}) {
+  const db = createDatabase();
+  const payments = await db.select({
+    payment: schema.paymentTransactions,
+    planDurationDays: schema.billingPlans.durationDays,
+    planEntitlements: schema.billingPlans.entitlements
+  }).from(schema.paymentTransactions)
+    .innerJoin(schema.billingPlans, eq(schema.paymentTransactions.planId, schema.billingPlans.id))
+    .where(eq(schema.paymentTransactions.providerPaymentId, providerPaymentId))
+    .limit(1);
+
+  const row = payments[0];
+  if (!row) return { ok: false as const, error: "payment_not_found" };
+  if (row.payment.status === "confirmed") {
+    return { ok: true as const, alreadyConfirmed: true, subscriptionId: row.payment.subscriptionId };
+  }
+  if (row.payment.status !== "pending") {
+    return { ok: false as const, error: "payment_not_pending" };
+  }
+  if (!row.payment.subscriptionId) {
+    return { ok: false as const, error: "subscription_not_found" };
+  }
+
+  const subscriptions = await db.select().from(schema.subscriptions)
+    .where(eq(schema.subscriptions.id, row.payment.subscriptionId))
+    .limit(1);
+  const subscription = subscriptions[0];
+  if (!subscription) return { ok: false as const, error: "subscription_not_found" };
+  if (subscription.status === "active") {
+    await db.update(schema.paymentTransactions).set({
+      status: "confirmed",
+      confirmedAt: new Date(),
+      providerPayload,
+      updatedAt: new Date()
+    }).where(eq(schema.paymentTransactions.id, row.payment.id));
+    return { ok: true as const, alreadyConfirmed: true, subscriptionId: subscription.id };
+  }
+
+  const start = new Date();
+  const end = new Date(start.getTime() + row.planDurationDays * 24 * 60 * 60 * 1000);
+
+  await db.update(schema.subscriptions).set({
+    status: "active",
+    currentPeriodStart: start,
+    currentPeriodEnd: end,
+    entitlementSnapshot: row.planEntitlements,
+    updatedAt: new Date()
+  }).where(eq(schema.subscriptions.id, subscription.id));
+
+  await db.update(schema.paymentTransactions).set({
+    status: "confirmed",
+    confirmedAt: new Date(),
+    providerPayload,
+    updatedAt: new Date()
+  }).where(eq(schema.paymentTransactions.id, row.payment.id));
+
+  return {
+    ok: true as const,
+    alreadyConfirmed: false,
+    subscriptionId: subscription.id,
+    currentPeriodEnd: end
+  };
+}
+
+export async function failPayment(providerPaymentId: string, providerPayload: Record<string, unknown> = {}) {
+  const db = createDatabase();
+  const rows = await db.select().from(schema.paymentTransactions)
+    .where(eq(schema.paymentTransactions.providerPaymentId, providerPaymentId))
+    .limit(1);
+  const payment = rows[0];
+  if (!payment) return { ok: false as const, error: "payment_not_found" };
+  if (payment.status === "confirmed") return { ok: false as const, error: "payment_already_confirmed" };
+  if (payment.status === "failed") return { ok: true as const, alreadyFailed: true };
+
+  await db.update(schema.paymentTransactions).set({
+    status: "failed",
+    providerPayload,
+    updatedAt: new Date()
+  }).where(eq(schema.paymentTransactions.id, payment.id));
+
+  if (payment.subscriptionId) {
+    await db.update(schema.subscriptions).set({
+      status: "failed",
+      updatedAt: new Date()
+    }).where(eq(schema.subscriptions.id, payment.subscriptionId));
+  }
+
+  return { ok: true as const, alreadyFailed: false };
+}

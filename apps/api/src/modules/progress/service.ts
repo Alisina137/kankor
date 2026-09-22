@@ -10,42 +10,62 @@ type AnswerHistoryRow = {
   timeSpentSeconds: number;
 };
 
+function snapshotTopicId(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const topic = (value as Record<string, unknown>).topic;
+  if (!topic || typeof topic !== "object" || Array.isArray(topic)) return "";
+  const id = (topic as Record<string, unknown>).id;
+  return typeof id === "string" ? id : "";
+}
+
 async function answerHistoryForUser(userId: string) {
   const db = createDatabase();
-  return db.select({
+  const rows = await db.select({
     attemptId: schema.examAttempts.id,
     submittedAt: schema.examAttempts.submittedAt,
     questionId: schema.examQuestions.questionId,
-    topicId: schema.questions.topicId,
+    curriculum: schema.examQuestions.curriculumSnapshot,
     correct: schema.attemptAnswers.correct,
     timeSpentSeconds: schema.attemptAnswers.timeSpentSeconds
   })
     .from(schema.attemptAnswers)
     .innerJoin(schema.examAttempts, eq(schema.attemptAnswers.attemptId, schema.examAttempts.id))
     .innerJoin(schema.examQuestions, eq(schema.attemptAnswers.examQuestionId, schema.examQuestions.id))
-    .innerJoin(schema.questions, eq(schema.examQuestions.questionId, schema.questions.id))
     .where(and(
       eq(schema.examAttempts.userId, userId),
       eq(schema.examAttempts.status, "analyzed")
     ))
     .orderBy(asc(schema.examAttempts.submittedAt));
+
+  return rows.map((row) => ({
+    attemptId: row.attemptId,
+    submittedAt: row.submittedAt,
+    questionId: row.questionId,
+    topicId: snapshotTopicId(row.curriculum),
+    correct: row.correct,
+    timeSpentSeconds: row.timeSpentSeconds
+  })).filter((row) => Boolean(row.topicId));
 }
 
 export async function refreshProgressForAttempt(attemptId: string, userId: string) {
   const db = createDatabase();
 
-  const affected = await db.select({
+  const affectedRows = await db.select({
     questionId: schema.examQuestions.questionId,
-    topicId: schema.questions.topicId
+    curriculum: schema.examQuestions.curriculumSnapshot
   })
     .from(schema.attemptAnswers)
     .innerJoin(schema.examAttempts, eq(schema.attemptAnswers.attemptId, schema.examAttempts.id))
     .innerJoin(schema.examQuestions, eq(schema.attemptAnswers.examQuestionId, schema.examQuestions.id))
-    .innerJoin(schema.questions, eq(schema.examQuestions.questionId, schema.questions.id))
     .where(and(
       eq(schema.attemptAnswers.attemptId, attemptId),
       eq(schema.examAttempts.userId, userId)
     ));
+
+  const affected = affectedRows.map((item) => ({
+    questionId: item.questionId,
+    topicId: snapshotTopicId(item.curriculum)
+  })).filter((item) => Boolean(item.topicId));
 
   if (!affected.length) return;
 

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireAdmin } from "../../common/admin-auth.js";
 
@@ -192,7 +192,7 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       values.sourceMetadata = request.body.sourceMetadata;
     }
 
-    await db.update(schema.questions).set(values)
+    await db.update(schema.questions).set(values as typeof schema.questions.$inferInsert)
       .where(eq(schema.questions.id, request.params.id));
 
     return { question: await tracedQuestion(request.params.id) };
@@ -201,25 +201,29 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
   app.put<{ Params: { id: string; language: string }; Body: Record<string, unknown> }>("/questions/:id/translations/:language", async (request, reply) => {
     const admin = await requireAdmin(request, reply);
     if (!admin) return;
+
     const language = request.params.language;
     if (!LANGUAGES.has(language)) return reply.code(400).send({ error: "invalid_language" });
 
     const content = stringValue(request.body.content);
     const choices = request.body.choices;
-    if (!content || !validChoices(choices)) return reply.code(400).send({ error: "invalid_translation" });
+    if (!content || !validChoices(choices)) {
+      return reply.code(400).send({ error: "invalid_translation" });
+    }
 
     const db = createDatabase();
-    const rows = await db.select({ id: schema.questions.id }).from(schema.questions)
+    const question = await db.select({ id: schema.questions.id }).from(schema.questions)
       .where(eq(schema.questions.id, request.params.id)).limit(1);
-    if (!rows[0]) return reply.code(404).send({ error: "question_not_found" });
+    if (!question[0]) return reply.code(404).send({ error: "question_not_found" });
 
-    const existing = await db.select({ id: schema.questionTranslations.id }).from(schema.questionTranslations)
-      .where(eq(schema.questionTranslations.questionId, request.params.id));
+    const existing = await db.select({ id: schema.questionTranslations.id })
+      .from(schema.questionTranslations)
+      .where(and(
+        eq(schema.questionTranslations.questionId, request.params.id),
+        eq(schema.questionTranslations.language, language)
+      ))
+      .limit(1);
 
-    const sameLanguage = await db.select({ id: schema.questionTranslations.id }).from(schema.questionTranslations)
-      .where(eq(schema.questionTranslations.questionId, request.params.id));
-
-    const matching = existing.find(() => true);
     const values = {
       questionId: request.params.id,
       language,
@@ -231,14 +235,10 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       updatedAt: new Date()
     };
 
-    if (matching && sameLanguage.length) {
-      const found = await db.select({ id: schema.questionTranslations.id }).from(schema.questionTranslations)
-        .where(eq(schema.questionTranslations.questionId, request.params.id));
-      const candidate = found[0];
-      if (candidate) {
-        await db.update(schema.questionTranslations).set(values)
-          .where(eq(schema.questionTranslations.id, candidate.id));
-      }
+    if (existing[0]) {
+      await db.update(schema.questionTranslations)
+        .set(values)
+        .where(eq(schema.questionTranslations.id, existing[0].id));
     } else {
       await db.insert(schema.questionTranslations).values(values);
     }

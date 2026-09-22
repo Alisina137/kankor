@@ -1,7 +1,7 @@
 import { theme } from "@kankor/config";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
 import { apiRequest, ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
@@ -252,14 +252,8 @@ export default function PracticeScreen() {
   }
 
   return (
-    <Screen>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.stack}>
+    <Screen scroll contentContainerStyle={styles.scrollContent}>
+      <View style={styles.stack}>
         <View style={styles.header}>
           <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
           <Text style={[styles.body, { textAlign: align }]}>{text.body}</Text>
@@ -331,15 +325,13 @@ export default function PracticeScreen() {
             </Pressable>
           </View>
         ) : null}
-        </View>
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 120 },
+  scrollContent: { paddingBottom: 140 },
   stack: { gap: theme.spacing.lg },
   header: { gap: theme.spacing.sm },
   title: { color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "800" },

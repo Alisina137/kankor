@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
-import { apiRequest } from "../../lib/api";
+import { ApiError, apiRequest } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
@@ -155,8 +155,9 @@ export default function ProgressScreen() {
         token
       );
       router.push(`/exam/${result.attempt.id}`);
-    } catch {
-      setError(text.error);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.code === "premium_required") router.push("/premium");
+      else setError(text.error);
     } finally {
       setStartingTopic("");
     }

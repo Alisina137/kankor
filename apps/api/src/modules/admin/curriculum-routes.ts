@@ -61,7 +61,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
     if ("namePs" in request.body) values.namePs = optionalString(request.body.namePs);
     if ("sortOrder" in request.body) values.sortOrder = intValue(request.body.sortOrder);
     if ("active" in request.body) values.active = boolValue(request.body.active);
-    const [item] = await db.update(schema.grades).set(values).where(eq(schema.grades.id, request.params.id)).returning();
+    const [item] = await db.update(schema.grades).set(values as any).where(eq(schema.grades.id, request.params.id)).returning();
     if (!item) return reply.code(404).send({ error: "grade_not_found" });
     return { item };
   });
@@ -90,7 +90,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
     if ("namePs" in request.body) values.namePs = optionalString(request.body.namePs);
     if ("sortOrder" in request.body) values.sortOrder = intValue(request.body.sortOrder);
     if ("active" in request.body) values.active = boolValue(request.body.active);
-    const [item] = await db.update(schema.subjects).set(values).where(eq(schema.subjects.id, request.params.id)).returning();
+    const [item] = await db.update(schema.subjects).set(values as any).where(eq(schema.subjects.id, request.params.id)).returning();
     if (!item) return reply.code(404).send({ error: "subject_not_found" });
     return { item };
   });
@@ -124,7 +124,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
     if ("editionYear" in request.body) values.editionYear = request.body.editionYear == null ? null : intValue(request.body.editionYear);
     if ("sortOrder" in request.body) values.sortOrder = intValue(request.body.sortOrder);
     if ("active" in request.body) values.active = boolValue(request.body.active);
-    const [item] = await db.update(schema.books).set(values).where(eq(schema.books.id, request.params.id)).returning();
+    const [item] = await db.update(schema.books).set(values as any).where(eq(schema.books.id, request.params.id)).returning();
     if (!item) return reply.code(404).send({ error: "book_not_found" });
     return { item };
   });
@@ -155,7 +155,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
     if ("titlePs" in request.body) values.titlePs = optionalString(request.body.titlePs);
     if ("sortOrder" in request.body) values.sortOrder = intValue(request.body.sortOrder);
     if ("active" in request.body) values.active = boolValue(request.body.active);
-    const [item] = await db.update(schema.chapters).set(values).where(eq(schema.chapters.id, request.params.id)).returning();
+    const [item] = await db.update(schema.chapters).set(values as any).where(eq(schema.chapters.id, request.params.id)).returning();
     if (!item) return reply.code(404).send({ error: "chapter_not_found" });
     return { item };
   });
@@ -186,7 +186,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
     if ("titlePs" in request.body) values.titlePs = optionalString(request.body.titlePs);
     if ("sortOrder" in request.body) values.sortOrder = intValue(request.body.sortOrder);
     if ("active" in request.body) values.active = boolValue(request.body.active);
-    const [item] = await db.update(schema.topics).set(values).where(eq(schema.topics.id, request.params.id)).returning();
+    const [item] = await db.update(schema.topics).set(values as any).where(eq(schema.topics.id, request.params.id)).returning();
     if (!item) return reply.code(404).send({ error: "topic_not_found" });
     return { item };
   });

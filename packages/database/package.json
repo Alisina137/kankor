@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.build.json",
     "db:migrate": "node scripts/migrate.mjs",
     "db:studio": "drizzle-kit studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:seed:test-questions": "node scripts/seed-initial-question-bank.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

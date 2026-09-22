@@ -14,7 +14,7 @@
     "@kankor/config": "*",
     "@expo/vector-icons": "^15.0.3",
     "expo": "^57.0.17",
-    "expo-router": "^7.0.0",
+    "expo-router": "~57.0.22",
     "expo-secure-store": "57.0.4",
     "expo-status-bar": "^3.0.0",
     "react": "19.2.3",

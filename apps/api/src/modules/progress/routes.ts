@@ -146,25 +146,55 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
     if (!auth) return;
     const db = createDatabase();
 
-    const rows = await db.select({
-      groupId: schema.subjects.id,
-      label: schema.subjects.nameFa,
-      correct: schema.attemptAnswers.correct,
-      timeSpentSeconds: schema.attemptAnswers.timeSpentSeconds
-    }).from(schema.attemptAnswers)
-      .innerJoin(schema.examAttempts, eq(schema.attemptAnswers.attemptId, schema.examAttempts.id))
-      .innerJoin(schema.examQuestions, eq(schema.attemptAnswers.examQuestionId, schema.examQuestions.id))
-      .innerJoin(schema.questions, eq(schema.examQuestions.questionId, schema.questions.id))
-      .innerJoin(schema.topics, eq(schema.questions.topicId, schema.topics.id))
-      .innerJoin(schema.chapters, eq(schema.topics.chapterId, schema.chapters.id))
-      .innerJoin(schema.books, eq(schema.chapters.bookId, schema.books.id))
-      .innerJoin(schema.subjects, eq(schema.books.subjectId, schema.subjects.id))
-      .where(and(
-        eq(schema.examAttempts.userId, auth.user.userId),
-        eq(schema.examAttempts.status, "analyzed")
-      ));
+    const analyses = await db.select({
+      bySubject: schema.attemptAnalyses.bySubject
+    }).from(schema.attemptAnalyses)
+      .innerJoin(schema.examAttempts, eq(schema.attemptAnalyses.attemptId, schema.examAttempts.id))
+      .where(eq(schema.examAttempts.userId, auth.user.userId));
 
-    return { items: aggregateRows(rows).sort((a,b) => a.accuracyPercentage - b.accuracyPercentage) };
+    const groups = new Map<string, {
+      id: string; label: string; total: number; correct: number; incorrect: number;
+      unanswered: number; weightedTime: number;
+    }>();
+
+    for (const analysis of analyses) {
+      for (const raw of analysis.bySubject) {
+        const id = typeof raw.id === "string" ? raw.id : "";
+        if (!id) continue;
+        const total = Number(raw.total ?? 0);
+        const current = groups.get(id) ?? {
+          id,
+          label: typeof raw.label === "string" ? raw.label : "Subject",
+          total: 0,
+          correct: 0,
+          incorrect: 0,
+          unanswered: 0,
+          weightedTime: 0
+        };
+        current.total += total;
+        current.correct += Number(raw.correct ?? 0);
+        current.incorrect += Number(raw.incorrect ?? 0);
+        current.unanswered += Number(raw.unanswered ?? 0);
+        current.weightedTime += Number(raw.averageTimeSeconds ?? 0) * total;
+        groups.set(id, current);
+      }
+    }
+
+    const items = [...groups.values()].map((item) => {
+      const answered = item.correct + item.incorrect;
+      return {
+        id: item.id,
+        label: item.label,
+        total: item.total,
+        correct: item.correct,
+        incorrect: item.incorrect,
+        unanswered: item.unanswered,
+        accuracyPercentage: answered ? Math.round((item.correct / answered) * 10000) / 100 : 0,
+        averageTimeSeconds: item.total ? Math.round((item.weightedTime / item.total) * 100) / 100 : 0
+      };
+    }).sort((a,b) => a.accuracyPercentage - b.accuracyPercentage);
+
+    return { items };
   });
 
   app.get("/progress/topics", async (request, reply) => {

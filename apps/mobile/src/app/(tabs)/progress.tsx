@@ -151,7 +151,7 @@ export default function ProgressScreen() {
     try {
       const result = await apiRequest<{ attempt: { id: string } }>(
         `/progress/topics/${topic.topicId}/practice`,
-        { method: "POST", body: JSON.stringify({ language: locale }) },
+        { method: "POST", body: JSON.stringify({}) },
         token
       );
       router.push(`/exam/${result.attempt.id}`);

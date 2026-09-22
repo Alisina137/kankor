@@ -41,7 +41,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 7 — Progress and Mistake System completed in source.
+Phase 8 — Freemium and Billing completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -108,6 +108,23 @@ Phase 7 — Progress and Mistake System completed in source.
 - Progress mobile tab replaces the placeholder with longitudinal metrics, weak topics, subject performance, and recent history.
 - Phase 7 structural verifier.
 
+### Phase 8
+- Configurable BillingPlan, Subscription, PaymentTransaction, and EntitlementUsage entities.
+- Historical forms carry free/premium access tiers so selected forms can remain free.
+- Free-plan numerical limits live in app configuration and are explicitly development defaults, not final product pricing/policy.
+- Premium entitlement is server-derived from a verified active subscription; the client cannot self-activate Premium.
+- Active subscriptions expire through server reconciliation without deleting accounts, attempts, scores, mistakes, or progress history.
+- Exam starts enforce per-mode limits, targeted-exam size limits, and a daily free-question allowance.
+- Existing in-progress attempts remain usable if Premium expires after the attempt started.
+- Historical archive start enforces free selected forms, Premium-only forms, and configurable free daily historical limits.
+- Free users retain basic results/review/progress; deep analytics, detailed explanations/worked solutions, Mistake Notebook, weakness practice, and extended history are Premium boundaries.
+- Checkout requests require idempotency keys; duplicate confirmation/webhook delivery does not create duplicate Premium activation.
+- Development uses a simulated provider with a separate server confirmation step.
+- Production-facing webhook path requires BILLING_WEBHOOK_SECRET and leaves provider-specific integration abstract.
+- Admin can configure plans/prices/durations, activate plans, inspect subscriptions/payments, and update free limits remotely.
+- Mobile Premium screen supports plan selection, pending checkout, simulated confirmation, entitlement refresh, and cancel-at-period-end.
+- Phase 8 structural verifier.
+
 ## Verification status
 - Phase 2 account flow was locally verified by the user.
 - Phase 3 admin access was locally verified by the user.
@@ -123,9 +140,11 @@ Phase 7 — Progress and Mistake System completed in source.
 - Targeted practice uses the documented internal marks-based scoring snapshot: correct = question marks, incorrect = 0, unanswered = 0.
 - The product owner still needs to supply/verify authoritative curriculum, questions, and annual Kankor scoring policy.
 - Historical archive infrastructure is complete, but no real historical Kankor papers have been imported yet because authoritative source forms have not been supplied.
+- No final Premium price is hard-coded. Administrators must create/activate plans after willingness-to-pay validation.
+- Development checkout uses the simulated provider only. Production payment availability, app-store policy, provider credentials, webhook signature method, and legal/privacy obligations must be rechecked before commercial launch.
 
 ## Latest source baseline
-Phase 7 branch awaiting merge to `main`.
+Phase 8 branch awaiting merge to `main`.
 
 ## Next phase
-Phase 8 — Freemium and Billing.
+Phase 9 — Administration and Content Quality.

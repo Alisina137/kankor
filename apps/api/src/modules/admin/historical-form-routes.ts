@@ -176,14 +176,21 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
       if (!VERIFICATION_STATUSES.has(status)) return reply.code(400).send({ error: "invalid_verification_status" });
 
       if (status === "published") {
-        const relations = await db.select({ order: schema.historicalFormQuestions.order })
+        const relations = await db.select({
+          order: schema.historicalFormQuestions.order,
+          verificationStatus: schema.questions.verificationStatus
+        })
           .from(schema.historicalFormQuestions)
+          .innerJoin(schema.questions, eq(schema.historicalFormQuestions.questionId, schema.questions.id))
           .where(eq(schema.historicalFormQuestions.historicalFormId, current.id))
           .orderBy(asc(schema.historicalFormQuestions.order));
 
         if (!relations.length) return reply.code(409).send({ error: "historical_form_has_no_questions" });
         const contiguous = relations.every((item, index) => item.order === index + 1);
         if (!contiguous) return reply.code(409).send({ error: "historical_form_order_not_contiguous" });
+        if (relations.some((item) => item.verificationStatus !== "published")) {
+          return reply.code(409).send({ error: "historical_form_contains_unpublished_questions" });
+        }
         values.questionCount = relations.length;
       }
       values.verificationStatus = status;

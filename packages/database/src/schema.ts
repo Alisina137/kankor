@@ -331,3 +331,45 @@ export const attemptAnalyses = pgTable("attempt_analyses", {
 }, (table) => ({
   attemptIdx: uniqueIndex("attempt_analyses_attempt_unique").on(table.attemptId)
 }));
+
+
+export const mistakeItems = pgTable("mistake_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
+  topicId: uuid("topic_id").notNull().references(() => topics.id, { onDelete: "restrict" }),
+  firstMissedAt: timestamp("first_missed_at", { withTimezone: true }).notNull(),
+  lastAttemptedAt: timestamp("last_attempted_at", { withTimezone: true }).notNull(),
+  timesMissed: integer("times_missed").notNull().default(1),
+  eventuallyMastered: boolean("eventually_mastered").notNull().default(false),
+  masteredAt: timestamp("mastered_at", { withTimezone: true }),
+  latestAttemptId: uuid("latest_attempt_id").references(() => examAttempts.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userQuestionUnique: uniqueIndex("mistake_items_user_question_unique").on(table.userId, table.questionId),
+  userIdx: index("mistake_items_user_idx").on(table.userId),
+  topicIdx: index("mistake_items_topic_idx").on(table.topicId),
+  masteredIdx: index("mistake_items_mastered_idx").on(table.userId, table.eventuallyMastered)
+}));
+
+export const topicMastery = pgTable("topic_mastery", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  topicId: uuid("topic_id").notNull().references(() => topics.id, { onDelete: "cascade" }),
+  attemptsCount: integer("attempts_count").notNull().default(0),
+  questionsAnswered: integer("questions_answered").notNull().default(0),
+  correctCount: integer("correct_count").notNull().default(0),
+  incorrectCount: integer("incorrect_count").notNull().default(0),
+  unansweredCount: integer("unanswered_count").notNull().default(0),
+  accuracyPercentage: numeric("accuracy_percentage", { precision: 8, scale: 4 }).notNull().default("0"),
+  averageTimeSeconds: numeric("average_time_seconds", { precision: 10, scale: 2 }).notNull().default("0"),
+  firstAttemptedAt: timestamp("first_attempted_at", { withTimezone: true }),
+  lastAttemptedAt: timestamp("last_attempted_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  userTopicUnique: uniqueIndex("topic_mastery_user_topic_unique").on(table.userId, table.topicId),
+  userIdx: index("topic_mastery_user_idx").on(table.userId),
+  topicIdx: index("topic_mastery_topic_idx").on(table.topicId)
+}));
+

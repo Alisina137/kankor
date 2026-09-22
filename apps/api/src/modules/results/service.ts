@@ -118,7 +118,15 @@ export async function getStoredResult(attemptId: string) {
   ]);
 
   return resultRows[0]
-    ? { result: resultRows[0], analysis: analysisRows[0] ?? null }
+    ? {
+        result: {
+          ...resultRows[0],
+          score: Number(resultRows[0].score),
+          maxScore: Number(resultRows[0].maxScore),
+          percentage: Number(resultRows[0].percentage)
+        },
+        analysis: analysisRows[0] ?? null
+      }
     : null;
 }
 

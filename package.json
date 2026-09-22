@@ -1,6 +1,6 @@
 {
   "name": "kankorprep",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
@@ -12,7 +12,8 @@
     "db:migrate": "npm --workspace @kankor/database run db:migrate",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "verify:foundation": "node scripts/verify-foundation.mjs",
-    "verify:phase2": "node scripts/verify-phase2.mjs"
+    "verify:phase2": "node scripts/verify-phase2.mjs",
+    "verify:phase3": "node scripts/verify-phase3.mjs"
   },
   "engines": {"node": ">=22.13.0"}
 }

@@ -26,88 +26,79 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Native mobile session tokens use Expo SecureStore.
 - Curriculum is relational and traceable: Subject + Grade → Book → Chapter → Topic → Question.
 - Questions preserve source metadata, language, difficulty, marks, explanations, worked solutions, verification state, and version.
-- Student-facing question and exam-session APIs never expose answer keys.
+- Student-facing active-exam APIs never expose answer keys.
 - Content-admin APIs require an admin role or bootstrap email.
 - Annual Kankor rules remain administrator-configurable and are not hard-coded.
-- Generated exams snapshot question content, choices, version, marks, correct answer, and curriculum metadata server-side.
+- Generated exams snapshot question text, choices, correct answer, marks, explanations, worked solution, curriculum metadata, and scoring rules.
+- Full-Kankor generation requires explicit valid scoring rules on the active blueprint.
+- Targeted practice uses an explicit versioned internal marks-based scoring snapshot.
 - Active attempts are owned by the authenticated student and use server timestamps for timer recovery.
-- Client answers are saved locally first and synchronized with monotonically increasing revisions.
-- PostgreSQL atomically rejects delayed older revisions from overwriting newer answers.
-- Submission uses a deterministic idempotency key and completed attempts are locked.
-- Database remains Neon-compatible PostgreSQL with Drizzle ORM and deterministic SQL migrations.
+- Client answers are local-first and synchronized with monotonically increasing revisions.
+- PostgreSQL atomically rejects delayed older autosaves.
+- Submission locks the attempt before authoritative server-side scoring.
+- Attempt results and analyses are immutable one-per-attempt snapshots.
+- Duplicate submissions reuse the same stored result.
+- Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 4 — Examination Engine completed in source.
+Phase 5 — Scoring, Results and Review completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
-- Mobile application shell with five-tab navigation.
-- Shared design tokens.
-- Dari/Pashto/English localization architecture and RTL/LTR direction support.
-- Next.js admin shell.
-- Fastify API foundation.
-- PostgreSQL/Drizzle database foundation.
+- Mobile shell, navigation, design tokens, RTL localization, admin/API/database foundations.
 
 ### Phase 2
-- Welcome, registration, login, logout, session restore, and session rotation.
-- Password recovery token creation and password reset endpoints.
-- Account deletion.
-- Server-side auth validation and rate limiting.
-- User/session/password-reset database schema and migration.
-- Language, target Kankor year, and optional preparation-level onboarding.
-- Auth/onboarding route guards.
-- Personalized Home and Profile account controls.
-- Secure native session persistence with Expo SecureStore.
-- Local user verification confirmed account creation and normal connectivity.
+- Registration, login/logout, recovery/reset, secure sessions, onboarding, account deletion, and protected entry.
 
 ### Phase 3
-- Grade, Subject, Book, Chapter, Topic, Question, and QuestionTranslation database entities.
-- Grade 10–12 structural records without inventing official subject/question content.
-- Public curriculum APIs and protected content-admin management.
-- Published-question APIs that omit correct answers.
-- Full question trace through subject, grade, book, chapter, and topic.
-- Web admin console and mobile Practice curriculum browser.
-- Admin bootstrap access and question lifecycle controls.
+- Structured curriculum and question system.
+- Question translations, content admin management, publication lifecycle, and student curriculum browsing.
 
 ### Phase 4
-- Configurable ExamBlueprint, Exam, ExamQuestion, ExamAttempt, and AttemptAnswer entities.
-- Configurable full-Kankor blueprint with effective year, question count, optional duration, criteria, and distribution segments.
-- No hard-coded annual duration, scoring, or subject distribution.
-- Full Kankor generation and targeted subject/book/chapter/topic/custom generation from published active curriculum content.
-- Immutable per-exam question snapshots so later question edits cannot mutate an existing exam.
-- Attempt ownership enforcement.
-- Start/resume API with server-owned timer timestamps and remaining-time recovery.
-- Batch answer autosave with selected choice, flag, per-question time, and client revision.
-- Atomic PostgreSQL revision guard against delayed older autosaves.
-- Idempotent submission and attempt locking.
-- Answered/unanswered/flagged submit summary.
-- Expo local-first attempt persistence with active-attempt index for relaunch/offline resume.
-- Dedicated distraction-minimized exam route outside normal bottom navigation.
-- Mobile timer, answer choices, flagging, navigator, previous/next navigation, submit confirmation, and automatic expiry submission attempt.
-- Exams tab with active-attempt resume and full-Kankor entry.
-- Practice tab with targeted exam setup, configurable question count, and optional timer.
-- Admin blueprint management page.
-- Admin question lifecycle controls through Draft → Review → Approved → Published → Deprecated.
-- Phase 4 structural verifier.
+- Configurable exam blueprints and generation.
+- Full and targeted exams.
+- Immutable exam question snapshots.
+- Reliable attempt start/resume, server timer, local-first persistence, atomic autosave revisions, navigator, flags, and idempotent submission.
+
+### Phase 5
+- Blueprint-level configurable scoring rules for full Kankor.
+- Explicit scoring-rule snapshots stored with each generated exam and attempt configuration.
+- Explanation/worked-solution snapshots stored with generated exam questions.
+- AttemptResult and AttemptAnalysis persistence.
+- Server-authoritative scoring using frozen question/answer/configuration data only.
+- Correct, incorrect, unanswered, score, maximum score, percentage, and total-time calculations.
+- Per-answer correctness and awarded-score persistence.
+- Multidimensional analysis by subject, grade, book, chapter, topic, difficulty, and timing.
+- Strongest/weakest topic summaries and deterministic next-action recommendation.
+- Immediate scoring/analysis during idempotent submission.
+- GET result, review, and completed-exam history APIs with student ownership enforcement.
+- Review filters: all, incorrect, correct, unanswered, and flagged.
+- Review data includes original frozen question, choices, student's answer, correct answer, correctness, explanations, worked solution, and curriculum metadata.
+- Mobile result page with primary metrics, subject/topic analysis, strongest/weakest areas, and recommendation.
+- Mobile review page with correctness labels, answer comparison, explanations, worked solutions, curriculum trace, and filters.
+- Completed-exam history on the Exams tab.
+- Admin UI for explicit full-Kankor scoring-rule configuration.
+- Phase 5 structural verifier.
 
 ## Verification status
-- Phase 2 was locally verified by the user.
-- Phase 3 admin login and content-admin access were locally verified by the user.
-- Phase 4 critical files were reviewed after GitHub writes.
-- `scripts/verify-phase4.mjs` checks database entities/migration, 160-question capacity, published/active question eligibility, snapshots, ownership-sensitive attempt routes, atomic revision protection, idempotent submission, timer recovery, local persistence, and mobile exam controls.
-- Full dependency install, database migration, TypeScript checks, production builds, and runtime 160-question disruption testing require local verification after pull.
+- Phase 2 account flow was locally verified by the user.
+- Phase 3 admin access was locally verified by the user.
+- Phase 4 source was repaired after the user's TypeScript report; the attempt router was restored on main.
+- Phase 5 critical scoring, result, review, and configuration files were reviewed after writes.
+- `scripts/verify-phase5.mjs` validates scoring snapshots, server scoring, immutable result entities, multidimensional analysis, result/review endpoints, mobile results, explanations, and worked solutions.
+- Full dependency install, database migration, TypeScript checks, builds, and runtime submit→result→review testing require local verification after pull.
 
 ## Known issues / external requirements
-- Run `npm run db:migrate` after pulling Phase 4.
-- Full Kankor requires an active exam blueprint created in the admin panel.
-- Exams require enough questions in `Published` state for the selected language/criteria.
-- The product owner still needs to supply/verify the authoritative curriculum and question content.
-- Exact annual Kankor duration, scoring weights, and subject distribution remain configuration data, not code constants.
-- Phase 4 intentionally stops at reliable submission. Scoring, results, answer review, explanations, and worked-solution presentation begin in Phase 5.
+- Run `npm run db:migrate` after pulling Phase 5.
+- Existing full-Kankor blueprints created before Phase 5 do not automatically receive invented scoring rules. Edit/recreate them with verified scoring multipliers before starting a new full Kankor exam.
+- Existing pre-Phase-5 full-Kankor exams without a scoring snapshot cannot be authoritatively scored; start a new exam after configuring the blueprint.
+- Targeted practice uses the documented internal marks-based scoring snapshot: correct = question marks, incorrect = 0, unanswered = 0.
+- The product owner still needs to supply/verify authoritative curriculum, questions, and annual Kankor scoring policy.
+- Mistake notebook and longitudinal mastery begin in Phase 7.
 - Historical fixed forms begin in Phase 6.
 
 ## Latest source baseline
-Phase 4 branch awaiting merge to `main`.
+Phase 5 branch awaiting merge to `main`.
 
 ## Next phase
-Phase 5 — Scoring, Results and Review.
+Phase 6 — Historical Form Library.

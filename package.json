@@ -1,0 +1,16 @@
+{
+  "name": "kankorprep",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:mobile": "npm --workspace @kankor/mobile run start",
+    "dev:admin": "npm --workspace @kankor/admin run dev",
+    "dev:api": "npm --workspace @kankor/api run dev",
+    "build:admin": "npm --workspace @kankor/admin run build",
+    "build:api": "npm --workspace @kankor/api run build",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify:foundation": "node scripts/verify-foundation.mjs"
+  },
+  "engines": {"node": ">=22.13.0"}
+}

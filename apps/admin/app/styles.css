@@ -1,0 +1,20 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #171A1F;
+  background: #F7F8FA;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.shell { max-width: 760px; margin: 0 auto; padding: 64px 24px; }
+.eyebrow { color: #2457D6; font-weight: 700; }
+h1 { font-size: clamp(2rem, 7vw, 3.5rem); margin: 8px 0 12px; }
+p { color: #667085; line-height: 1.8; }
+.card {
+  background: #fff;
+  border: 1px solid #E4E7EC;
+  border-radius: 18px;
+  padding: 24px;
+  margin: 32px 0;
+  display: grid;
+  gap: 8px;
+}

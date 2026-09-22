@@ -30,7 +30,7 @@ export default function RegisterScreen() {
   return <Screen><View style={styles.stack}>
     <Text style={[styles.title,{textAlign:align}]}>{text.createAccount}</Text>
     <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" />
-    <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
+    <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="new-password" />
     <FormField label={text.confirmPassword} value={confirm} onChangeText={setConfirm} secureTextEntry autoComplete="new-password" />
     {error?<Text style={[styles.error,{textAlign:align}]}>{error}</Text>:null}
     <AppButton label={text.createAccount} loading={busy} onPress={submit}/>

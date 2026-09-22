@@ -122,8 +122,9 @@ export default function HistoricalFormsScreen() {
     if (language) params.set("language", language);
 
     try {
+      const query = params.toString();
       const result = await apiRequest<{ items: HistoricalForm[] }>(
-        `/exams/history${params.size ? `?${params.toString()}` : ""}`,
+        `/exams/history${query ? `?${query}` : ""}`,
         {},
         token
       );

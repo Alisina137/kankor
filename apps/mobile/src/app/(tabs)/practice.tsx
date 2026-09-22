@@ -155,6 +155,12 @@ export default function PracticeScreen() {
 
   const displayName = (fa: string, ps: string | null) => locale === "ps" ? (ps || fa) : fa;
   const selectedBook = books.find((item) => item.id === bookId) ?? null;
+  const selectedSubject = subjects.find((item) => item.id === subjectId) ?? null;
+  const availableQuestionCounts = topicId ? questionCounts.filter((count) => count <= 10) : questionCounts;
+  useEffect(() => {
+    if (topicId && questionCount > 10) setQuestionCount(10);
+  }, [topicId, questionCount]);
+
   const selectedPath = useMemo(() => {
     const subject = subjects.find((item) => item.id === subjectId);
     const book = books.find((item) => item.id === bookId);
@@ -215,7 +221,7 @@ export default function PracticeScreen() {
     const body: Record<string, unknown> = {
       mode,
       title: selectedPath || text.title,
-      language: String(selectedBook?.sourceMetadata?.language ?? locale),
+      language: String(selectedBook?.sourceMetadata?.language ?? (selectedSubject?.code === "pashto" ? "ps" : locale)),
       questionCount,
       durationSeconds
     };
@@ -302,7 +308,7 @@ export default function PracticeScreen() {
 
             <Text style={[styles.label, { textAlign: align }]}>{text.questionCount}</Text>
             <View style={styles.chips}>
-              {questionCounts.map((count) => (
+              {availableQuestionCounts.map((count) => (
                 <Pressable key={count} onPress={() => setQuestionCount(count)} style={[styles.chip, questionCount === count && styles.chipActive]}>
                   <Text style={questionCount === count ? styles.chipTextActive : styles.chipText}>{count}</Text>
                 </Pressable>

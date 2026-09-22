@@ -1,6 +1,6 @@
 {
   "name": "kankorprep",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
@@ -9,8 +9,10 @@
     "dev:api": "npm --workspace @kankor/api run dev",
     "build:admin": "npm --workspace @kankor/admin run build",
     "build:api": "npm --workspace @kankor/api run build",
+    "db:migrate": "npm --workspace @kankor/database run db:migrate",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "verify:foundation": "node scripts/verify-foundation.mjs"
+    "verify:foundation": "node scripts/verify-foundation.mjs",
+    "verify:phase2": "node scripts/verify-phase2.mjs"
   },
   "engines": {"node": ">=22.13.0"}
 }

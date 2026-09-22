@@ -2,6 +2,9 @@
 -- Source: user-provided official textbook PDF G10-Dr-History.pdf.
 -- This migration imports curriculum structure only: subject, book, chapters, and lessons/topics.
 
+ALTER TABLE "books"
+  ADD COLUMN IF NOT EXISTS "source_metadata" jsonb NOT NULL DEFAULT '{}'::jsonb;
+
 INSERT INTO "subjects" (
   "code", "name_fa", "name_ps", "active", "sort_order", "created_at", "updated_at"
 )
@@ -14,7 +17,7 @@ ON CONFLICT ("code") DO UPDATE SET
   "updated_at" = now();
 
 INSERT INTO "books" (
-  "subject_id", "grade_id", "code", "title_fa", "title_ps", "edition_year", "active", "sort_order", "created_at", "updated_at"
+  "subject_id", "grade_id", "code", "title_fa", "title_ps", "edition_year", "source_metadata", "active", "sort_order", "created_at", "updated_at"
 )
 SELECT
   s."id",
@@ -23,6 +26,7 @@ SELECT
   'تاریخ صنف دهم',
   NULL,
   1398,
+  '{"publisher":"وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G10-Dr-History.pdf","sourceType":"official_textbook","pages":154}'::jsonb,
   true,
   10,
   now(),
@@ -35,6 +39,7 @@ ON CONFLICT ("code") DO UPDATE SET
   "grade_id" = EXCLUDED."grade_id",
   "title_fa" = EXCLUDED."title_fa",
   "edition_year" = EXCLUDED."edition_year",
+  "source_metadata" = EXCLUDED."source_metadata",
   "active" = true,
   "updated_at" = now();
 

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { and, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
-import { createGeneratedExam, type ExamCriteria } from "./service.js";
+import { createGeneratedExam, parseScoringRules, PRACTICE_SCORING_RULES, type ExamCriteria, type ScoringRules } from "./service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 
@@ -40,7 +40,8 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       name: schema.examBlueprints.name,
       effectiveYear: schema.examBlueprints.effectiveYear,
       questionCount: schema.examBlueprints.questionCount,
-      durationSeconds: schema.examBlueprints.durationSeconds
+      durationSeconds: schema.examBlueprints.durationSeconds,
+      scoringConfigured: schema.examBlueprints.scoringRules
     })
       .from(schema.examBlueprints)
       .where(and(
@@ -50,7 +51,7 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       .orderBy(desc(schema.examBlueprints.effectiveYear), desc(schema.examBlueprints.updatedAt))
       .limit(1);
 
-    return { blueprint: rows[0] ?? null };
+    return { blueprint: rows[0] ? { ...rows[0], scoringConfigured: Boolean(rows[0].scoringConfigured) } : null };
   });
 
   app.post("/exams/generate", async (request: BodyRequest, reply) => {
@@ -68,6 +69,7 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
     let durationSeconds: number | null;
     let criteria: ExamCriteria;
     let blueprintId: string | null = null;
+    let scoringRules: ScoringRules;
     let title = typeof request.body.title === "string" && request.body.title.trim()
       ? request.body.title.trim()
       : "KankorPrep Exam";
@@ -88,6 +90,9 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       questionCount = blueprint.questionCount;
       durationSeconds = blueprint.durationSeconds;
       criteria = { ...(blueprint.criteria as ExamCriteria), language };
+      const parsedScoring = parseScoringRules(blueprint.scoringRules);
+      if (!parsedScoring) return reply.code(409).send({ error: "scoring_rules_required" });
+      scoringRules = parsedScoring;
       blueprintId = blueprint.id;
       title = blueprint.name;
     } else {
@@ -104,6 +109,7 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       }
 
       criteria = { ...criteriaFromBody(request.body), language };
+      scoringRules = PRACTICE_SCORING_RULES;
 
       if (requestedMode === "subject" && !criteria.subjectIds?.length) return reply.code(400).send({ error: "subject_required" });
       if (requestedMode === "book" && !criteria.bookIds?.length) return reply.code(400).send({ error: "book_required" });
@@ -119,6 +125,7 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
       durationSeconds,
       blueprintId,
       criteria,
+      scoringRules,
       userId: auth.user.userId
     });
 

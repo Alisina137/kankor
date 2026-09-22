@@ -18,6 +18,49 @@ export type ExamCriteria = ExamFilter & {
   }>;
 };
 
+export type ScoringRules = {
+  mode: "question_marks";
+  correctMultiplier: number;
+  incorrectMultiplier: number;
+  unansweredMultiplier: number;
+  floorAtZero: boolean;
+};
+
+export const PRACTICE_SCORING_RULES: ScoringRules = {
+  mode: "question_marks",
+  correctMultiplier: 1,
+  incorrectMultiplier: 0,
+  unansweredMultiplier: 0,
+  floorAtZero: false
+};
+
+export function parseScoringRules(value: unknown): ScoringRules | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+
+  const correctMultiplier = Number(raw.correctMultiplier);
+  const incorrectMultiplier = Number(raw.incorrectMultiplier);
+  const unansweredMultiplier = Number(raw.unansweredMultiplier);
+
+  if (
+    raw.mode !== "question_marks"
+    || !Number.isFinite(correctMultiplier)
+    || correctMultiplier <= 0
+    || !Number.isFinite(incorrectMultiplier)
+    || !Number.isFinite(unansweredMultiplier)
+  ) {
+    return null;
+  }
+
+  return {
+    mode: "question_marks",
+    correctMultiplier,
+    incorrectMultiplier,
+    unansweredMultiplier,
+    floorAtZero: Boolean(raw.floorAtZero)
+  };
+}
+
 export type GenerateExamInput = {
   mode: string;
   title: string;
@@ -26,6 +69,7 @@ export type GenerateExamInput = {
   durationSeconds: number | null;
   blueprintId?: string | null;
   criteria: ExamCriteria;
+  scoringRules: ScoringRules;
   userId: string;
 };
 
@@ -65,6 +109,9 @@ export async function selectPublishedQuestions(criteria: ExamFilter, count: numb
     content: schema.questions.content,
     choices: schema.questions.choices,
     correctChoice: schema.questions.correctChoice,
+    shortExplanation: schema.questions.shortExplanation,
+    detailedExplanation: schema.questions.detailedExplanation,
+    workedSolution: schema.questions.workedSolution,
     marks: schema.questions.marks,
     difficulty: schema.questions.difficulty,
     language: schema.questions.language,
@@ -173,6 +220,7 @@ export async function createGeneratedExam(input: GenerateExamInput) {
     questionCount: input.questionCount,
     durationSeconds: input.durationSeconds,
     criteriaSnapshot: input.criteria,
+    scoringSnapshot: input.scoringRules,
     createdByUserId: input.userId
   }).returning({ id: schema.exams.id });
 
@@ -186,6 +234,11 @@ export async function createGeneratedExam(input: GenerateExamInput) {
       choicesSnapshot: question.choices,
       correctChoiceSnapshot: question.correctChoice,
       marksSnapshot: question.marks,
+      explanationSnapshot: {
+        shortExplanation: question.shortExplanation,
+        detailedExplanation: question.detailedExplanation,
+        workedSolution: question.workedSolution
+      },
       curriculumSnapshot: {
         difficulty: question.difficulty,
         language: question.language,
@@ -238,7 +291,8 @@ export async function getOwnedAttempt(attemptId: string, userId: string) {
     examMode: schema.exams.mode,
     questionCount: schema.exams.questionCount,
     durationSeconds: schema.exams.durationSeconds,
-    language: schema.exams.language
+    language: schema.exams.language,
+    scoringSnapshot: schema.exams.scoringSnapshot
   })
     .from(schema.examAttempts)
     .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))

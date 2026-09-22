@@ -1,6 +1,6 @@
 {
   "name": "kankorprep",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -23,7 +23,8 @@
     "db:seed:test-questions": "npm --workspace @kankor/database run db:seed:test-questions",
     "db:setup:test-content": "npm run db:migrate && npm run db:seed:test-questions",
     "verify:grade10-test-content": "node scripts/verify-grade10-test-content.mjs",
-    "verify:phase6": "node scripts/verify-phase6.mjs"
+    "verify:phase6": "node scripts/verify-phase6.mjs",
+    "verify:phase7": "node scripts/verify-phase7.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

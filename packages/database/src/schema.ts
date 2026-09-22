@@ -257,7 +257,7 @@ export const examQuestions = pgTable("exam_questions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
   examOrderUnique: uniqueIndex("exam_questions_exam_order_unique").on(table.examId, table.order),
-  examQuestionUnique: uniqueIndex("exam_questions_exam_question_unique").on(table.examId, table.questionId),
+  examQuestionIdx: index("exam_questions_exam_question_idx").on(table.examId, table.questionId),
   examIdx: index("exam_questions_exam_idx").on(table.examId)
 }));
 

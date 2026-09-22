@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
 import { apiRequest, ApiError } from "../../lib/api";
+import { getActivePersistedExam } from "../../lib/exam-storage";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
@@ -96,6 +97,17 @@ export default function ExamsScreen() {
     if (!token) return;
     setLoading(true);
     setError("");
+
+    const local = await getActivePersistedExam();
+    if (local?.payload.attempt.status === "in_progress") {
+      setActiveAttempt({
+        id: local.payload.attempt.id,
+        title: local.payload.attempt.title,
+        questionCount: local.payload.attempt.questionCount,
+        summary: local.payload.attempt.summary
+      });
+    }
+
     try {
       const [blueprintResult, attemptResult] = await Promise.all([
         apiRequest<{ blueprint: Blueprint | null }>("/exams/active-blueprint", {}, token),
@@ -104,7 +116,7 @@ export default function ExamsScreen() {
       setBlueprint(blueprintResult.blueprint);
       setActiveAttempt(attemptResult.attempt);
     } catch {
-      setError(text.error);
+      if (!local) setError(text.error);
     } finally {
       setLoading(false);
     }

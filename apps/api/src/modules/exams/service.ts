@@ -133,7 +133,7 @@ async function selectFromCriteria(criteria: ExamCriteria, questionCount: number)
 }
 
 export async function createGeneratedExam(input: GenerateExamInput) {
-  let selected;
+  let selected: Awaited<ReturnType<typeof selectPublishedQuestions>>;
   try {
     selected = await selectFromCriteria(input.criteria, input.questionCount);
   } catch (error) {

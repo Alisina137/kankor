@@ -67,6 +67,14 @@ for (const marker of [
 ]) {
   if (!routes.includes(marker)) throw new Error(`Billing API capability missing: ${marker}`);
 }
+if (!routes.includes('process.env.NODE_ENV === "production"')) {
+  throw new Error("Simulated checkout must be disabled in production");
+}
+
+const examRoutes = await readFile(resolve("apps/api/src/modules/exams/routes.ts"), "utf8");
+if (!examRoutes.includes("authorizeExamStart")) {
+  throw new Error("Exam generation must preflight entitlements");
+}
 
 const attempts = await readFile(resolve("apps/api/src/modules/attempts/routes.ts"), "utf8");
 if (!attempts.includes("authorizeExamStart") || !attempts.includes("recordExamStart")) {

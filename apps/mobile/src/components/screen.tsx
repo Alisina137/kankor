@@ -1,20 +1,51 @@
 import { theme } from "@kankor/config";
 import type { PropsWithChildren } from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { useLocale } from "../providers/locale-provider";
 
-export function Screen({ children }: PropsWithChildren) {
+type ScreenProps = PropsWithChildren<{
+  scroll?: boolean;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+}>;
+
+export function Screen({ children, scroll = false, contentContainerStyle }: ScreenProps) {
   const { direction } = useLocale();
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={[styles.container, { direction }]}>{children}</View>
+      {scroll ? (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { direction }, contentContainerStyle]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[styles.container, { direction }, contentContainerStyle]}>
+          {children}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: theme.colors.background },
+  safe: {
+    flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  scroll: {
+    flex: 1
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md
+  },
   container: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,

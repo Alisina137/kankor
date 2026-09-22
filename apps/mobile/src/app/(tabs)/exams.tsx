@@ -16,6 +16,22 @@ type Blueprint = {
   effectiveYear: number | null;
   questionCount: number;
   durationSeconds: number | null;
+  scoringConfigured?: boolean;
+};
+
+type CompletedAttempt = {
+  attemptId: string;
+  title: string;
+  mode: string;
+  questionCount: number;
+  score: number;
+  maxScore: number;
+  percentage: number;
+  correct: number;
+  incorrect: number;
+  unanswered: number;
+  totalTimeSeconds: number;
+  submittedAt: string | null;
 };
 
 type ActiveAttemptResponse = {
@@ -41,7 +57,11 @@ const copy = {
     answered: "پاسخ داده",
     noBlueprint: "هنوز طرح فعال کانکور تنظیم نشده است. مدیر محتوا باید یک طرح فعال ایجاد کند.",
     insufficient: "برای این امتحان هنوز سوالات منتشرشده کافی نیست.",
-    error: "امتحان شروع نشد. دوباره تلاش کنید."
+    error: "امتحان شروع نشد. دوباره تلاش کنید.",
+    scoring: "قواعد امتیازدهی این طرح هنوز تنظیم نشده است.",
+    history: "امتحانات تکمیل‌شده",
+    noHistory: "هنوز امتحان تکمیل‌شده ندارید.",
+    viewResult: "مشاهده نتیجه"
   },
   ps: {
     title: "ازموینې",
@@ -56,7 +76,11 @@ const copy = {
     answered: "ځواب شوي",
     noBlueprint: "تر اوسه فعال کانکور پلان نه دی جوړ شوی. د محتوا مدیر باید فعال پلان جوړ کړي.",
     insufficient: "د دې ازموینې لپاره کافي خپرې شوې پوښتنې نشته.",
-    error: "ازموینه پیل نه شوه. بیا هڅه وکړئ."
+    error: "ازموینه پیل نه شوه. بیا هڅه وکړئ.",
+    scoring: "د دې پلان د نمرې قواعد لا نه دي تنظیم شوي.",
+    history: "بشپړې شوې ازموینې",
+    noHistory: "تراوسه مو بشپړه ازموینه نه ده کړې.",
+    viewResult: "پایله وګورئ"
   },
   en: {
     title: "Exams",
@@ -71,7 +95,11 @@ const copy = {
     answered: "answered",
     noBlueprint: "No active Kankor blueprint is configured yet. A content admin must create and activate one.",
     insufficient: "There are not enough published questions for this exam yet.",
-    error: "The exam could not be started. Try again."
+    error: "The exam could not be started. Try again.",
+    scoring: "Scoring rules are not configured for this blueprint yet.",
+    history: "Completed exams",
+    noHistory: "You have not completed an exam yet.",
+    viewResult: "View result"
   }
 } as const;
 
@@ -89,6 +117,7 @@ export default function ExamsScreen() {
 
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [activeAttempt, setActiveAttempt] = useState<ActiveAttemptResponse["attempt"]>(null);
+  const [completed, setCompleted] = useState<CompletedAttempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
@@ -109,12 +138,14 @@ export default function ExamsScreen() {
     }
 
     try {
-      const [blueprintResult, attemptResult] = await Promise.all([
+      const [blueprintResult, attemptResult, completedResult] = await Promise.all([
         apiRequest<{ blueprint: Blueprint | null }>("/exams/active-blueprint", {}, token),
-        apiRequest<ActiveAttemptResponse>("/attempts/active", {}, token)
+        apiRequest<ActiveAttemptResponse>("/attempts/active", {}, token),
+        apiRequest<{ items: CompletedAttempt[] }>("/attempts/completed", {}, token)
       ]);
       setBlueprint(blueprintResult.blueprint);
       setActiveAttempt(attemptResult.attempt);
+      setCompleted(completedResult.items);
     } catch {
       if (!local) setError(text.error);
     } finally {
@@ -145,7 +176,7 @@ export default function ExamsScreen() {
       router.push(`/exam/${started.attempt.id}`);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
-      setError(code === "insufficient_question_pool" ? text.insufficient : code === "active_blueprint_required" ? text.noBlueprint : text.error);
+      setError(code === "insufficient_question_pool" ? text.insufficient : code === "active_blueprint_required" ? text.noBlueprint : code === "scoring_rules_required" ? text.scoring : text.error);
     } finally {
       setStarting(false);
     }
@@ -196,6 +227,27 @@ export default function ExamsScreen() {
             ) : null}
           </View>
         </View>
+
+        <View style={styles.historySection}>
+          <Text style={[styles.cardTitle, { textAlign: align }]}>{text.history}</Text>
+          {completed.length ? completed.map((item) => (
+            <Pressable
+              key={item.attemptId}
+              style={styles.historyCard}
+              onPress={() => router.push(`/result/${item.attemptId}`)}
+            >
+              <View style={styles.historyCopy}>
+                <Text style={[styles.historyTitle, { textAlign: align }]}>{item.title}</Text>
+                <Text style={[styles.meta, { textAlign: align }]}>
+                  {item.score} / {item.maxScore} · {item.percentage.toFixed(1)}%
+                </Text>
+              </View>
+              <Text style={styles.resultLink}>{text.viewResult}</Text>
+            </Pressable>
+          )) : (
+            <Text style={[styles.body, { textAlign: align }]}>{text.noHistory}</Text>
+          )}
+        </View>
       </View>
     </Screen>
   );
@@ -215,5 +267,10 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
   warning: { color: theme.colors.warning, lineHeight: 23 },
   error: { color: theme.colors.danger },
-  disabled: { opacity: 0.5 }
+  disabled: { opacity: 0.5 },
+  historySection: { gap: theme.spacing.sm },
+  historyCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.surface },
+  historyCopy: { flex: 1, gap: 4 },
+  historyTitle: { color: theme.colors.text, fontWeight: "700" },
+  resultLink: { color: theme.colors.primary, fontWeight: "800" }
 });

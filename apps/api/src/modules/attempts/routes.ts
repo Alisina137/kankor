@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { getOwnedAttempt } from "../exams/service.js";
+import { scoreAttempt } from "../results/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 const CHOICES = new Set(["A", "B", "C", "D"]);
@@ -127,7 +128,8 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
         mode: exam.mode,
         questionCount: exam.questionCount,
         durationSeconds: exam.durationSeconds,
-        criteria: exam.criteriaSnapshot
+        criteria: exam.criteriaSnapshot,
+        scoring: exam.scoringSnapshot
       }
     }).returning({ id: schema.examAttempts.id });
 
@@ -300,8 +302,16 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
       const db = createDatabase();
 
       if (["submitted", "scored", "analyzed"].includes(attempt.status)) {
-        const payload = await attemptPayload(attempt.id, auth.user.userId);
-        return { ...payload, alreadySubmitted: true };
+        try {
+          const scored = await scoreAttempt(attempt.id, auth.user.userId);
+          const payload = await attemptPayload(attempt.id, auth.user.userId);
+          return { ...payload, ...scored, alreadySubmitted: true };
+        } catch (error) {
+          if (error instanceof Error && error.message === "scoring_configuration_missing") {
+            return reply.code(409).send({ error: "scoring_configuration_missing" });
+          }
+          throw error;
+        }
       }
 
       if (!["created", "in_progress"].includes(attempt.status)) {
@@ -334,12 +344,21 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
         updatedAt: submittedAt
       }).where(eq(schema.examAttempts.id, attempt.id));
 
-      const payload = await attemptPayload(attempt.id, auth.user.userId);
+      try {
+        const scored = await scoreAttempt(attempt.id, auth.user.userId);
+        const payload = await attemptPayload(attempt.id, auth.user.userId);
 
-      return {
-        ...payload,
-        alreadySubmitted: false
-      };
+        return {
+          ...payload,
+          ...scored,
+          alreadySubmitted: false
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message === "scoring_configuration_missing") {
+          return reply.code(409).send({ error: "scoring_configuration_missing" });
+        }
+        throw error;
+      }
     }
   );
 };

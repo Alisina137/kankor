@@ -6,6 +6,7 @@ import { curriculumRoutes } from "./modules/curriculum/index.js";
 import { questionRoutes } from "./modules/questions/index.js";
 import { examRoutes } from "./modules/exams/index.js";
 import { attemptRoutes } from "./modules/attempts/index.js";
+import { resultRoutes } from "./modules/results/index.js";
 import {
   adminCurriculumRoutes,
   adminQuestionRoutes,
@@ -32,13 +33,13 @@ export async function buildApp() {
   app.get("/health", async () => ({
     status: "ok",
     service: "kankor-api",
-    phase: 4
+    phase: 5
   }));
 
   app.get("/api/v1", async () => ({
     name: "KankorPrep API",
     version: "v1",
-    status: "examination-engine"
+    status: "scoring-results-review"
   }));
 
   await app.register(authRoutes, { prefix: "/api/v1/auth" });
@@ -46,6 +47,7 @@ export async function buildApp() {
   await app.register(questionRoutes, { prefix: "/api/v1" });
   await app.register(examRoutes, { prefix: "/api/v1" });
   await app.register(attemptRoutes, { prefix: "/api/v1" });
+  await app.register(resultRoutes, { prefix: "/api/v1" });
   await app.register(adminCurriculumRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminQuestionRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminExamBlueprintRoutes, { prefix: "/api/v1/admin" });

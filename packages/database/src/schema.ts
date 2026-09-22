@@ -166,6 +166,7 @@ export const examBlueprints = pgTable("exam_blueprints", {
   questionCount: integer("question_count").notNull(),
   durationSeconds: integer("duration_seconds"),
   criteria: jsonb("criteria").$type<Record<string, unknown>>().notNull().default({}),
+  scoringRules: jsonb("scoring_rules").$type<Record<string, unknown>>(),
   active: boolean("active").notNull().default(false),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
@@ -185,6 +186,7 @@ export const exams = pgTable("exams", {
   questionCount: integer("question_count").notNull(),
   durationSeconds: integer("duration_seconds"),
   criteriaSnapshot: jsonb("criteria_snapshot").$type<Record<string, unknown>>().notNull().default({}),
+  scoringSnapshot: jsonb("scoring_snapshot").$type<Record<string, unknown>>(),
   createdByUserId: uuid("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
@@ -202,6 +204,11 @@ export const examQuestions = pgTable("exam_questions", {
   choicesSnapshot: jsonb("choices_snapshot").$type<Array<{ key: "A" | "B" | "C" | "D"; text: string }>>().notNull(),
   correctChoiceSnapshot: varchar("correct_choice_snapshot", { length: 1 }).notNull(),
   marksSnapshot: numeric("marks_snapshot", { precision: 8, scale: 2 }).notNull(),
+  explanationSnapshot: jsonb("explanation_snapshot").$type<{
+    shortExplanation: string | null;
+    detailedExplanation: string | null;
+    workedSolution: string | null;
+  }>().notNull().default({ shortExplanation: null, detailedExplanation: null, workedSolution: null }),
   curriculumSnapshot: jsonb("curriculum_snapshot").$type<Record<string, unknown>>().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
@@ -237,8 +244,46 @@ export const attemptAnswers = pgTable("attempt_answers", {
   flagged: boolean("flagged").notNull().default(false),
   timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
   clientRevision: integer("client_revision").notNull().default(0),
+  correct: boolean("correct"),
+  awardedScore: numeric("awarded_score", { precision: 12, scale: 4 }),
   savedAt: timestamp("saved_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
   attemptQuestionUnique: uniqueIndex("attempt_answers_attempt_question_unique").on(table.attemptId, table.examQuestionId),
   attemptIdx: index("attempt_answers_attempt_idx").on(table.attemptId)
+}));
+
+
+export const attemptResults = pgTable("attempt_results", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  attemptId: uuid("attempt_id").notNull().references(() => examAttempts.id, { onDelete: "cascade" }).unique(),
+  score: numeric("score", { precision: 12, scale: 4 }).notNull(),
+  maxScore: numeric("max_score", { precision: 12, scale: 4 }).notNull(),
+  percentage: numeric("percentage", { precision: 8, scale: 4 }).notNull(),
+  correctCount: integer("correct_count").notNull(),
+  incorrectCount: integer("incorrect_count").notNull(),
+  unansweredCount: integer("unanswered_count").notNull(),
+  totalTimeSeconds: integer("total_time_seconds").notNull(),
+  scoringSnapshot: jsonb("scoring_snapshot").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  attemptIdx: uniqueIndex("attempt_results_attempt_unique").on(table.attemptId)
+}));
+
+export const attemptAnalyses = pgTable("attempt_analyses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  attemptId: uuid("attempt_id").notNull().references(() => examAttempts.id, { onDelete: "cascade" }).unique(),
+  overall: jsonb("overall").$type<Record<string, unknown>>().notNull(),
+  bySubject: jsonb("by_subject").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  byGrade: jsonb("by_grade").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  byBook: jsonb("by_book").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  byChapter: jsonb("by_chapter").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  byTopic: jsonb("by_topic").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  byDifficulty: jsonb("by_difficulty").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  timing: jsonb("timing").$type<Record<string, unknown>>().notNull().default({}),
+  strongestAreas: jsonb("strongest_areas").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  weakestAreas: jsonb("weakest_areas").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  recommendation: jsonb("recommendation").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  attemptIdx: uniqueIndex("attempt_analyses_attempt_unique").on(table.attemptId)
 }));

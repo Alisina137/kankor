@@ -353,6 +353,7 @@ export default function ExamSessionScreen() {
       await removePersistedExam(attemptId);
       setSubmitted(true);
       setOffline(false);
+      router.replace(`/result/${attemptId}`);
     } catch {
       setOffline(true);
     } finally {

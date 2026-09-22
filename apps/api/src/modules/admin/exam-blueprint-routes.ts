@@ -2,6 +2,7 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireAdmin } from "../../common/admin-auth.js";
+import { parseScoringRules } from "../exams/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 
@@ -39,6 +40,7 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
     const durationSeconds = optionalPositiveInt(request.body.durationSeconds);
     const effectiveYear = optionalPositiveInt(request.body.effectiveYear);
     const active = Boolean(request.body.active);
+    const scoringRules = parseScoringRules(request.body.scoringRules);
 
     if (!code || !name || !Number.isInteger(questionCount) || questionCount < 1 || questionCount > 160) {
       return reply.code(400).send({ error: "invalid_exam_blueprint" });
@@ -46,6 +48,7 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
     if (request.body.durationSeconds != null && durationSeconds == null) {
       return reply.code(400).send({ error: "invalid_duration" });
     }
+    if (!scoringRules) return reply.code(400).send({ error: "invalid_scoring_rules" });
 
     const db = createDatabase();
     if (active) {
@@ -62,6 +65,7 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
       questionCount,
       durationSeconds,
       criteria: criteriaValue(request.body.criteria),
+      scoringRules,
       active,
       createdBy: admin.user.userId,
       updatedBy: admin.user.userId
@@ -103,11 +107,20 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
       values.durationSeconds = duration;
     }
     if ("criteria" in request.body) values.criteria = criteriaValue(request.body.criteria);
+    if ("scoringRules" in request.body) {
+      const scoringRules = parseScoringRules(request.body.scoringRules);
+      if (!scoringRules) return reply.code(400).send({ error: "invalid_scoring_rules" });
+      values.scoringRules = scoringRules;
+    }
 
     if ("active" in request.body) {
       const active = Boolean(request.body.active);
       values.active = active;
       if (active) {
+        const effectiveScoring = "scoringRules" in request.body
+          ? parseScoringRules(request.body.scoringRules)
+          : parseScoringRules(rows[0].scoringRules);
+        if (!effectiveScoring) return reply.code(400).send({ error: "scoring_rules_required" });
         await db.update(schema.examBlueprints)
           .set({ active: false, updatedAt: new Date() })
           .where(eq(schema.examBlueprints.mode, "full_kankor"));

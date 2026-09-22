@@ -53,7 +53,10 @@ export default function AdminHome() {
     const saved = sessionStorage.getItem("kankor-admin-token") ?? "";
     if (saved) {
       setToken(saved);
-      void refresh(saved).catch(() => sessionStorage.removeItem("kankor-admin-token"));
+      void refresh(saved).catch(() => {
+        sessionStorage.removeItem("kankor-admin-token");
+        setToken("");
+      });
     }
   }, [refresh]);
 
@@ -71,6 +74,10 @@ export default function AdminHome() {
       await refresh(result.token);
       setStatus("ورود موفق بود.");
     } catch (error) {
+      sessionStorage.removeItem("kankor-admin-token");
+      setToken("");
+      setCurriculum({ grades: [], subjects: [], books: [], chapters: [], topics: [] });
+      setQuestions([]);
       setStatus(error instanceof Error && error.message === "admin_required"
         ? "این حساب دسترسی مدیریت محتوا ندارد."
         : "ورود یا اتصال به API ناموفق بود.");

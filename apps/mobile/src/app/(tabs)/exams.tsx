@@ -185,7 +185,11 @@ export default function ExamsScreen() {
       router.push(`/exam/${started.attempt.id}`);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
-      setError(code === "insufficient_question_pool" ? text.insufficient : code === "active_blueprint_required" ? text.noBlueprint : code === "scoring_rules_required" ? text.scoring : text.error);
+      if (code === "premium_required") {
+        router.push("/premium");
+      } else {
+        setError(code === "insufficient_question_pool" ? text.insufficient : code === "active_blueprint_required" ? text.noBlueprint : code === "scoring_rules_required" ? text.scoring : text.error);
+      }
     } finally {
       setStarting(false);
     }

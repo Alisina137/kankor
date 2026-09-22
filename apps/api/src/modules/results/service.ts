@@ -187,12 +187,24 @@ export async function scoreAttempt(attemptId: string, userId: string) {
 
   for (const item of scored) {
     const answer = answerMap.get(item.examQuestionId);
-    if (!answer) continue;
 
-    await db.update(schema.attemptAnswers).set({
-      correct: item.correct,
-      awardedScore: String(round(item.awardedScore))
-    }).where(eq(schema.attemptAnswers.id, answer.id));
+    if (answer) {
+      await db.update(schema.attemptAnswers).set({
+        correct: item.correct,
+        awardedScore: String(round(item.awardedScore))
+      }).where(eq(schema.attemptAnswers.id, answer.id));
+    } else {
+      await db.insert(schema.attemptAnswers).values({
+        attemptId: attempt.id,
+        examQuestionId: item.examQuestionId,
+        selectedChoice: null,
+        flagged: false,
+        timeSpentSeconds: 0,
+        clientRevision: 0,
+        correct: null,
+        awardedScore: String(round(item.awardedScore))
+      }).onConflictDoNothing();
+    }
   }
 
   const rawScore = scored.reduce((sum, item) => sum + item.awardedScore, 0);

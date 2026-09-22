@@ -137,7 +137,7 @@ export default function AdminHome() {
           <h1>مدیریت نصاب و سوالات</h1>
           <p>مرحله ۳ — ساختار Subject → Grade → Book → Chapter → Topic → Question</p>
         </div>
-        <button className="secondary" onClick={logout}>خروج</button>
+        <div className="inline-actions"><a href="/exams">طرح امتحان</a><button className="secondary" onClick={logout}>خروج</button></div>
       </header>
 
       {status ? <div className="notice">{status}</div> : null}

@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS "payment_transactions" (
   "subscription_id" uuid REFERENCES "subscriptions"("id") ON DELETE SET NULL,
   "provider" varchar(32) NOT NULL,
   "provider_payment_id" varchar(180) NOT NULL UNIQUE,
+  "idempotency_key" varchar(160),
   "status" varchar(24) NOT NULL DEFAULT 'pending',
   "amount_afn" integer NOT NULL,
   "provider_payload" jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS "payment_transactions" (
   CONSTRAINT "payment_transactions_amount_check" CHECK ("amount_afn" >= 0)
 );
 CREATE INDEX IF NOT EXISTS "payment_transactions_user_idx" ON "payment_transactions" ("user_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "payment_transactions_user_idempotency_unique" ON "payment_transactions" ("user_id", "idempotency_key");
 CREATE INDEX IF NOT EXISTS "payment_transactions_status_idx" ON "payment_transactions" ("status");
 
 CREATE TABLE IF NOT EXISTS "entitlement_usage" (

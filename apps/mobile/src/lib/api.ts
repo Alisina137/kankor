@@ -38,7 +38,11 @@ export async function apiRequest<T>(
   token?: string | null
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+
+  if (options.body != null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   let response: Response;
@@ -52,7 +56,14 @@ export async function apiRequest<T>(
 
   const body = await response.json().catch(() => ({})) as Record<string, unknown>;
   if (!response.ok) {
-    throw new ApiError(typeof body.error === "string" ? body.error : "request_failed", response.status);
+    const code =
+      typeof body.error === "string"
+        ? body.error
+        : typeof body.message === "string"
+          ? body.message
+          : "request_failed";
+
+    throw new ApiError(code, response.status);
   }
 
   return body as T;

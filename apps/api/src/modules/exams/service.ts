@@ -35,7 +35,14 @@ function nonEmpty(values?: string[]) {
 
 export async function selectPublishedQuestions(criteria: ExamFilter, count: number) {
   const db = createDatabase();
-  const conditions = [eq(schema.questions.verificationStatus, "published")];
+  const conditions = [
+    eq(schema.questions.verificationStatus, "published"),
+    eq(schema.subjects.active, true),
+    eq(schema.grades.active, true),
+    eq(schema.books.active, true),
+    eq(schema.chapters.active, true),
+    eq(schema.topics.active, true)
+  ];
 
   const subjectIds = nonEmpty(criteria.subjectIds);
   const gradeIds = nonEmpty(criteria.gradeIds);

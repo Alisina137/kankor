@@ -1,12 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
 import { parseScoringRules, PRACTICE_SCORING_RULES } from "./service.js";
-
-function optionalString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
-}
 
 export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
   app.get<{ Querystring: { year?: string; province?: string; round?: string; language?: string } }>("/exams/history", async (request, reply) => {

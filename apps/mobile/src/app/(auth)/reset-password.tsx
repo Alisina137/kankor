@@ -36,7 +36,7 @@ export default function ResetPasswordScreen() {
       <View style={styles.stack}>
         <Text style={[styles.title, { textAlign: align }]}>{text.resetTitle}</Text>
         <FormField label={text.resetToken} value={token} onChangeText={setToken} />
-        <FormField label={text.newPassword} value={password} onChangeText={setPassword} secureTextEntry />
+        <FormField label={text.newPassword} value={password} onChangeText={setPassword} secureTextEntry secureToggle />
         {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
         <AppButton label={text.resetPassword} loading={busy} onPress={submit} />
       </View>

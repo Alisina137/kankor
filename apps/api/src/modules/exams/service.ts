@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 
-export type ExamCriteria = {
+export type ExamFilter = {
   subjectIds?: string[];
   gradeIds?: string[];
   bookIds?: string[];
@@ -9,6 +9,13 @@ export type ExamCriteria = {
   topicIds?: string[];
   difficulties?: string[];
   language?: string;
+};
+
+export type ExamCriteria = ExamFilter & {
+  distribution?: Array<{
+    count: number;
+    filter: ExamFilter;
+  }>;
 };
 
 export type GenerateExamInput = {
@@ -26,7 +33,7 @@ function nonEmpty(values?: string[]) {
   return Array.isArray(values) ? values.filter(Boolean) : [];
 }
 
-export async function selectPublishedQuestions(criteria: ExamCriteria, count: number) {
+export async function selectPublishedQuestions(criteria: ExamFilter, count: number) {
   const db = createDatabase();
   const conditions = [eq(schema.questions.verificationStatus, "published")];
 
@@ -82,8 +89,64 @@ export async function selectPublishedQuestions(criteria: ExamCriteria, count: nu
     .limit(count);
 }
 
+async function selectFromCriteria(criteria: ExamCriteria, questionCount: number) {
+  const distribution = Array.isArray(criteria.distribution) ? criteria.distribution : [];
+
+  if (!distribution.length) {
+    return selectPublishedQuestions(criteria, questionCount);
+  }
+
+  const total = distribution.reduce((sum, segment) => sum + Number(segment.count || 0), 0);
+  if (total !== questionCount || distribution.some((segment) => !Number.isInteger(segment.count) || segment.count < 1)) {
+    throw new Error("invalid_blueprint_distribution");
+  }
+
+  const selected: Awaited<ReturnType<typeof selectPublishedQuestions>> = [];
+  const used = new Set<string>();
+  const base: ExamFilter = {
+    subjectIds: criteria.subjectIds,
+    gradeIds: criteria.gradeIds,
+    bookIds: criteria.bookIds,
+    chapterIds: criteria.chapterIds,
+    topicIds: criteria.topicIds,
+    difficulties: criteria.difficulties,
+    language: criteria.language
+  };
+
+  for (const segment of distribution) {
+    const pool = await selectPublishedQuestions({
+      ...base,
+      ...segment.filter,
+      language: segment.filter.language ?? base.language
+    }, Math.min(160, segment.count + used.size));
+
+    const unique = pool.filter((question) => !used.has(question.id)).slice(0, segment.count);
+    if (unique.length < segment.count) return selected;
+
+    for (const question of unique) {
+      used.add(question.id);
+      selected.push(question);
+    }
+  }
+
+  return selected;
+}
+
 export async function createGeneratedExam(input: GenerateExamInput) {
-  const selected = await selectPublishedQuestions(input.criteria, input.questionCount);
+  let selected;
+  try {
+    selected = await selectFromCriteria(input.criteria, input.questionCount);
+  } catch (error) {
+    if (error instanceof Error && error.message === "invalid_blueprint_distribution") {
+      return {
+        ok: false as const,
+        error: "invalid_blueprint_distribution",
+        requested: input.questionCount,
+        available: 0
+      };
+    }
+    throw error;
+  }
 
   if (selected.length < input.questionCount) {
     return {

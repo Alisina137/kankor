@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { authRoutes } from "./modules/auth/index.js";
 import { curriculumRoutes } from "./modules/curriculum/index.js";
@@ -7,6 +8,14 @@ import { adminCurriculumRoutes, adminQuestionRoutes } from "./modules/admin/inde
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
+
+  await app.register(cors, {
+    origin: (process.env.ADMIN_WEB_ORIGIN ?? "http://localhost:3000")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+  });
 
   await app.register(rateLimit, {
     global: true,

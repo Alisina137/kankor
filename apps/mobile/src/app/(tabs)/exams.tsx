@@ -61,7 +61,10 @@ const copy = {
     scoring: "قواعد امتیازدهی این طرح هنوز تنظیم نشده است.",
     history: "امتحانات تکمیل‌شده",
     noHistory: "هنوز امتحان تکمیل‌شده ندارید.",
-    viewResult: "مشاهده نتیجه"
+    viewResult: "مشاهده نتیجه",
+    historical: "فورم‌های تاریخی",
+    historicalBody: "کانکورهای گذشته را با هویت و ترتیب اصلی حفظ‌شده انجام دهید.",
+    browseHistorical: "مشاهده آرشیف تاریخی"
   },
   ps: {
     title: "ازموینې",
@@ -80,7 +83,10 @@ const copy = {
     scoring: "د دې پلان د نمرې قواعد لا نه دي تنظیم شوي.",
     history: "بشپړې شوې ازموینې",
     noHistory: "تراوسه مو بشپړه ازموینه نه ده کړې.",
-    viewResult: "پایله وګورئ"
+    viewResult: "پایله وګورئ",
+    historical: "تاریخي فورمې",
+    historicalBody: "پخوانۍ کانکور فورمې د خوندي شوي هویت او اصلي ترتیب سره ترسره کړئ.",
+    browseHistorical: "تاریخي آرشیف وګورئ"
   },
   en: {
     title: "Exams",
@@ -99,7 +105,10 @@ const copy = {
     scoring: "Scoring rules are not configured for this blueprint yet.",
     history: "Completed exams",
     noHistory: "You have not completed an exam yet.",
-    viewResult: "View result"
+    viewResult: "View result",
+    historical: "Historical forms",
+    historicalBody: "Take past Kankor forms with preserved identity and original ordering.",
+    browseHistorical: "Browse historical archive"
   }
 } as const;
 
@@ -225,6 +234,17 @@ export default function ExamsScreen() {
             ) : !loading ? (
               <Text style={[styles.warning, { textAlign: align }]}>{text.noBlueprint}</Text>
             ) : null}
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.iconWrap}><Ionicons name="archive-outline" size={26} color={theme.colors.primary} /></View>
+          <View style={styles.cardBody}>
+            <Text style={[styles.cardTitle, { textAlign: align }]}>{text.historical}</Text>
+            <Text style={[styles.body, { textAlign: align }]}>{text.historicalBody}</Text>
+            <Pressable style={styles.primaryButton} onPress={() => router.push("/historical")}>
+              <Text style={styles.primaryButtonText}>{text.browseHistorical}</Text>
+            </Pressable>
           </View>
         </View>
 

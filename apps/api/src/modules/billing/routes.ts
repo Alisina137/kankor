@@ -43,7 +43,7 @@ export const billingRoutes: FastifyPluginAsync = async (app) => {
     const provider = stringValue(request.body?.provider) || "simulated";
     const idempotencyKey = stringValue(request.body?.idempotencyKey);
     if (!planId || !idempotencyKey) return reply.code(400).send({ error: "plan_and_idempotency_required" });
-    if (provider !== "simulated") return reply.code(400).send({ error: "provider_not_configured" });
+    if (provider !== "simulated" || process.env.NODE_ENV === "production") return reply.code(400).send({ error: "provider_not_configured" });
 
     const state = await getEntitlementState(auth.user.userId);
     if (state.tier === "premium") {

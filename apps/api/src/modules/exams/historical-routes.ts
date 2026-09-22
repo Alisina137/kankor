@@ -105,6 +105,8 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
       shortExplanation: schema.questions.shortExplanation,
       detailedExplanation: schema.questions.detailedExplanation,
       workedSolution: schema.questions.workedSolution,
+      questionSourceType: schema.questions.sourceType,
+      questionSourceMetadata: schema.questions.sourceMetadata,
       marks: schema.questions.marks,
       difficulty: schema.questions.difficulty,
       language: schema.questions.language,
@@ -189,6 +191,8 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
         historical: {
           ...provenance,
           relationSourceMetadata: question.relationSource,
+          questionSourceType: question.questionSourceType,
+          questionSourceMetadata: question.questionSourceMetadata,
           historicalScoringMetadata: question.historicalScoring
         },
         subject: { id: question.subjectId, code: question.subjectCode, nameFa: question.subjectFa, namePs: question.subjectPs },

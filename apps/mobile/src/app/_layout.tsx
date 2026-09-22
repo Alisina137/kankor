@@ -14,6 +14,7 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="historical" />
+          <Stack.Screen name="mistakes" />
           <Stack.Screen name="exam/[attemptId]" />
           <Stack.Screen name="result/[attemptId]" />
           <Stack.Screen name="review/[attemptId]" />

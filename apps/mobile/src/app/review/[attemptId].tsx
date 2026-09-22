@@ -29,7 +29,7 @@ type ReviewItem = {
     grade?: { number?: number };
     book?: { titleFa?: string; titlePs?: string };
     chapter?: { number?: number; titleFa?: string; titlePs?: string };
-    topic?: { titleFa?: string; titlePs?: string };
+    topic?: { id?: string; titleFa?: string; titlePs?: string };
     difficulty?: string;
   };
 };
@@ -58,7 +58,8 @@ const copy = {
     notAnswered: "پاسخ داده نشده",
     flaggedLabel: "علامت‌گذاری شده",
     correctLabel: "صحیح",
-    incorrectLabel: "غلط"
+    incorrectLabel: "غلط",
+    practiceTopic: "تمرین این موضوع"
   },
   ps: {
     title: "د پوښتنو بیاکتنه",
@@ -81,7 +82,8 @@ const copy = {
     notAnswered: "ځواب نه دی ورکړل شوی",
     flaggedLabel: "نښه شوې",
     correctLabel: "سم",
-    incorrectLabel: "ناسم"
+    incorrectLabel: "ناسم",
+    practiceTopic: "دا موضوع تمرین کړئ"
   },
   en: {
     title: "Question review",
@@ -104,7 +106,8 @@ const copy = {
     notAnswered: "Not answered",
     flaggedLabel: "Flagged",
     correctLabel: "Correct",
-    incorrectLabel: "Incorrect"
+    incorrectLabel: "Incorrect",
+    practiceTopic: "Practice this topic"
   }
 } as const;
 
@@ -122,6 +125,7 @@ export default function ReviewScreen() {
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [startingTopic, setStartingTopic] = useState("");
 
   const load = useCallback(async (nextFilter: FilterKey) => {
     if (!attemptId || !token) return;
@@ -142,6 +146,23 @@ export default function ReviewScreen() {
   }, [attemptId, token, text.error]);
 
   useEffect(() => { void load(filter); }, [filter, load]);
+
+  async function practiceTopic(topicId?: string) {
+    if (!topicId || !token || startingTopic) return;
+    setStartingTopic(topicId);
+    try {
+      const response = await apiRequest<{ attempt: { id: string } }>(
+        `/progress/topics/${topicId}/practice`,
+        { method: "POST", body: JSON.stringify({}) },
+        token
+      );
+      router.push(`/exam/${response.attempt.id}`);
+    } catch {
+      setError(text.error);
+    } finally {
+      setStartingTopic("");
+    }
+  }
 
   function localized(fa?: string, ps?: string) {
     return locale === "ps" ? (ps || fa || "") : (fa || ps || "");
@@ -259,6 +280,13 @@ export default function ReviewScreen() {
               <View style={styles.curriculum}>
                 <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.curriculum}</Text>
                 <Text style={[styles.small, { textAlign: align }]}>{curriculumLabel(item)}</Text>
+                {item.curriculum?.topic?.id ? (
+                  <Pressable style={styles.practiceButton} disabled={Boolean(startingTopic)} onPress={() => void practiceTopic(item.curriculum.topic?.id)}>
+                    {startingTopic === item.curriculum.topic.id
+                      ? <ActivityIndicator color="#FFFFFF" size="small" />
+                      : <Text style={styles.practiceButtonText}>{text.practiceTopic}</Text>}
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           );
@@ -313,5 +341,7 @@ const styles = StyleSheet.create({
   empty: { color: theme.colors.mutedText, padding: theme.spacing.lg },
   error: { color: theme.colors.danger, textAlign: "center", padding: theme.spacing.md },
   backResult: { minHeight: 48, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.surface },
-  backResultText: { color: theme.colors.text, fontWeight: "700" }
+  backResultText: { color: theme.colors.text, fontWeight: "700" },
+  practiceButton: { minHeight: 42, alignItems: "center", justifyContent: "center", borderRadius: theme.radius.md, backgroundColor: theme.colors.primary },
+  practiceButtonText: { color: "#FFFFFF", fontWeight: "800" }
 });

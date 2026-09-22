@@ -1,4 +1,30 @@
-const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+
+function expoDevelopmentHost() {
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.platform?.hostUri;
+  if (!hostUri) return null;
+
+  try {
+    return new URL(`http://${hostUri}`).hostname;
+  } catch {
+    return hostUri.split(":")[0] || null;
+  }
+}
+
+function resolveApiUrl() {
+  const configured = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+
+  if (Platform.OS === "web") return configured;
+
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
+  if (!isLocalhost) return configured;
+
+  const expoHost = expoDevelopmentHost();
+  return expoHost ? `http://${expoHost}:4000` : configured;
+}
+
+export const API_URL = resolveApiUrl();
 
 export class ApiError extends Error {
   constructor(public code: string, public status: number) {

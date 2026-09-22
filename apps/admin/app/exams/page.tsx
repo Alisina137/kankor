@@ -12,6 +12,7 @@ type Blueprint = {
   questionCount: number;
   durationSeconds: number | null;
   criteria: Record<string, unknown>;
+  scoringRules: { correctMultiplier?: number; incorrectMultiplier?: number; unansweredMultiplier?: number; floorAtZero?: boolean } | null;
   active: boolean;
 };
 
@@ -75,6 +76,13 @@ export default function ExamBlueprintPage() {
           questionCount: Number(data.get("questionCount")),
           durationSeconds: durationMinutes ? Number(durationMinutes) * 60 : null,
           criteria,
+          scoringRules: {
+            mode: "question_marks",
+            correctMultiplier: Number(data.get("correctMultiplier")),
+            incorrectMultiplier: Number(data.get("incorrectMultiplier")),
+            unansweredMultiplier: Number(data.get("unansweredMultiplier")),
+            floorAtZero: data.get("floorAtZero") === "on"
+          },
           active: data.get("active") === "on"
         })
       }, token);
@@ -123,7 +131,7 @@ export default function ExamBlueprintPage() {
         <div>
           <p className="eyebrow">Phase 4</p>
           <h1>طرح امتحان کانکور</h1>
-          <p>قواعد سالانه مانند تعداد سوال و زمان از اینجا تنظیم می‌شوند و در کد ثابت نیستند.</p>
+          <p>قواعد سالانه مانند تعداد سوال، زمان و امتیازدهی از اینجا تنظیم می‌شوند و در کد ثابت نیستند.</p>
         </div>
         <a href="/">مدیریت محتوا</a>
       </header>
@@ -141,6 +149,13 @@ export default function ExamBlueprintPage() {
           <label>تعداد سوال<input name="questionCount" type="number" min="1" max="160" required /></label>
           <label>زمان به دقیقه (اختیاری)<input name="durationMinutes" type="number" min="1" /></label>
         </div>
+        <div className="three">
+          <label>ضریب جواب صحیح<input name="correctMultiplier" type="number" step="0.0001" required placeholder="مثلاً 1" /></label>
+          <label>ضریب جواب غلط<input name="incorrectMultiplier" type="number" step="0.0001" required placeholder="قانون رسمی را وارد کنید" /></label>
+          <label>ضریب بی‌پاسخ<input name="unansweredMultiplier" type="number" step="0.0001" required placeholder="قانون رسمی را وارد کنید" /></label>
+        </div>
+        <label className="checkbox-row"><input name="floorAtZero" type="checkbox" /> نمره نهایی کمتر از صفر نشود</label>
+        <p>ضرایب امتیازدهی را فقط بر اساس قانون معتبر همان دوره کانکور وارد کنید.</p>
         <label>
           Criteria JSON (اختیاری)
           <textarea
@@ -161,7 +176,7 @@ export default function ExamBlueprintPage() {
               <div>
                 <strong>{item.name}</strong>
                 <small>
-                  {item.questionCount} سوال · {item.durationSeconds ? `${Math.round(item.durationSeconds / 60)} دقیقه` : "بدون زمان"} · {item.effectiveYear ?? "بدون سال"}
+                  {item.questionCount} سوال · {item.durationSeconds ? `${Math.round(item.durationSeconds / 60)} دقیقه` : "بدون زمان"} · {item.effectiveYear ?? "بدون سال"} · {item.scoringRules ? `ضرایب ${item.scoringRules.correctMultiplier}/${item.scoringRules.incorrectMultiplier}/${item.scoringRules.unansweredMultiplier}` : "امتیازدهی تنظیم نشده"}
                 </small>
               </div>
               <div className="inline-actions">

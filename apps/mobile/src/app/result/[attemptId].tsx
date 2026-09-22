@@ -155,6 +155,7 @@ export default function ResultScreen() {
   const [data, setData] = useState<ResultPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [startingTopic, setStartingTopic] = useState(false);
 
   const load = useCallback(async () => {
     if (!attemptId || !token) return;
@@ -189,6 +190,24 @@ export default function ResultScreen() {
         <Pressable style={styles.primaryButton} onPress={() => void load()}><Text style={styles.primaryText}>{text.retry}</Text></Pressable>
       </View>
     );
+  }
+
+  async function practiceRecommendedTopic() {
+    const topicId = data?.analysis?.recommendation?.topicId;
+    if (!token || typeof topicId !== "string" || startingTopic) return;
+    setStartingTopic(true);
+    try {
+      const response = await apiRequest<{ attempt: { id: string } }>(
+        `/progress/topics/${topicId}/practice`,
+        { method: "POST", body: JSON.stringify({}) },
+        token
+      );
+      router.push(`/exam/${response.attempt.id}`);
+    } catch {
+      setError(text.error);
+    } finally {
+      setStartingTopic(false);
+    }
   }
 
   function PerformanceList({ title, rows }: { title: string; rows: DimensionRow[] }) {
@@ -266,6 +285,11 @@ export default function ResultScreen() {
               ? `${text.practiceTopic}: ${String(data.analysis.recommendation.label ?? "")}`
               : text.anotherExam}
           </Text>
+          {data.analysis.recommendation.type === "practice_topic" ? (
+            <Pressable style={styles.primaryButton} disabled={startingTopic} onPress={() => void practiceRecommendedTopic()}>
+              {startingTopic ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>{text.practiceTopic}</Text>}
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 

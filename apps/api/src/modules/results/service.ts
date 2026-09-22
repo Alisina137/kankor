@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { getOwnedAttempt, parseScoringRules, type ScoringRules } from "../exams/service.js";
+import { refreshProgressForAttempt } from "../progress/service.js";
 
 type SnapshotEntity = Record<string, unknown>;
 type CurriculumSnapshot = {
@@ -132,7 +133,10 @@ export async function getStoredResult(attemptId: string) {
 
 export async function scoreAttempt(attemptId: string, userId: string) {
   const existing = await getStoredResult(attemptId);
-  if (existing?.analysis) return existing;
+  if (existing?.analysis) {
+    await refreshProgressForAttempt(attemptId, userId);
+    return existing;
+  }
 
   const attempt = await getOwnedAttempt(attemptId, userId);
   if (!attempt) throw new Error("attempt_not_found");
@@ -326,6 +330,8 @@ export async function scoreAttempt(attemptId: string, userId: string) {
   await db.update(schema.examAttempts)
     .set({ status: "analyzed", updatedAt: new Date() })
     .where(eq(schema.examAttempts.id, attempt.id));
+
+  await refreshProgressForAttempt(attempt.id, userId);
 
   const stored = await getStoredResult(attempt.id);
   if (!stored) throw new Error("result_persistence_failed");

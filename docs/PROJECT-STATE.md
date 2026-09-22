@@ -41,7 +41,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 6 — Historical Form Library completed in source.
+Phase 7 — Progress and Mistake System completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -95,6 +95,19 @@ Phase 6 — Historical Form Library completed in source.
 - Result page identifies historical form provenance and whether practice scoring fallback was used.
 - Phase 6 structural verifier.
 
+### Phase 7
+- MistakeItem tracks user/question/topic, first miss, last attempt, miss count, mastered state, mastered time, and latest attempt.
+- TopicMastery stores attempts, question totals, correct/incorrect/unanswered counts, accuracy, timing, and first/last activity.
+- Mistakes/mastery are deterministically recalculated from authoritative analyzed attempts, making retries idempotent.
+- Longitudinal topic mapping uses immutable exam curriculum snapshots rather than current mutable question mapping.
+- Completed-attempt scoring automatically refreshes mistake and mastery state.
+- Existing pre-Phase-7 completed attempts are backfilled when Progress is first opened.
+- Progress APIs expose overview, subject trends, topic mastery, and performance history with student ownership.
+- Mistake Notebook API/UI shows active/mastered mistakes and repeated misses.
+- Targeted re-practice creates a real topic exam directly from mistakes, weak-topic analytics, result recommendations, and question review.
+- Progress mobile tab replaces the placeholder with longitudinal metrics, weak topics, subject performance, and recent history.
+- Phase 7 structural verifier.
+
 ## Verification status
 - Phase 2 account flow was locally verified by the user.
 - Phase 3 admin access was locally verified by the user.
@@ -109,11 +122,10 @@ Phase 6 — Historical Form Library completed in source.
 - Existing pre-Phase-5 full-Kankor exams without a scoring snapshot cannot be authoritatively scored; start a new exam after configuring the blueprint.
 - Targeted practice uses the documented internal marks-based scoring snapshot: correct = question marks, incorrect = 0, unanswered = 0.
 - The product owner still needs to supply/verify authoritative curriculum, questions, and annual Kankor scoring policy.
-- Mistake notebook and longitudinal mastery begin in Phase 7.
 - Historical archive infrastructure is complete, but no real historical Kankor papers have been imported yet because authoritative source forms have not been supplied.
 
 ## Latest source baseline
-Phase 6 branch awaiting merge to `main`.
+Phase 7 branch awaiting merge to `main`.
 
 ## Next phase
-Phase 7 — Progress and Mistake System.
+Phase 8 — Freemium and Billing.

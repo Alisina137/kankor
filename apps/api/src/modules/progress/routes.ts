@@ -170,7 +170,6 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.get("/progress/topics", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
-    await rebuildAllProgress(auth.user.userId);
     const db = createDatabase();
 
     const items = await db.select({
@@ -241,7 +240,6 @@ export const progressRoutes: FastifyPluginAsync = async (app) => {
   app.get("/mistakes", async (request, reply) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
-    await rebuildAllProgress(auth.user.userId);
     const db = createDatabase();
 
     const items = await db.select({

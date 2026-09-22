@@ -208,6 +208,17 @@ export async function authorizeExamStart(userId: string, mode: string, questionC
     };
   }
 
+  const questionsUsed = await getUsage(userId, "questions");
+  if (free.dailyQuestionAllowance <= 0 || questionsUsed + questionCount > free.dailyQuestionAllowance) {
+    return {
+      allowed: false as const,
+      error: "premium_required",
+      reason: "daily_question_limit",
+      limit: free.dailyQuestionAllowance,
+      used: questionsUsed
+    };
+  }
+
   const configKey = MODE_KEYS[mode];
   if (!configKey) return { allowed: true as const, tier: state.tier };
   const limit = Number(free[configKey]);

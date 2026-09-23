@@ -175,8 +175,8 @@ export default function HistoricalFormsScreen() {
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <View style={styles.headerCopy}>
-          <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.body}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.body}</Text>
         </View>
       </View>
 
@@ -187,13 +187,13 @@ export default function HistoricalFormsScreen() {
             onChangeText={setYear}
             placeholder={text.year}
             keyboardType="number-pad"
-            style={[styles.input, { textAlign: align }]}
+            style={[styles.input, { textAlign: align, writingDirection: direction }]}
           />
           <TextInput
             value={province}
             onChangeText={setProvince}
             placeholder={text.province}
-            style={[styles.input, { textAlign: align }]}
+            style={[styles.input, { textAlign: align, writingDirection: direction }]}
           />
         </View>
         <View style={[styles.filterRow, { flexDirection: rowDirection }]}>
@@ -201,7 +201,7 @@ export default function HistoricalFormsScreen() {
             value={round}
             onChangeText={setRound}
             placeholder={text.round}
-            style={[styles.input, { textAlign: align }]}
+            style={[styles.input, { textAlign: align, writingDirection: direction }]}
           />
           <View style={[styles.languageRow, { flexDirection: rowDirection }]}>
             {["", "fa", "ps"].map((item) => (
@@ -229,12 +229,12 @@ export default function HistoricalFormsScreen() {
       </View>
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
       {!loading && !forms.length ? (
         <View style={styles.emptyCard}>
           <Ionicons name="archive-outline" size={34} color={theme.colors.mutedText} />
-          <Text style={[styles.body, { textAlign: align }]}>{text.empty}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.empty}</Text>
         </View>
       ) : null}
 
@@ -242,8 +242,8 @@ export default function HistoricalFormsScreen() {
         <View style={styles.card} key={form.id}>
           <View style={[styles.cardTop, { flexDirection: rowDirection }]}>
             <View style={styles.cardTitleWrap}>
-              <Text style={[styles.cardTitle, { textAlign: align }]}>{form.title}</Text>
-              <Text style={[styles.meta, { textAlign: align }]}>
+              <Text style={[styles.cardTitle, { textAlign: align, writingDirection: direction }]}>{form.title}</Text>
+              <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
                 {form.year}
                 {form.province ? ` · ${form.province}` : ""}
                 {form.round ? ` · ${form.round}` : ""}

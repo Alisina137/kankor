@@ -8,9 +8,9 @@ export function SectionCard({ title, children }: PropsWithChildren<{ title: stri
   const align = direction === "rtl" ? "right" : "left";
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { direction }]}>
       <Text style={[styles.title, { textAlign: align }]}>{title}</Text>
-      <View>{children}</View>
+      <View style={{ direction }}>{children}</View>
     </View>
   );
 }

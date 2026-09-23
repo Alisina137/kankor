@@ -18,6 +18,7 @@ export default function OnboardingScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   if (!loading && !user) return <Redirect href="/(auth)/welcome" />;
   if (user?.onboardingCompleted) return <Redirect href="/(tabs)" />;
@@ -48,7 +49,7 @@ export default function OnboardingScreen() {
         </View>
 
         <Text style={[styles.label, { textAlign: align }]}>{text.language}</Text>
-        <View style={styles.row}>
+        <View style={[styles.row, { flexDirection: rowDirection }]}>
           {(["fa", "ps"] as SupportedLocale[]).map((item) => (
             <Pressable key={item} onPress={() => setLocale(item)} style={[styles.chip, locale === item && styles.active]}>
               <Text style={locale === item ? styles.activeText : styles.chipText}>{localeMeta[item].label}</Text>
@@ -57,7 +58,7 @@ export default function OnboardingScreen() {
         </View>
 
         <Text style={[styles.label, { textAlign: align }]}>{text.targetYear}</Text>
-        <View style={styles.row}>
+        <View style={[styles.row, { flexDirection: rowDirection }]}>
           {years.map((item) => (
             <Pressable key={item} onPress={() => setYear(item)} style={[styles.chip, year === item && styles.active]}>
               <Text style={year === item ? styles.activeText : styles.chipText}>{item}</Text>

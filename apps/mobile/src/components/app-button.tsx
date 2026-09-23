@@ -1,5 +1,6 @@
 import { theme } from "@kankor/config";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { useLocale } from "../providers/locale-provider";
 
 export function AppButton({
   label,
@@ -15,6 +16,7 @@ export function AppButton({
   variant?: "primary" | "secondary" | "danger";
 }) {
   const blocked = disabled || loading;
+  const { direction } = useLocale();
   return (
     <Pressable
       accessibilityRole="button"
@@ -22,6 +24,7 @@ export function AppButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
+        { direction },
         styles[variant],
         blocked && styles.disabled,
         pressed && !blocked && styles.pressed
@@ -29,7 +32,7 @@ export function AppButton({
     >
       {loading
         ? <ActivityIndicator color={variant === "primary" ? "#FFFFFF" : theme.colors.primary} />
-        : <Text style={[styles.label, variant !== "primary" && styles.secondaryLabel, variant === "danger" && styles.dangerLabel]}>{label}</Text>
+        : <Text style={[styles.label, variant !== "primary" && styles.secondaryLabel, variant === "danger" && styles.dangerLabel, { writingDirection: direction }]}>{label}</Text>
       }
     </Pressable>
   );

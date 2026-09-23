@@ -60,6 +60,7 @@ export default function MistakesScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
   const [items, setItems] = useState<Mistake[]>([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState("");
@@ -106,9 +107,9 @@ export default function MistakesScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+      <View style={[styles.header, { flexDirection: rowDirection }]}>
         <Pressable style={styles.back} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
+          <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
       </View>
@@ -119,7 +120,7 @@ export default function MistakesScreen() {
 
       {items.map((item) => (
         <View style={styles.card} key={item.id}>
-          <View style={styles.top}>
+          <View style={[styles.top, { flexDirection: rowDirection }]}>
             <Text style={[
               styles.status,
               item.eventuallyMastered ? styles.mastered : styles.active

@@ -118,6 +118,7 @@ export default function PremiumScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
   const [plans, setPlans] = useState<Plan[]>([]);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [checkout, setCheckout] = useState<Checkout | null>(null);
@@ -211,9 +212,9 @@ export default function PremiumScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+      <View style={[styles.header, { flexDirection: rowDirection }]}>
         <Pressable onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
+          <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
@@ -261,7 +262,7 @@ export default function PremiumScreen() {
 
       {plans.map((plan) => (
         <View style={styles.card} key={plan.id}>
-          <View style={styles.planTop}>
+          <View style={[styles.planTop, { flexDirection: rowDirection }]}>
             <View style={styles.planCopy}>
               <Text style={[styles.planName, { textAlign: align }]}>{planName(plan)}</Text>
               <Text style={[styles.body, { textAlign: align }]}>{plan.durationDays} {text.days}</Text>

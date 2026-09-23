@@ -13,10 +13,10 @@ export function Screen({ children, scroll = false, contentContainerStyle }: Scre
   const { direction } = useLocale();
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { direction }]}>
       {scroll ? (
         <ScrollView
-          style={styles.scroll}
+          style={[styles.scroll, { direction }]}
           contentContainerStyle={[styles.scrollContent, { direction }, contentContainerStyle]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

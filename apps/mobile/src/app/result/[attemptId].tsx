@@ -151,6 +151,7 @@ export default function ResultScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [data, setData] = useState<ResultPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -218,7 +219,7 @@ export default function ResultScreen() {
         <Text style={[styles.sectionTitle, { textAlign: align }]}>{title}</Text>
         {rows.map((row) => (
           <View style={styles.performanceRow} key={row.id}>
-            <View style={styles.performanceTop}>
+            <View style={[styles.performanceTop, { flexDirection: rowDirection }]}>
               <Text style={[styles.performanceLabel, { textAlign: align }]}>{row.label}</Text>
               <Text style={styles.performanceValue}>{row.percentage.toFixed(1)}%</Text>
             </View>
@@ -265,7 +266,7 @@ export default function ResultScreen() {
         <Text style={styles.percentage}>{primary.percentage.toFixed(1)}%</Text>
       </View>
 
-      <View style={styles.metrics}>
+      <View style={[styles.metrics, { flexDirection: rowDirection }]}>
         <View style={styles.metric}><Text style={styles.metricValue}>{primary.correctCount}</Text><Text style={styles.metricLabel}>{text.correct}</Text></View>
         <View style={styles.metric}><Text style={styles.metricValue}>{primary.incorrectCount}</Text><Text style={styles.metricLabel}>{text.incorrect}</Text></View>
         <View style={styles.metric}><Text style={styles.metricValue}>{primary.unansweredCount}</Text><Text style={styles.metricLabel}>{text.unanswered}</Text></View>

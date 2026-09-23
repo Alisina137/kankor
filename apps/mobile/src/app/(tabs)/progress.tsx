@@ -108,6 +108,8 @@ export default function ProgressScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const startAlign = direction === "rtl" ? "flex-end" : "flex-start";
   const [overview, setOverview] = useState<Overview | null>(null);
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [subjects, setSubjects] = useState<SubjectRow[]>([]);
@@ -171,7 +173,7 @@ export default function ProgressScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
-        <Pressable style={styles.mistakeButton} onPress={() => router.push("/mistakes")}>
+        <Pressable style={[styles.mistakeButton, { flexDirection: rowDirection, alignSelf: startAlign }]} onPress={() => router.push("/mistakes")}>
           <Ionicons name="book-outline" size={18} color={theme.colors.primary} />
           <Text style={styles.mistakeButtonText}>{text.mistakes}</Text>
         </Pressable>
@@ -183,7 +185,7 @@ export default function ProgressScreen() {
         <View style={styles.empty}><Text style={[styles.body, { textAlign: align }]}>{text.empty}</Text></View>
       ) : (
         <>
-          <View style={styles.metrics}>
+          <View style={[styles.metrics, { flexDirection: rowDirection }]}>
             {[
               [text.exams, overview.completedExams],
               [text.questions, overview.questionsAttempted],
@@ -203,7 +205,7 @@ export default function ProgressScreen() {
             <View style={styles.card}>
               <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.weakTopics}</Text>
               {topics.slice(0, 5).map((topic) => (
-                <View key={topic.topicId} style={styles.row}>
+                <View key={topic.topicId} style={[styles.row, { flexDirection: rowDirection }]}>
                   <View style={styles.rowCopy}>
                     <Text style={[styles.rowTitle, { textAlign: align }]}>{localize(topic.topicFa, topic.topicPs)}</Text>
                     <Text style={[styles.meta, { textAlign: align }]}>
@@ -228,7 +230,7 @@ export default function ProgressScreen() {
             <View style={styles.card}>
               <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.subjects}</Text>
               {subjects.map((subject) => (
-                <View key={subject.id} style={styles.row}>
+                <View key={subject.id} style={[styles.row, { flexDirection: rowDirection }]}>
                   <Text style={[styles.rowTitle, { textAlign: align }]}>{subject.label}</Text>
                   <Text style={styles.percent}>{subject.accuracyPercentage.toFixed(1)}%</Text>
                 </View>
@@ -240,7 +242,7 @@ export default function ProgressScreen() {
             <View style={styles.card}>
               <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.history}</Text>
               {history.slice(0, 10).map((item) => (
-                <Pressable key={item.attemptId} style={styles.row} onPress={() => router.push(`/result/${item.attemptId}`)}>
+                <Pressable key={item.attemptId} style={[styles.row, { flexDirection: rowDirection }]} onPress={() => router.push(`/result/${item.attemptId}`)}>
                   <View style={styles.rowCopy}>
                     <Text style={[styles.rowTitle, { textAlign: align }]}>{item.title}</Text>
                     <Text style={[styles.meta, { textAlign: align }]}>{item.mode}</Text>

@@ -102,6 +102,7 @@ export default function PracticeScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -193,7 +194,7 @@ export default function PracticeScreen() {
       <View style={styles.section}>
         <Text style={[styles.label, { textAlign: align }]}>{label}</Text>
         {items.length ? (
-          <View style={styles.chips}>
+          <View style={[styles.chips, { flexDirection: rowDirection }]}>
             {items.map((item) => (
               <Pressable
                 key={item.id}
@@ -284,7 +285,7 @@ export default function PracticeScreen() {
 
         {selectedBook ? (
           <View style={styles.sourceCard}>
-            <View style={styles.sourceHeader}>
+            <View style={[styles.sourceHeader, { flexDirection: rowDirection }]}>
               <Text style={[styles.sourceBadge, { textAlign: align }]}>{text.officialBook}</Text>
               {selectedBook.editionYear ? (
                 <Text style={styles.sourceEdition}>{text.edition} {selectedBook.editionYear}</Text>
@@ -311,7 +312,7 @@ export default function PracticeScreen() {
             <Text style={[styles.setupTitle, { textAlign: align }]}>{text.examSetup}</Text>
 
             <Text style={[styles.label, { textAlign: align }]}>{text.questionCount}</Text>
-            <View style={styles.chips}>
+            <View style={[styles.chips, { flexDirection: rowDirection }]}>
               {availableQuestionCounts.map((count) => (
                 <Pressable key={count} onPress={() => setQuestionCount(count)} style={[styles.chip, questionCount === count && styles.chipActive]}>
                   <Text style={questionCount === count ? styles.chipTextActive : styles.chipText}>{count}</Text>
@@ -320,7 +321,7 @@ export default function PracticeScreen() {
             </View>
 
             <Text style={[styles.label, { textAlign: align }]}>{text.timer}</Text>
-            <View style={styles.chips}>
+            <View style={[styles.chips, { flexDirection: rowDirection }]}>
               {timerOptions.map((seconds) => (
                 <Pressable key={String(seconds)} onPress={() => setDurationSeconds(seconds)} style={[styles.chip, durationSeconds === seconds && styles.chipActive]}>
                   <Text style={durationSeconds === seconds ? styles.chipTextActive : styles.chipText}>

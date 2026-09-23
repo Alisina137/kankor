@@ -79,6 +79,9 @@ export function publishCriteria(question: typeof schema.questions.$inferSelect) 
     ? question.sourceMetadata as Record<string, unknown>
     : {};
 
+  const renderingRequired = sourceMetadata.hasFormula === true || sourceMetadata.hasImage === true;
+  const workedSolutionRequired = sourceMetadata.requiresWorkedSolution === true;
+
   const checks = {
     hasContent: Boolean(question.content.trim()),
     hasFourChoices: choices.length === 4 && keys.size === 4,
@@ -87,7 +90,8 @@ export function publishCriteria(question: typeof schema.questions.$inferSelect) 
     hasSourceType: Boolean(question.sourceType),
     sourceLabeled: question.sourceType !== "official" || Object.keys(sourceMetadata).length > 0,
     hasShortExplanation: Boolean(question.shortExplanation?.trim()),
-    workedSolutionPresentWhenProvided: question.workedSolution == null || Boolean(question.workedSolution.trim())
+    renderingValidated: !renderingRequired || sourceMetadata.renderingValidated === true,
+    workedSolutionSatisfied: !workedSolutionRequired || Boolean(question.workedSolution?.trim())
   };
 
   return {

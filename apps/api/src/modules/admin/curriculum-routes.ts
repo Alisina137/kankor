@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { asc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdminRole, CONTENT_MANAGE_ROLES } from "../../common/admin-auth.js";
+import { requireAdminRole, CONTENT_MANAGE_ROLES, CONTENT_REVIEW_ROLES } from "../../common/admin-auth.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 
@@ -22,7 +22,7 @@ function boolValue(value: unknown, fallback = true) {
 
 export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   app.get("/curriculum", async (request, reply) => {
-    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_REVIEW_ROLES))) return;
     const db = createDatabase();
 
     const [grades, subjects, books, chapters, topics] = await Promise.all([

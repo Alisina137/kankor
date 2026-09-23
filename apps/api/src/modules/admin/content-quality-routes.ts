@@ -159,10 +159,15 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
       if (!values) return reply.code(400).send({error:"invalid_correction"});
 
       await saveRevision(current, reason, admin.user.userId);
-      const [next] = await db.insert(schema.questions).values({...values,createdBy:admin.user.userId,updatedBy:admin.user.userId}).returning();
-      if (current.verificationStatus === "published") {
-        await db.update(schema.questions).set({verificationStatus:"deprecated",updatedBy:admin.user.userId,updatedAt:new Date()}).where(eq(schema.questions.id,current.id));
-      }
+      const next = await db.transaction(async (tx) => {
+        const [created] = await tx.insert(schema.questions)
+          .values({...values,createdBy:admin.user.userId,updatedBy:admin.user.userId})
+          .returning();
+        await tx.update(schema.questions)
+          .set({verificationStatus:"deprecated",updatedBy:admin.user.userId,updatedAt:new Date()})
+          .where(eq(schema.questions.id,current.id));
+        return created;
+      });
       await writeAudit({
         actorUserId:admin.user.userId,action:"question.correct",entityType:"question",entityId:next.id,
         before:questionSnapshot(current),after:questionSnapshot(next),metadata:{supersedesQuestionId:current.id,changeReason:reason}
@@ -297,27 +302,43 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
       }
 
       const [batch] = await db.insert(schema.contentImportBatches).values({
-        importType:"questions",status:request.body?.dryRun === false && rejected.length===0 ? "applied" : "validated",
+        importType:"questions",status:"validated",
         totalRows:rows.length,acceptedRows:accepted.length,rejectedRows:rejected.length,
-        validationReport:{rejected},createdBy:admin.user.userId,
-        appliedAt:request.body?.dryRun === false && rejected.length===0 ? new Date() : null
+        validationReport:{rejected},createdBy:admin.user.userId
       }).returning();
 
       let inserted=0;
       if (request.body?.dryRun === false && rejected.length===0) {
-        for (const item of accepted) {
-          const v=item.value;
-          await db.insert(schema.questions).values({
-            topicId:String(v.topicId),language:String(v.language),questionType:"single_choice",
-            content:String(v.content),choices:v.choices as Array<{key:"A"|"B"|"C"|"D";text:string}>,
-            correctChoice:String(v.correctChoice),shortExplanation:opt(v.shortExplanation),
-            detailedExplanation:opt(v.detailedExplanation),workedSolution:opt(v.workedSolution),
-            difficulty:String(v.difficulty),marks:String(Number(v.marks??1)),
-            sourceType:str(v.sourceType)||"editorial",
-            sourceMetadata:v.sourceMetadata && typeof v.sourceMetadata==="object" ? v.sourceMetadata as Record<string,unknown> : {},
-            verificationStatus:"draft",createdBy:admin.user.userId,updatedBy:admin.user.userId
+        try {
+          await db.transaction(async (tx) => {
+            for (const item of accepted) {
+              const v=item.value;
+              await tx.insert(schema.questions).values({
+                topicId:String(v.topicId),language:String(v.language),questionType:"single_choice",
+                content:String(v.content),choices:v.choices as Array<{key:"A"|"B"|"C"|"D";text:string}>,
+                correctChoice:String(v.correctChoice),shortExplanation:opt(v.shortExplanation),
+                detailedExplanation:opt(v.detailedExplanation),workedSolution:opt(v.workedSolution),
+                difficulty:String(v.difficulty),marks:String(Number(v.marks??1)),
+                sourceType:str(v.sourceType)||"editorial",
+                sourceMetadata:v.sourceMetadata && typeof v.sourceMetadata==="object" ? v.sourceMetadata as Record<string,unknown> : {},
+                verificationStatus:"draft",createdBy:admin.user.userId,updatedBy:admin.user.userId
+              });
+              inserted++;
+            }
           });
-          inserted++;
+          await db.update(schema.contentImportBatches).set({
+            status:"applied",appliedAt:new Date()
+          }).where(eq(schema.contentImportBatches.id,batch.id));
+          batch.status="applied";
+          batch.appliedAt=new Date();
+        } catch (error) {
+          inserted=0;
+          await db.update(schema.contentImportBatches).set({
+            status:"failed",
+            validationReport:{rejected,applyError:error instanceof Error?error.message:"apply_failed"}
+          }).where(eq(schema.contentImportBatches.id,batch.id));
+          batch.status="failed";
+          return reply.code(409).send({error:"import_apply_failed",batch,rejected});
         }
       }
       await writeAudit({actorUserId:admin.user.userId,action:"content.bulk_import.questions",entityType:"import_batch",entityId:batch.id,metadata:{dryRun:request.body?.dryRun!==false,totalRows:rows.length,accepted:accepted.length,rejected:rejected.length,inserted}});

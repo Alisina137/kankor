@@ -123,6 +123,7 @@ export default function ExamsScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [activeAttempt, setActiveAttempt] = useState<ActiveAttemptResponse["attempt"]>(null);
@@ -204,7 +205,7 @@ export default function ExamsScreen() {
         {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
 
         {activeAttempt ? (
-          <View style={styles.card}>
+          <View style={[styles.card, { flexDirection: rowDirection }]}>
             <View style={styles.iconWrap}><Ionicons name="refresh-circle-outline" size={26} color={theme.colors.primary} /></View>
             <View style={styles.cardBody}>
               <Text style={[styles.cardTitle, { textAlign: align }]}>{text.resume}</Text>
@@ -219,7 +220,7 @@ export default function ExamsScreen() {
           </View>
         ) : null}
 
-        <View style={styles.card}>
+        <View style={[styles.card, { flexDirection: rowDirection }]}>
           <View style={styles.iconWrap}><Ionicons name="document-text-outline" size={26} color={theme.colors.primary} /></View>
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, { textAlign: align }]}>{text.full}</Text>
@@ -227,7 +228,7 @@ export default function ExamsScreen() {
 
             {blueprint ? (
               <>
-                <View style={styles.metaRow}>
+                <View style={[styles.metaRow, { flexDirection: rowDirection }]}>
                   <Text style={styles.meta}>{blueprint.questionCount} {text.questions}</Text>
                   <Text style={styles.meta}>{text.duration}: {durationLabel(blueprint.durationSeconds, text.noTimer)}</Text>
                 </View>
@@ -241,7 +242,7 @@ export default function ExamsScreen() {
           </View>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { flexDirection: rowDirection }]}>
           <View style={styles.iconWrap}><Ionicons name="archive-outline" size={26} color={theme.colors.primary} /></View>
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, { textAlign: align }]}>{text.historical}</Text>
@@ -257,7 +258,7 @@ export default function ExamsScreen() {
           {completed.length ? completed.map((item) => (
             <Pressable
               key={item.attemptId}
-              style={styles.historyCard}
+              style={[styles.historyCard, { flexDirection: rowDirection }]}
               onPress={() => router.push(`/result/${item.attemptId}`)}
             >
               <View style={styles.historyCopy}>

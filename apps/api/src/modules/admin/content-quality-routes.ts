@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import {
   CONTENT_MANAGE_ROLES,
@@ -365,14 +365,52 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
   app.get("/dashboard", async (request, reply) => {
     if (!(await requireAdminRole(request, reply, CONTENT_REVIEW_ROLES))) return;
     const db=createDatabase();
-    const [users,attempts,questions,reports,payments] = await Promise.all([
+    const [users,activeStudents,attempts,questions,reports,payments] = await Promise.all([
       db.select({count:sql<number>`count(*)`}).from(schema.users),
+      db.select({count:sql<number>`count(distinct ${schema.sessions.userId})`}).from(schema.sessions)
+        .where(gt(schema.sessions.expiresAt,new Date())),
       db.select({count:sql<number>`count(*)`}).from(schema.examAttempts).where(eq(schema.examAttempts.status,"analyzed")),
       db.select({status:schema.questions.verificationStatus,count:sql<number>`count(*)`}).from(schema.questions).groupBy(schema.questions.verificationStatus),
       db.select({status:schema.contentReports.status,count:sql<number>`count(*)`}).from(schema.contentReports).groupBy(schema.contentReports.status),
       db.select({status:schema.paymentTransactions.status,count:sql<number>`count(*)`}).from(schema.paymentTransactions).groupBy(schema.paymentTransactions.status)
     ]);
-    return {users:Number(users[0]?.count??0),completedExams:Number(attempts[0]?.count??0),questionHealth:questions,reportHealth:reports,paymentActivity:payments};
+    return {
+      users:Number(users[0]?.count??0),
+      activeStudents:Number(activeStudents[0]?.count??0),
+      completedExams:Number(attempts[0]?.count??0),
+      questionHealth:questions,
+      reportHealth:reports,
+      paymentActivity:payments
+    };
+  });
+
+
+  app.get("/configuration", async (request, reply) => {
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
+    const db=createDatabase();
+    return {items:await db.select().from(schema.appConfiguration).orderBy(schema.appConfiguration.key)};
+  });
+
+  app.patch<{Params:{key:string};Body:Record<string,unknown>}>("/configuration/:key", async (request, reply) => {
+    const admin=await requireAdminRole(request,reply,CONTENT_MANAGE_ROLES);
+    if(!admin)return;
+    const key=str(request.params.key);
+    if(!key)return reply.code(400).send({error:"configuration_key_required"});
+    const db=createDatabase();
+    const rows=await db.select().from(schema.appConfiguration).where(eq(schema.appConfiguration.key,key)).limit(1);
+    const before=rows[0]??null;
+    const value="value" in request.body?request.body.value:before?.value;
+    if(value===undefined)return reply.code(400).send({error:"configuration_value_required"});
+    const description="description" in request.body?opt(request.body.description):before?.description??null;
+    const active="active" in request.body?Boolean(request.body.active):before?.active??true;
+    const [item]=await db.insert(schema.appConfiguration).values({key,value,description,active})
+      .onConflictDoUpdate({target:schema.appConfiguration.key,set:{value,description,active,updatedAt:new Date()}})
+      .returning();
+    await writeAudit({
+      actorUserId:admin.user.userId,action:"configuration.update",entityType:"configuration",entityId:key,
+      before:before as unknown as Record<string,unknown>|null,after:item as unknown as Record<string,unknown>
+    });
+    return {item};
   });
 
   app.get("/users", async (request, reply) => {

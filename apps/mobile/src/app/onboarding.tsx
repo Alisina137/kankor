@@ -44,11 +44,11 @@ export default function OnboardingScreen() {
     <Screen>
       <View style={styles.stack}>
         <View style={styles.copy}>
-          <Text style={[styles.title, { textAlign: align }]}>{text.onboardingTitle}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.onboardingBody}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.onboardingTitle}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.onboardingBody}</Text>
         </View>
 
-        <Text style={[styles.label, { textAlign: align }]}>{text.language}</Text>
+        <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.language}</Text>
         <View style={[styles.row, { flexDirection: rowDirection }]}>
           {(["fa", "ps"] as SupportedLocale[]).map((item) => (
             <Pressable key={item} onPress={() => setLocale(item)} style={[styles.chip, locale === item && styles.active]}>
@@ -57,7 +57,7 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { textAlign: align }]}>{text.targetYear}</Text>
+        <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.targetYear}</Text>
         <View style={[styles.row, { flexDirection: rowDirection }]}>
           {years.map((item) => (
             <Pressable key={item} onPress={() => setYear(item)} style={[styles.chip, year === item && styles.active]}>
@@ -66,20 +66,20 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { textAlign: align }]}>{text.preparationLevel}</Text>
+        <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.preparationLevel}</Text>
         <View style={styles.levels}>
           {levels.map((item) => {
             const label = item === "starting" ? text.starting : item === "some_preparation" ? text.somePreparation : text.intensive;
             return (
               <Pressable key={item} onPress={() => setLevel(level === item ? null : item)} style={[styles.level, level === item && styles.active]}>
-                <Text style={[styles.chipText, level === item && styles.activeText, { textAlign: align }]}>{label}</Text>
+                <Text style={[styles.chipText, level === item && styles.activeText, { textAlign: align, writingDirection: direction }]}>{label}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={[styles.note, { textAlign: align }]}>{text.diagnosticLater}</Text>
-        {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+        <Text style={[styles.note, { textAlign: align, writingDirection: direction }]}>{text.diagnosticLater}</Text>
+        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
         <AppButton label={text.continue} loading={busy} onPress={finish} />
       </View>
     </Screen>

@@ -60,7 +60,7 @@ export default function MistakesScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
   const [items, setItems] = useState<Mistake[]>([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState("");

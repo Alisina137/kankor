@@ -1,3 +1,8 @@
+ALTER TABLE "question_translations"
+  ADD COLUMN IF NOT EXISTS "verification_status" varchar(24) NOT NULL DEFAULT 'draft',
+  ADD COLUMN IF NOT EXISTS "version" integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS "updated_by" uuid REFERENCES "users"("id") ON DELETE SET NULL;
+
 ALTER TABLE "questions" ADD COLUMN IF NOT EXISTS "supersedes_question_id" uuid;
 CREATE TABLE IF NOT EXISTS "question_revisions" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

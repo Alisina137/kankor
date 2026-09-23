@@ -111,12 +111,12 @@ export default function MistakesScreen() {
         <Pressable style={styles.back} onPress={() => router.back()}>
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
-        <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
       </View>
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
-      {!loading && !items.length ? <Text style={[styles.empty, { textAlign: align }]}>{text.empty}</Text> : null}
+      {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
+      {!loading && !items.length ? <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.empty}</Text> : null}
 
       {items.map((item) => (
         <View style={styles.card} key={item.id}>
@@ -130,8 +130,8 @@ export default function MistakesScreen() {
             <Text style={styles.count}>{item.timesMissed} {text.missed}</Text>
           </View>
 
-          <Text style={[styles.question, { textAlign: align }]}>{item.question}</Text>
-          <Text style={[styles.meta, { textAlign: align }]}>
+          <Text style={[styles.question, { textAlign: align, writingDirection: direction }]}>{item.question}</Text>
+          <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
             {localize(item.subjectFa, item.subjectPs)} · {localize(item.topicFa, item.topicPs)}
           </Text>
 

@@ -1,3 +1,4 @@
+ALTER TABLE "questions" ADD COLUMN IF NOT EXISTS "supersedes_question_id" uuid;
 CREATE TABLE IF NOT EXISTS "question_revisions" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "question_id" uuid NOT NULL REFERENCES "questions"("id") ON DELETE CASCADE,

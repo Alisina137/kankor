@@ -34,10 +34,10 @@ export default function ResetPasswordScreen() {
   return (
     <Screen>
       <View style={styles.stack}>
-        <Text style={[styles.title, { textAlign: align }]}>{text.resetTitle}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.resetTitle}</Text>
         <FormField label={text.resetToken} value={token} onChangeText={setToken} />
         <FormField label={text.newPassword} value={password} onChangeText={setPassword} secureTextEntry secureToggle />
-        {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
         <AppButton label={text.resetPassword} loading={busy} onPress={submit} />
       </View>
     </Screen>

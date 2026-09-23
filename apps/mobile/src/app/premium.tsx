@@ -217,21 +217,21 @@ export default function PremiumScreen() {
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.subtitle}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.subtitle}</Text>
         </View>
       </View>
 
       <View style={styles.hero}>
-        <Text style={[styles.kicker, { textAlign: align }]}>{text.current}</Text>
-        <Text style={[styles.heroTitle, { textAlign: align }]}>{activeName}</Text>
+        <Text style={[styles.kicker, { textAlign: align, writingDirection: direction }]}>{text.current}</Text>
+        <Text style={[styles.heroTitle, { textAlign: align, writingDirection: direction }]}>{activeName}</Text>
         {entitlement?.subscription?.currentPeriodEnd ? (
-          <Text style={[styles.body, { textAlign: align }]}>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>
             {text.activeUntil}: {new Date(entitlement.subscription.currentPeriodEnd).toLocaleDateString()}
           </Text>
         ) : null}
         {entitlement?.subscription?.cancelAtPeriodEnd ? (
-          <Text style={[styles.notice, { textAlign: align }]}>{text.cancelAtEnd}</Text>
+          <Text style={[styles.notice, { textAlign: align, writingDirection: direction }]}>{text.cancelAtEnd}</Text>
         ) : null}
         {entitlement?.tier === "premium" && !entitlement.subscription?.cancelAtPeriodEnd ? (
           <Pressable style={styles.secondaryButton} disabled={Boolean(busy)} onPress={() => void cancelSubscription()}>
@@ -241,31 +241,31 @@ export default function PremiumScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.benefits}</Text>
-        <Text style={[styles.body, { textAlign: align }]}>{text.benefitText}</Text>
+        <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.benefits}</Text>
+        <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.benefitText}</Text>
       </View>
 
-      {message ? <Text style={[styles.message, { textAlign: align }]}>{message}</Text> : null}
+      {message ? <Text style={[styles.message, { textAlign: align, writingDirection: direction }]}>{message}</Text> : null}
 
       {checkout ? (
         <View style={styles.card}>
-          <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.pending}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{checkout.amountAfn} {text.afn}</Text>
+          <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.pending}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{checkout.amountAfn} {text.afn}</Text>
           <Pressable style={styles.primaryButton} disabled={Boolean(busy)} onPress={() => void confirmSimulation()}>
             {busy === "confirm" ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>{text.confirmTest}</Text>}
           </Pressable>
         </View>
       ) : null}
 
-      <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.choose}</Text>
-      {!plans.length ? <Text style={[styles.body, { textAlign: align }]}>{text.noPlans}</Text> : null}
+      <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.choose}</Text>
+      {!plans.length ? <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.noPlans}</Text> : null}
 
       {plans.map((plan) => (
         <View style={styles.card} key={plan.id}>
           <View style={[styles.planTop, { flexDirection: rowDirection }]}>
             <View style={styles.planCopy}>
-              <Text style={[styles.planName, { textAlign: align }]}>{planName(plan)}</Text>
-              <Text style={[styles.body, { textAlign: align }]}>{plan.durationDays} {text.days}</Text>
+              <Text style={[styles.planName, { textAlign: align, writingDirection: direction }]}>{planName(plan)}</Text>
+              <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{plan.durationDays} {text.days}</Text>
             </View>
             <Text style={styles.price}>{plan.priceAfn} {text.afn}</Text>
           </View>

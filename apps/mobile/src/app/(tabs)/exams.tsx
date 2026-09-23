@@ -199,18 +199,18 @@ export default function ExamsScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.scrollContent}>
       <View style={styles.stack}>
-        <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
 
         {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-        {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
         {activeAttempt ? (
           <View style={[styles.card, { flexDirection: rowDirection }]}>
             <View style={styles.iconWrap}><Ionicons name="refresh-circle-outline" size={26} color={theme.colors.primary} /></View>
             <View style={styles.cardBody}>
-              <Text style={[styles.cardTitle, { textAlign: align }]}>{text.resume}</Text>
-              <Text style={[styles.body, { textAlign: align }]}>{text.resumeBody}</Text>
-              <Text style={[styles.meta, { textAlign: align }]}>
+              <Text style={[styles.cardTitle, { textAlign: align, writingDirection: direction }]}>{text.resume}</Text>
+              <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.resumeBody}</Text>
+              <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
                 {activeAttempt.summary.answered}/{activeAttempt.questionCount} {text.answered}
               </Text>
               <Pressable style={styles.primaryButton} onPress={() => router.push(`/exam/${activeAttempt.id}`)}>
@@ -223,8 +223,8 @@ export default function ExamsScreen() {
         <View style={[styles.card, { flexDirection: rowDirection }]}>
           <View style={styles.iconWrap}><Ionicons name="document-text-outline" size={26} color={theme.colors.primary} /></View>
           <View style={styles.cardBody}>
-            <Text style={[styles.cardTitle, { textAlign: align }]}>{text.full}</Text>
-            <Text style={[styles.body, { textAlign: align }]}>{text.fullBody}</Text>
+            <Text style={[styles.cardTitle, { textAlign: align, writingDirection: direction }]}>{text.full}</Text>
+            <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.fullBody}</Text>
 
             {blueprint ? (
               <>
@@ -237,7 +237,7 @@ export default function ExamsScreen() {
                 </Pressable>
               </>
             ) : !loading ? (
-              <Text style={[styles.warning, { textAlign: align }]}>{text.noBlueprint}</Text>
+              <Text style={[styles.warning, { textAlign: align, writingDirection: direction }]}>{text.noBlueprint}</Text>
             ) : null}
           </View>
         </View>
@@ -245,8 +245,8 @@ export default function ExamsScreen() {
         <View style={[styles.card, { flexDirection: rowDirection }]}>
           <View style={styles.iconWrap}><Ionicons name="archive-outline" size={26} color={theme.colors.primary} /></View>
           <View style={styles.cardBody}>
-            <Text style={[styles.cardTitle, { textAlign: align }]}>{text.historical}</Text>
-            <Text style={[styles.body, { textAlign: align }]}>{text.historicalBody}</Text>
+            <Text style={[styles.cardTitle, { textAlign: align, writingDirection: direction }]}>{text.historical}</Text>
+            <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.historicalBody}</Text>
             <Pressable style={styles.primaryButton} onPress={() => router.push("/historical")}>
               <Text style={styles.primaryButtonText}>{text.browseHistorical}</Text>
             </Pressable>
@@ -254,7 +254,7 @@ export default function ExamsScreen() {
         </View>
 
         <View style={styles.historySection}>
-          <Text style={[styles.cardTitle, { textAlign: align }]}>{text.history}</Text>
+          <Text style={[styles.cardTitle, { textAlign: align, writingDirection: direction }]}>{text.history}</Text>
           {completed.length ? completed.map((item) => (
             <Pressable
               key={item.attemptId}
@@ -262,15 +262,15 @@ export default function ExamsScreen() {
               onPress={() => router.push(`/result/${item.attemptId}`)}
             >
               <View style={styles.historyCopy}>
-                <Text style={[styles.historyTitle, { textAlign: align }]}>{item.title}</Text>
-                <Text style={[styles.meta, { textAlign: align }]}>
+                <Text style={[styles.historyTitle, { textAlign: align, writingDirection: direction }]}>{item.title}</Text>
+                <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
                   {item.score} / {item.maxScore} · {item.percentage.toFixed(1)}%
                 </Text>
               </View>
               <Text style={styles.resultLink}>{text.viewResult}</Text>
             </Pressable>
           )) : (
-            <Text style={[styles.body, { textAlign: align }]}>{text.noHistory}</Text>
+            <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.noHistory}</Text>
           )}
         </View>
       </View>

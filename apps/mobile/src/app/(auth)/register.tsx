@@ -28,11 +28,11 @@ export default function RegisterScreen() {
   }
 
   return <Screen><View style={styles.stack}>
-    <Text style={[styles.title,{textAlign:align}]}>{text.createAccount}</Text>
+    <Text style={[styles.title,{textAlign:align,writingDirection:direction}]}>{text.createAccount}</Text>
     <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" />
     <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="new-password" />
     <FormField label={text.confirmPassword} value={confirm} onChangeText={setConfirm} secureTextEntry secureToggle autoComplete="new-password" />
-    {error?<Text style={[styles.error,{textAlign:align}]}>{error}</Text>:null}
+    {error?<Text style={[styles.error,{textAlign:align,writingDirection:direction}]}>{error}</Text>:null}
     <AppButton label={text.createAccount} loading={busy} onPress={submit}/>
     <Pressable onPress={()=>router.push("/(auth)/login")}><Text style={styles.link}>{text.haveAccount} {text.signIn}</Text></Pressable>
   </View></Screen>;

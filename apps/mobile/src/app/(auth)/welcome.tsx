@@ -13,9 +13,9 @@ export default function WelcomeScreen() {
     <Screen>
       <View style={styles.container}>
         <View style={styles.copy}>
-          <Text style={[styles.brand, { textAlign: align }]}>{text.appName}</Text>
-          <Text style={[styles.title, { textAlign: align }]}>{text.welcomeTitle}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.welcomeBody}</Text>
+          <Text style={[styles.brand, { textAlign: align, writingDirection: direction }]}>{text.appName}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.welcomeTitle}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.welcomeBody}</Text>
         </View>
         <View style={styles.actions}>
           <AppButton label={text.createAccount} onPress={() => router.push("/(auth)/register")} />

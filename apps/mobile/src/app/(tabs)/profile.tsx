@@ -32,8 +32,8 @@ export default function ProfileScreen() {
     <Screen>
       <View style={styles.stack}>
         <SectionCard title={text.account}>
-          <Text style={[styles.email, { textAlign: align }]}>{user?.email}</Text>
-          <Text style={[styles.meta, { textAlign: align }]}>{text.targetLabel}: {user?.targetExamYear ?? "—"}</Text>
+          <Text style={[styles.email, { textAlign: align, writingDirection: direction }]}>{user?.email}</Text>
+          <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>{text.targetLabel}: {user?.targetExamYear ?? "—"}</Text>
         </SectionCard>
         <AppButton label="Premium" onPress={() => router.push("/premium")} />
         <AppButton label={text.logout} variant="secondary" onPress={() => void signOut()} />

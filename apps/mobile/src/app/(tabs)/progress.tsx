@@ -172,17 +172,17 @@ export default function ProgressScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
         <Pressable style={[styles.mistakeButton, { flexDirection: rowDirection, alignSelf: startAlign }]} onPress={() => router.push("/mistakes")}>
           <Ionicons name="book-outline" size={18} color={theme.colors.primary} />
           <Text style={styles.mistakeButtonText}>{text.mistakes}</Text>
         </Pressable>
       </View>
 
-      {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
       {!overview?.completedExams ? (
-        <View style={styles.empty}><Text style={[styles.body, { textAlign: align }]}>{text.empty}</Text></View>
+        <View style={styles.empty}><Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.empty}</Text></View>
       ) : (
         <>
           <View style={[styles.metrics, { flexDirection: rowDirection }]}>
@@ -196,19 +196,19 @@ export default function ProgressScreen() {
             ].map(([label, value]) => (
               <View style={styles.metric} key={String(label)}>
                 <Text style={styles.metricValue}>{String(value)}</Text>
-                <Text style={[styles.metricLabel, { textAlign: align }]}>{String(label)}</Text>
+                <Text style={[styles.metricLabel, { textAlign: align, writingDirection: direction }]}>{String(label)}</Text>
               </View>
             ))}
           </View>
 
           {topics.length ? (
             <View style={styles.card}>
-              <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.weakTopics}</Text>
+              <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.weakTopics}</Text>
               {topics.slice(0, 5).map((topic) => (
                 <View key={topic.topicId} style={[styles.row, { flexDirection: rowDirection }]}>
                   <View style={styles.rowCopy}>
-                    <Text style={[styles.rowTitle, { textAlign: align }]}>{localize(topic.topicFa, topic.topicPs)}</Text>
-                    <Text style={[styles.meta, { textAlign: align }]}>
+                    <Text style={[styles.rowTitle, { textAlign: align, writingDirection: direction }]}>{localize(topic.topicFa, topic.topicPs)}</Text>
+                    <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
                       {topic.accuracyPercentage.toFixed(1)}% · {topic.questionsAnswered} {text.questions}
                     </Text>
                   </View>
@@ -228,10 +228,10 @@ export default function ProgressScreen() {
 
           {subjects.length ? (
             <View style={styles.card}>
-              <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.subjects}</Text>
+              <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.subjects}</Text>
               {subjects.map((subject) => (
                 <View key={subject.id} style={[styles.row, { flexDirection: rowDirection }]}>
-                  <Text style={[styles.rowTitle, { textAlign: align }]}>{subject.label}</Text>
+                  <Text style={[styles.rowTitle, { textAlign: align, writingDirection: direction }]}>{subject.label}</Text>
                   <Text style={styles.percent}>{subject.accuracyPercentage.toFixed(1)}%</Text>
                 </View>
               ))}
@@ -240,12 +240,12 @@ export default function ProgressScreen() {
 
           {history.length ? (
             <View style={styles.card}>
-              <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.history}</Text>
+              <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.history}</Text>
               {history.slice(0, 10).map((item) => (
                 <Pressable key={item.attemptId} style={[styles.row, { flexDirection: rowDirection }]} onPress={() => router.push(`/result/${item.attemptId}`)}>
                   <View style={styles.rowCopy}>
-                    <Text style={[styles.rowTitle, { textAlign: align }]}>{item.title}</Text>
-                    <Text style={[styles.meta, { textAlign: align }]}>{item.mode}</Text>
+                    <Text style={[styles.rowTitle, { textAlign: align, writingDirection: direction }]}>{item.title}</Text>
+                    <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>{item.mode}</Text>
                   </View>
                   <Text style={styles.percent}>{item.percentage.toFixed(1)}%</Text>
                 </Pressable>

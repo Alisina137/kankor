@@ -192,7 +192,7 @@ export default function PracticeScreen() {
   }) {
     return (
       <View style={styles.section}>
-        <Text style={[styles.label, { textAlign: align }]}>{label}</Text>
+        <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{label}</Text>
         {items.length ? (
           <View style={[styles.chips, { flexDirection: rowDirection }]}>
             {items.map((item) => (
@@ -207,7 +207,7 @@ export default function PracticeScreen() {
               </Pressable>
             ))}
           </View>
-        ) : <Text style={[styles.empty, { textAlign: align }]}>{text.empty}</Text>}
+        ) : <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.empty}</Text>}
       </View>
     );
   }
@@ -266,12 +266,12 @@ export default function PracticeScreen() {
     <Screen scroll contentContainerStyle={styles.scrollContent}>
       <View style={styles.stack}>
         <View style={styles.header}>
-          <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.body}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.body}</Text>
         </View>
 
         {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-        {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
         {!loading ? (
           <>
@@ -286,15 +286,15 @@ export default function PracticeScreen() {
         {selectedBook ? (
           <View style={styles.sourceCard}>
             <View style={[styles.sourceHeader, { flexDirection: rowDirection }]}>
-              <Text style={[styles.sourceBadge, { textAlign: align }]}>{text.officialBook}</Text>
+              <Text style={[styles.sourceBadge, { textAlign: align, writingDirection: direction }]}>{text.officialBook}</Text>
               {selectedBook.editionYear ? (
                 <Text style={styles.sourceEdition}>{text.edition} {selectedBook.editionYear}</Text>
               ) : null}
             </View>
-            <Text style={[styles.sourceTitle, { textAlign: align }]}>
+            <Text style={[styles.sourceTitle, { textAlign: align, writingDirection: direction }]}>
               {displayName(selectedBook.titleFa, selectedBook.titlePs)}
             </Text>
-            <Text style={[styles.sourceMeta, { textAlign: align }]}>
+            <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
               {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chapters.length} {text.chapter}
             </Text>
           </View>
@@ -302,16 +302,16 @@ export default function PracticeScreen() {
 
         {selectedPath ? (
           <View style={styles.pathCard}>
-            <Text style={[styles.pathLabel, { textAlign: align }]}>{text.selected}</Text>
-            <Text style={[styles.path, { textAlign: align }]}>{selectedPath}</Text>
+            <Text style={[styles.pathLabel, { textAlign: align, writingDirection: direction }]}>{text.selected}</Text>
+            <Text style={[styles.path, { textAlign: align, writingDirection: direction }]}>{selectedPath}</Text>
           </View>
         ) : null}
 
         {subjectId ? (
           <View style={styles.setupCard}>
-            <Text style={[styles.setupTitle, { textAlign: align }]}>{text.examSetup}</Text>
+            <Text style={[styles.setupTitle, { textAlign: align, writingDirection: direction }]}>{text.examSetup}</Text>
 
-            <Text style={[styles.label, { textAlign: align }]}>{text.questionCount}</Text>
+            <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.questionCount}</Text>
             <View style={[styles.chips, { flexDirection: rowDirection }]}>
               {availableQuestionCounts.map((count) => (
                 <Pressable key={count} onPress={() => setQuestionCount(count)} style={[styles.chip, questionCount === count && styles.chipActive]}>
@@ -320,7 +320,7 @@ export default function PracticeScreen() {
               ))}
             </View>
 
-            <Text style={[styles.label, { textAlign: align }]}>{text.timer}</Text>
+            <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.timer}</Text>
             <View style={[styles.chips, { flexDirection: rowDirection }]}>
               {timerOptions.map((seconds) => (
                 <Pressable key={String(seconds)} onPress={() => setDurationSeconds(seconds)} style={[styles.chip, durationSeconds === seconds && styles.chipActive]}>

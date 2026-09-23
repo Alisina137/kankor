@@ -216,17 +216,17 @@ export default function ResultScreen() {
     if (!rows.length) return null;
     return (
       <View style={styles.card}>
-        <Text style={[styles.sectionTitle, { textAlign: align }]}>{title}</Text>
+        <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{title}</Text>
         {rows.map((row) => (
           <View style={styles.performanceRow} key={row.id}>
             <View style={[styles.performanceTop, { flexDirection: rowDirection }]}>
-              <Text style={[styles.performanceLabel, { textAlign: align }]}>{row.label}</Text>
+              <Text style={[styles.performanceLabel, { textAlign: align, writingDirection: direction }]}>{row.label}</Text>
               <Text style={styles.performanceValue}>{row.percentage.toFixed(1)}%</Text>
             </View>
             <View style={styles.track}>
               <View style={[styles.fill, { width: `${Math.max(0, Math.min(100, row.percentage))}%` as `${number}%` }]} />
             </View>
-            <Text style={[styles.small, { textAlign: align }]}>
+            <Text style={[styles.small, { textAlign: align, writingDirection: direction }]}>
               {row.correct}/{row.total} {text.questions}
             </Text>
           </View>
@@ -239,23 +239,23 @@ export default function ResultScreen() {
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Ionicons name="trophy-outline" size={34} color={theme.colors.primary} />
-        <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
       </View>
 
       {data.attempt?.mode === "historical" && data.attempt.historical ? (
         <View style={styles.card}>
-          <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.historicalForm}</Text>
-          <Text style={[styles.bodyText, { textAlign: align }]}>
+          <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.historicalForm}</Text>
+          <Text style={[styles.bodyText, { textAlign: align, writingDirection: direction }]}>
             {String(data.attempt.historical.year ?? "")}
             {data.attempt.historical.province ? ` · ${String(data.attempt.historical.province)}` : ""}
             {data.attempt.historical.round ? ` · ${String(data.attempt.historical.round)}` : ""}
             {data.attempt.historical.formCode ? ` · ${String(data.attempt.historical.formCode)}` : ""}
           </Text>
-          <Text style={[styles.small, { textAlign: align }]}>
+          <Text style={[styles.small, { textAlign: align, writingDirection: direction }]}>
             {text.source}: {String(data.attempt.historical.sourceStatus ?? "unverified")}
           </Text>
           {data.attempt.historical.scoringAuthority === "practice_fallback" ? (
-            <Text style={[styles.small, { textAlign: align }]}>{text.practiceFallback}</Text>
+            <Text style={[styles.small, { textAlign: align, writingDirection: direction }]}>{text.practiceFallback}</Text>
           ) : null}
         </View>
       ) : null}
@@ -281,8 +281,8 @@ export default function ResultScreen() {
 
       {data.analysis?.recommendation ? (
         <View style={styles.card}>
-          <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.recommendation}</Text>
-          <Text style={[styles.bodyText, { textAlign: align }]}>
+          <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.recommendation}</Text>
+          <Text style={[styles.bodyText, { textAlign: align, writingDirection: direction }]}>
             {data.analysis.recommendation.type === "practice_topic"
               ? `${text.practiceTopic}: ${String(data.analysis.recommendation.label ?? "")}`
               : text.anotherExam}

@@ -18,6 +18,7 @@ type Audit = { id:string; action:string; entityType:string|null; entityId:string
 type ImportBatch = { id:string; status:string; totalRows:number; acceptedRows:number; rejectedRows:number; createdAt:string };
 type User = { id:string; email:string; role:string; preferredLanguage:string; targetExamYear:number|null; createdAt:string };
 type Revision = { id:string; version:number; changeReason:string|null; createdAt:string; snapshot:Record<string,unknown> };
+type LineageItem = { id:string; snapshot:Record<string,unknown> };
 
 async function request<T>(path:string, options:RequestInit={}, token?:string) {
   const headers=new Headers(options.headers);
@@ -47,6 +48,7 @@ export default function ContentQualityPage(){
   const [correctionReason,setCorrectionReason]=useState("");
   const [correctionJson,setCorrectionJson]=useState("{}");
   const [revisions,setRevisions]=useState<Revision[]>([]);
+  const [lineage,setLineage]=useState<LineageItem[]>([]);
 
   const load=useCallback(async(authToken:string)=>{
     const [d,q,r,i]=await Promise.all([
@@ -118,12 +120,27 @@ export default function ContentQualityPage(){
   }
 
 
+
+  async function changeRole(userId:string, role:string){
+    if(!token)return;
+    setBusy(true);setStatus("");
+    try{
+      await request(`/admin/users/${userId}/role`,{
+        method:"PATCH",body:JSON.stringify({role})
+      },token);
+      await load(token);
+      setStatus(`نقش کاربر به ${role} تغییر کرد.`);
+    }catch(error){setStatus(`تغییر نقش ناموفق بود: ${error instanceof Error?error.message:"خطا"}`);}
+    finally{setBusy(false);}
+  }
+
   async function loadRevisions(){
     if(!token||!correctionQuestionId.trim())return;
     setBusy(true);setStatus("");
     try{
-      const result=await request<{items:Revision[]}>(`/admin/content/questions/${correctionQuestionId.trim()}/revisions`,{},token);
+      const result=await request<{items:Revision[];lineage:LineageItem[]}>(`/admin/content/questions/${correctionQuestionId.trim()}/revisions`,{},token);
       setRevisions(result.items);
+      setLineage(result.lineage);
       setStatus(`${result.items.length} revision پیدا شد.`);
     }catch(error){setStatus(`Revision history بارگیری نشد: ${error instanceof Error?error.message:"خطا"}`);}
     finally{setBusy(false);}
@@ -229,8 +246,14 @@ export default function ContentQualityPage(){
         <button className="secondary" disabled={busy||!correctionQuestionId.trim()} onClick={()=>void loadRevisions()}>Revision History</button>
         <button disabled={busy||!correctionQuestionId.trim()||!correctionReason.trim()} onClick={()=>void correctQuestion()}>Create corrected Draft version</button>
       </div>
+      {lineage.length?<div className="list">
+        {lineage.map((item,index)=><div className="list-item" key={item.id}>
+          <div><strong>Lineage v{String(item.snapshot.version??"—")}</strong><small>{item.id}{index===0?" · current":""}</small></div>
+          <span className="badge">{String(item.snapshot.verificationStatus??"—")}</span>
+        </div>)}
+      </div>:null}
       {revisions.length?<div className="list">
-        {revisions.map(r=><div className="list-item" key={r.id}><div><strong>Version {r.version}</strong><small>{r.changeReason??"بدون دلیل"} · {new Date(r.createdAt).toLocaleString()}</small></div><span className="badge">immutable snapshot</span></div>)}
+        {revisions.map(r=><div className="list-item" key={r.id}><div><strong>Snapshot v{r.version}</strong><small>{r.changeReason??"بدون دلیل"} · {new Date(r.createdAt).toLocaleString()}</small></div><span className="badge">immutable snapshot</span></div>)}
       </div>:null}
     </section>
 
@@ -277,7 +300,15 @@ export default function ContentQualityPage(){
     </div></section>:null}
 
     {users.length?<section className="card"><h2>Users</h2><div className="list">
-      {users.slice(0,80).map(u=><div className="list-item" key={u.id}><div><strong>{u.email}</strong><small>{u.preferredLanguage} · target {u.targetExamYear??"—"}</small></div><span className="badge">{u.role}</span></div>)}
+      {users.slice(0,80).map(u=><div className="list-item" key={u.id}>
+        <div><strong>{u.email}</strong><small>{u.preferredLanguage} · target {u.targetExamYear??"—"}</small></div>
+        <div className="inline-actions">
+          <span className="badge">{u.role}</span>
+          <button className="secondary" disabled={busy} onClick={()=>void changeRole(u.id,"student")}>Student</button>
+          <button className="secondary" disabled={busy} onClick={()=>void changeRole(u.id,"content_reviewer")}>Reviewer</button>
+          <button className="secondary" disabled={busy} onClick={()=>void changeRole(u.id,"content_admin")}>Content Admin</button>
+        </div>
+      </div>)}
     </div></section>:null}
   </main>;
 }

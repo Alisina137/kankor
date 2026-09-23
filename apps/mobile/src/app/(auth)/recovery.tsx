@@ -14,11 +14,11 @@ export default function RecoveryScreen(){
   const align=direction==="rtl"?"right":"left";
   async function submit(){setBusy(true);setMessage("");try{const r=await requestRecovery(email);setMessage(r.developmentToken?`${text.recoveryAccepted}\n${text.resetToken}: ${r.developmentToken}`:text.recoveryAccepted);}catch{setMessage(text.genericError);}finally{setBusy(false);}}
   return <Screen><View style={styles.stack}>
-    <Text style={[styles.title,{textAlign:align}]}>{text.recoveryTitle}</Text>
-    <Text style={[styles.body,{textAlign:align}]}>{text.recoveryBody}</Text>
+    <Text style={[styles.title,{textAlign:align,writingDirection:direction}]}>{text.recoveryTitle}</Text>
+    <Text style={[styles.body,{textAlign:align,writingDirection:direction}]}>{text.recoveryBody}</Text>
     <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address"/>
     <AppButton label={text.sendRecovery} loading={busy} onPress={submit}/>
-    {message?<Text style={[styles.body,{textAlign:align}]}>{message}</Text>:null}
+    {message?<Text style={[styles.body,{textAlign:align,writingDirection:direction}]}>{message}</Text>:null}
     <AppButton label={text.resetTitle} variant="secondary" onPress={()=>router.push("/(auth)/reset-password")}/>
   </View></Screen>;
 }

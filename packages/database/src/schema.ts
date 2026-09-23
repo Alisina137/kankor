@@ -132,6 +132,7 @@ export const questions = pgTable("questions", {
   sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
   verificationStatus: varchar("verification_status", { length: 24 }).notNull().default("draft"),
   version: integer("version").notNull().default(1),
+  supersedesQuestionId: uuid("supersedes_question_id"),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -151,6 +152,9 @@ export const questionTranslations = pgTable("question_translations", {
   shortExplanation: text("short_explanation"),
   detailedExplanation: text("detailed_explanation"),
   workedSolution: text("worked_solution"),
+  verificationStatus: varchar("verification_status", { length: 24 }).notNull().default("draft"),
+  version: integer("version").notNull().default(1),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
@@ -443,4 +447,81 @@ export const entitlementUsage = pgTable("entitlement_usage", {
 }, (table) => ({
   userDateKeyUnique: uniqueIndex("entitlement_usage_user_date_key_unique").on(table.userId, table.usageDate, table.key),
   userIdx: index("entitlement_usage_user_idx").on(table.userId)
+}));
+
+
+export const questionRevisions = pgTable("question_revisions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  questionId: uuid("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").$type<Record<string, unknown>>().notNull(),
+  changeReason: text("change_reason"),
+  changedBy: uuid("changed_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  questionVersionUnique: uniqueIndex("question_revisions_question_version_unique").on(table.questionId, table.version),
+  questionIdx: index("question_revisions_question_idx").on(table.questionId)
+}));
+
+export const contentReviews = pgTable("content_reviews", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  entityType: varchar("entity_type", { length: 32 }).notNull(),
+  entityId: uuid("entity_id").notNull(),
+  decision: varchar("decision", { length: 24 }).notNull(),
+  notes: text("notes"),
+  criteria: jsonb("criteria").$type<Record<string, unknown>>().notNull().default({}),
+  reviewerId: uuid("reviewer_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  entityIdx: index("content_reviews_entity_idx").on(table.entityType, table.entityId),
+  reviewerIdx: index("content_reviews_reviewer_idx").on(table.reviewerId)
+}));
+
+export const contentReports = pgTable("content_reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  questionId: uuid("question_id").references(() => questions.id, { onDelete: "set null" }),
+  reportType: varchar("report_type", { length: 40 }).notNull(),
+  status: varchar("status", { length: 24 }).notNull().default("open"),
+  description: text("description").notNull(),
+  source: varchar("source", { length: 32 }).notNull().default("admin_review"),
+  reportedBy: uuid("reported_by").references(() => users.id, { onDelete: "set null" }),
+  resolvedBy: uuid("resolved_by").references(() => users.id, { onDelete: "set null" }),
+  resolutionNotes: text("resolution_notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true })
+}, (table) => ({
+  statusIdx: index("content_reports_status_idx").on(table.status),
+  questionIdx: index("content_reports_question_idx").on(table.questionId)
+}));
+
+export const contentImportBatches = pgTable("content_import_batches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  importType: varchar("import_type", { length: 40 }).notNull(),
+  status: varchar("status", { length: 24 }).notNull().default("validated"),
+  totalRows: integer("total_rows").notNull().default(0),
+  acceptedRows: integer("accepted_rows").notNull().default(0),
+  rejectedRows: integer("rejected_rows").notNull().default(0),
+  validationReport: jsonb("validation_report").$type<Record<string, unknown>>().notNull().default({}),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  appliedAt: timestamp("applied_at", { withTimezone: true })
+}, (table) => ({
+  statusIdx: index("content_import_batches_status_idx").on(table.status),
+  createdByIdx: index("content_import_batches_created_by_idx").on(table.createdBy)
+}));
+
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actorUserId: uuid("actor_user_id").references(() => users.id, { onDelete: "set null" }),
+  action: varchar("action", { length: 96 }).notNull(),
+  entityType: varchar("entity_type", { length: 48 }),
+  entityId: varchar("entity_id", { length: 128 }),
+  beforeSnapshot: jsonb("before_snapshot").$type<Record<string, unknown>>(),
+  afterSnapshot: jsonb("after_snapshot").$type<Record<string, unknown>>(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => ({
+  actorIdx: index("admin_audit_logs_actor_idx").on(table.actorUserId),
+  entityIdx: index("admin_audit_logs_entity_idx").on(table.entityType, table.entityId),
+  createdAtIdx: index("admin_audit_logs_created_at_idx").on(table.createdAt)
 }));

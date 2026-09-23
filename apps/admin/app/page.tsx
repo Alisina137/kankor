@@ -109,24 +109,33 @@ export default function AdminHome() {
   }
 
   async function advanceQuestion(question: Question) {
-    const transitions: Record<string, string> = {
-      draft: "review",
-      review: "approved",
-      approved: "published",
-      published: "deprecated"
-    };
-    const next = transitions[question.verificationStatus];
-    if (!next || !token) return;
-
+    if (!token) return;
     setBusy(true);
     setStatus("");
     try {
-      await request(`/admin/questions/${question.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ verificationStatus: next })
-      }, token);
+      if (question.verificationStatus === "draft") {
+        await request(`/admin/content/questions/${question.id}/submit-review`, {
+          method: "POST",
+          body: JSON.stringify({})
+        }, token);
+      } else if (question.verificationStatus === "review") {
+        await request(`/admin/content/questions/${question.id}/review`, {
+          method: "POST",
+          body: JSON.stringify({ decision: "approved" })
+        }, token);
+      } else if (question.verificationStatus === "approved") {
+        await request(`/admin/content/questions/${question.id}/publish`, {
+          method: "POST",
+          body: JSON.stringify({})
+        }, token);
+      } else if (question.verificationStatus === "published") {
+        await request(`/admin/content/questions/${question.id}/deprecate`, {
+          method: "POST",
+          body: JSON.stringify({})
+        }, token);
+      }
       await refresh();
-      setStatus(`وضعیت سوال به ${next} تغییر کرد.`);
+      setStatus("وضعیت سوال با ثبت Review/Audit به‌روزرسانی شد.");
     } catch (error) {
       setStatus(`تغییر وضعیت ناموفق بود: ${error instanceof Error ? error.message : "خطا"}`);
     } finally {
@@ -163,7 +172,7 @@ export default function AdminHome() {
           <h1>مدیریت نصاب و سوالات</h1>
           <p>مرحله ۳ — ساختار Subject → Grade → Book → Chapter → Topic → Question</p>
         </div>
-        <div className="inline-actions"><a href="/exams">طرح امتحان</a><a href="/historical">فورم‌های تاریخی</a><a href="/billing">Billing</a><button className="secondary" onClick={logout}>خروج</button></div>
+        <div className="inline-actions"><a href="/quality">Content Quality</a><a href="/exams">طرح امتحان</a><a href="/historical">فورم‌های تاریخی</a><a href="/billing">Billing</a><button className="secondary" onClick={logout}>خروج</button></div>
       </header>
 
       {status ? <div className="notice">{status}</div> : null}

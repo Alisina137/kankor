@@ -1,11 +1,11 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { and, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdmin } from "../../common/admin-auth.js";
+import { requireAdminRole, CONTENT_MANAGE_ROLES, CONTENT_REVIEW_ROLES } from "../../common/admin-auth.js";
+import { saveRevision, writeAudit } from "./content-quality-service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 const CHOICES = new Set(["A", "B", "C", "D"]);
-const STATUSES = new Set(["draft", "review", "approved", "published", "deprecated"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "expert"]);
 const LANGUAGES = new Set(["fa", "ps", "en"]);
 
@@ -65,7 +65,7 @@ async function tracedQuestion(id: string) {
 
 export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
   app.get("/questions", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_REVIEW_ROLES))) return;
     const db = createDatabase();
     const items = await db.select({
       id: schema.questions.id,
@@ -80,7 +80,7 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get<{ Params: { id: string } }>("/questions/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_REVIEW_ROLES))) return;
     const question = await tracedQuestion(request.params.id);
     if (!question) return reply.code(404).send({ error: "question_not_found" });
 
@@ -92,7 +92,7 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/questions", async (request: BodyRequest, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const topicId = stringValue(request.body.topicId);
@@ -135,11 +135,19 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       updatedBy: admin.user.userId
     }).returning({ id: schema.questions.id });
 
-    return reply.code(201).send({ question: await tracedQuestion(inserted.id) });
+    const createdQuestion = await tracedQuestion(inserted.id);
+    await writeAudit({
+      actorUserId: admin.user.userId,
+      action: "question.create",
+      entityType: "question",
+      entityId: inserted.id,
+      after: createdQuestion as unknown as Record<string, unknown>
+    });
+    return reply.code(201).send({ question: createdQuestion });
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/questions/:id", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const db = createDatabase();
@@ -147,10 +155,17 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       .where(eq(schema.questions.id, request.params.id)).limit(1);
     if (!current[0]) return reply.code(404).send({ error: "question_not_found" });
 
+    const currentQuestion = current[0];
+    const contentFields = ["topicId","language","content","choices","correctChoice","difficulty","shortExplanation","detailedExplanation","workedSolution","marks","sourceType","sourceMetadata"];
+    const changesContent = contentFields.some((key) => key in request.body);
+    if (["published","deprecated"].includes(currentQuestion.verificationStatus) && changesContent) {
+      return reply.code(409).send({ error: "published_question_requires_correction" });
+    }
+
     const values: Record<string, unknown> = {
       updatedAt: new Date(),
       updatedBy: admin.user.userId,
-      version: current[0].version + 1
+      version: currentQuestion.version + (changesContent ? 1 : 0)
     };
 
     if ("topicId" in request.body) values.topicId = stringValue(request.body.topicId);
@@ -179,9 +194,7 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       values.difficulty = difficulty;
     }
     if ("verificationStatus" in request.body) {
-      const status = stringValue(request.body.verificationStatus);
-      if (!STATUSES.has(status)) return reply.code(400).send({ error: "invalid_verification_status" });
-      values.verificationStatus = status;
+      return reply.code(409).send({ error: "use_content_review_workflow" });
     }
     if ("shortExplanation" in request.body) values.shortExplanation = optionalString(request.body.shortExplanation);
     if ("detailedExplanation" in request.body) values.detailedExplanation = optionalString(request.body.detailedExplanation);
@@ -192,14 +205,29 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       values.sourceMetadata = request.body.sourceMetadata;
     }
 
+    if (changesContent) {
+      await saveRevision(currentQuestion, stringValue(request.body.changeReason) || "admin_edit", admin.user.userId);
+    }
+
     await db.update(schema.questions).set(values as typeof schema.questions.$inferInsert)
       .where(eq(schema.questions.id, request.params.id));
 
-    return { question: await tracedQuestion(request.params.id) };
+    const updated = await tracedQuestion(request.params.id);
+    await writeAudit({
+      actorUserId: admin.user.userId,
+      action: changesContent ? "question.edit" : "question.transition",
+      entityType: "question",
+      entityId: request.params.id,
+      before: currentQuestion as unknown as Record<string, unknown>,
+      after: updated as unknown as Record<string, unknown>,
+      metadata: { changeReason: stringValue(request.body.changeReason) || null }
+    });
+
+    return { question: updated };
   });
 
   app.put<{ Params: { id: string; language: string }; Body: Record<string, unknown> }>("/questions/:id/translations/:language", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const language = request.params.language;
@@ -232,17 +260,38 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       shortExplanation: optionalString(request.body.shortExplanation),
       detailedExplanation: optionalString(request.body.detailedExplanation),
       workedSolution: optionalString(request.body.workedSolution),
+      verificationStatus: "draft",
+      updatedBy: admin.user.userId,
       updatedAt: new Date()
     };
 
+    let translationId: string;
+    let beforeTranslation: Record<string, unknown> | null = null;
     if (existing[0]) {
+      const currentTranslation = await db.select().from(schema.questionTranslations)
+        .where(eq(schema.questionTranslations.id, existing[0].id)).limit(1);
+      beforeTranslation = currentTranslation[0] as unknown as Record<string, unknown> ?? null;
       await db.update(schema.questionTranslations)
-        .set(values)
+        .set({ ...values, version: (currentTranslation[0]?.version ?? 1) + 1 })
         .where(eq(schema.questionTranslations.id, existing[0].id));
+      translationId = existing[0].id;
     } else {
-      await db.insert(schema.questionTranslations).values(values);
+      const [createdTranslation] = await db.insert(schema.questionTranslations).values(values)
+        .returning({ id: schema.questionTranslations.id });
+      translationId = createdTranslation.id;
     }
 
-    return { saved: true };
+    const afterTranslation = await db.select().from(schema.questionTranslations)
+      .where(eq(schema.questionTranslations.id, translationId)).limit(1);
+    await writeAudit({
+      actorUserId: admin.user.userId,
+      action: existing[0] ? "translation.edit" : "translation.create",
+      entityType: "question_translation",
+      entityId: translationId,
+      before: beforeTranslation,
+      after: afterTranslation[0] as unknown as Record<string, unknown>
+    });
+
+    return { saved: true, translation: afterTranslation[0] };
   });
 };

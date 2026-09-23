@@ -14,7 +14,8 @@ import {
   adminQuestionRoutes,
   adminExamBlueprintRoutes,
   adminHistoricalFormRoutes,
-  adminBillingRoutes
+  adminBillingRoutes,
+  adminContentQualityRoutes
 } from "./modules/admin/index.js";
 
 export async function buildApp() {
@@ -37,13 +38,13 @@ export async function buildApp() {
   app.get("/health", async () => ({
     status: "ok",
     service: "kankor-api",
-    phase: 8
+    phase: 9
   }));
 
   app.get("/api/v1", async () => ({
     name: "KankorPrep API",
     version: "v1",
-    status: "freemium-billing"
+    status: "admin-content-quality"
   }));
 
   await app.register(authRoutes, { prefix: "/api/v1/auth" });
@@ -60,6 +61,7 @@ export async function buildApp() {
   await app.register(adminExamBlueprintRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminHistoricalFormRoutes, { prefix: "/api/v1/admin" });
   await app.register(adminBillingRoutes, { prefix: "/api/v1/admin" });
+  await app.register(adminContentQualityRoutes, { prefix: "/api/v1/admin" });
 
   return app;
 }

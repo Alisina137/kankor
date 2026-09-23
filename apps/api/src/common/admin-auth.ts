@@ -29,13 +29,13 @@ export async function requireAdmin(request: FastifyRequest, reply: FastifyReply)
 
   const isBootstrapAdmin = bootstrapEmails().has(user.email.toLowerCase());
 
-  if (isBootstrapAdmin && !ADMIN_ROLES.has(user.role)) {
+  if (isBootstrapAdmin && !["admin", "super_admin"].includes(user.role)) {
     const db = createDatabase();
     await db.update(schema.users)
-      .set({ role: "content_admin", updatedAt: new Date() })
+      .set({ role: "admin", updatedAt: new Date() })
       .where(eq(schema.users.id, user.userId));
 
-    user = { ...user, role: "content_admin" };
+    user = { ...user, role: "admin" };
   }
 
   if (!ADMIN_ROLES.has(user.role)) {
@@ -45,3 +45,27 @@ export async function requireAdmin(request: FastifyRequest, reply: FastifyReply)
 
   return { token, user };
 }
+
+
+export function roleAllowed(role: string, allowed: string[]) {
+  return allowed.includes(role);
+}
+
+export async function requireAdminRole(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  allowed: string[]
+) {
+  const auth = await requireAdmin(request, reply);
+  if (!auth) return null;
+  if (!roleAllowed(auth.user.role, allowed)) {
+    reply.code(403).send({ error: "insufficient_admin_role" });
+    return null;
+  }
+  return auth;
+}
+
+export const CONTENT_REVIEW_ROLES = ["content_reviewer", "content_admin", "admin", "super_admin"];
+export const CONTENT_MANAGE_ROLES = ["content_admin", "admin", "super_admin"];
+export const OPERATIONS_ADMIN_ROLES = ["admin", "super_admin"];
+export const SUPER_ADMIN_ROLES = ["super_admin"];

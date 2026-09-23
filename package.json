@@ -1,6 +1,6 @@
 {
   "name": "kankorprep",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -25,7 +25,8 @@
     "verify:grade10-test-content": "node scripts/verify-grade10-test-content.mjs",
     "verify:phase6": "node scripts/verify-phase6.mjs",
     "verify:phase7": "node scripts/verify-phase7.mjs",
-    "verify:phase8": "node scripts/verify-phase8.mjs"
+    "verify:phase8": "node scripts/verify-phase8.mjs",
+    "verify:phase9": "node scripts/verify-phase9.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

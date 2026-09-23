@@ -41,7 +41,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 8 — Freemium and Billing completed in source.
+Phase 9 — Administration and Content Quality completed in source.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -125,6 +125,25 @@ Phase 8 — Freemium and Billing completed in source.
 - Mobile Premium screen supports plan selection, pending checkout, simulated confirmation, entitlement refresh, and cancel-at-period-end.
 - Phase 8 structural verifier.
 
+### Phase 9
+- Role-scoped administration separates content review, content management, operational billing, and super-admin role management.
+- Question lifecycle is explicit: Draft → Review → Approved → Published → Deprecated. Direct status PATCH bypass is blocked.
+- ContentReview records preserve reviewer decisions, notes, and publication criteria.
+- Publish criteria require complete choices/correct answer/curriculum mapping/source labeling/short explanation and enforce rendering or worked-solution checks when flagged in source metadata.
+- Question translations have independent verification state/version and independent review records.
+- Published/deprecated questions cannot be edited in place. Corrections create a new Draft question version linked by supersedesQuestionId and deprecate the previous published record.
+- Existing exam snapshots and historical form mappings therefore continue to reference the original question record/version.
+- QuestionRevision snapshots preserve prior editorial states, including a Phase 9 baseline backfill for existing questions.
+- Bulk question import supports validate-only and apply modes, row-level validation, topic existence validation, Draft-only insertion, and import batch reports.
+- Internal content-quality reports support question, incorrect-answer, explanation, translation, rendering, curriculum-mapping, provenance, and other issue types.
+- Audit logs record key question lifecycle, correction, translation, bulk-import, report, configuration, and role-change actions.
+- Administration dashboard exposes users, active students, completed exams, question health, report health, and payment activity.
+- Basic user visibility and super-admin-only role changes are available.
+- Generic app configuration is administrable with audit history.
+- Content Quality web console provides review queue, safe correction/version history, bulk import, reports, audit log, and user visibility.
+- Student-facing question-report submission remains V1.1 as specified; Phase 9 implements the internal editorial/reporting system without silently expanding MVP scope.
+- Phase 9 structural verifier.
+
 ## Verification status
 - Phase 2 account flow was locally verified by the user.
 - Phase 3 admin access was locally verified by the user.
@@ -144,7 +163,7 @@ Phase 8 — Freemium and Billing completed in source.
 - Development checkout uses the simulated provider only. Production payment availability, app-store policy, provider credentials, webhook signature method, and legal/privacy obligations must be rechecked before commercial launch.
 
 ## Latest source baseline
-Phase 8 branch awaiting merge to `main`.
+Phase 9 implementation prepared for `main`.
 
 ## Next phase
-Phase 9 — Administration and Content Quality.
+Phase 10 — Release Readiness.

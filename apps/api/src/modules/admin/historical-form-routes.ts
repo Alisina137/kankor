@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { asc, desc, eq, inArray } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdmin } from "../../common/admin-auth.js";
+import { requireAdminRole, CONTENT_MANAGE_ROLES } from "../../common/admin-auth.js";
 import { parseScoringRules } from "../exams/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
@@ -30,7 +30,7 @@ function objectValue(value: unknown) {
 
 export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   app.get("/historical-forms", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const items = await db.select().from(schema.historicalForms)
       .orderBy(desc(schema.historicalForms.year), desc(schema.historicalForms.updatedAt));
@@ -38,7 +38,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get<{ Params: { id: string } }>("/historical-forms/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const forms = await db.select().from(schema.historicalForms)
       .where(eq(schema.historicalForms.id, request.params.id)).limit(1);
@@ -62,7 +62,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/historical-forms", async (request: BodyRequest, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const archiveCode = stringValue(request.body.archiveCode).toLowerCase();
@@ -118,7 +118,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/historical-forms/:id", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
     const db = createDatabase();
 
@@ -213,7 +213,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.put<{ Params: { id: string }; Body: Record<string, unknown> }>("/historical-forms/:id/questions", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
     const db = createDatabase();
 
@@ -278,7 +278,7 @@ export const adminHistoricalFormRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post<{ Params: { id: string }; Body: Record<string, unknown> }>("/historical-forms/:id/import", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const payload = objectValue(request.body);

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdmin } from "../../common/admin-auth.js";
+import { requireAdminRole, CONTENT_MANAGE_ROLES } from "../../common/admin-auth.js";
 import { parseScoringRules } from "../exams/service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
@@ -22,7 +22,7 @@ function criteriaValue(value: unknown) {
 
 export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
   app.get("/exam-blueprints", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     return {
       items: await db.select().from(schema.examBlueprints)
@@ -31,7 +31,7 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/exam-blueprints", async (request: BodyRequest, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const code = stringValue(request.body.code).toLowerCase();
@@ -75,7 +75,7 @@ export const adminExamBlueprintRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/exam-blueprints/:id", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
     if (!admin) return;
 
     const db = createDatabase();

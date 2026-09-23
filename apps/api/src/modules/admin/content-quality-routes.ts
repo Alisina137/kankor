@@ -169,6 +169,58 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
     }
   );
 
+
+  app.post<{Params:{id:string}}>(
+    "/content/questions/:id/deprecate",
+    async (request, reply) => {
+      const admin = await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES);
+      if (!admin) return;
+      const db = createDatabase();
+      const rows = await db.select().from(schema.questions).where(eq(schema.questions.id,request.params.id)).limit(1);
+      const question=rows[0];
+      if(!question)return reply.code(404).send({error:"question_not_found"});
+      if(question.verificationStatus!=="published")return reply.code(409).send({error:"question_not_published"});
+      await db.update(schema.questions).set({verificationStatus:"deprecated",updatedBy:admin.user.userId,updatedAt:new Date()}).where(eq(schema.questions.id,question.id));
+      await db.insert(schema.contentReviews).values({entityType:"question",entityId:question.id,decision:"deprecated",criteria:{},reviewerId:admin.user.userId});
+      await writeAudit({actorUserId:admin.user.userId,action:"question.deprecate",entityType:"question",entityId:question.id,before:questionSnapshot(question),after:{...questionSnapshot(question),verificationStatus:"deprecated"}});
+      return {status:"deprecated"};
+    }
+  );
+
+  app.post<{Params:{id:string;language:string};Body:{decision?:string;notes?:string}}>(
+    "/content/questions/:id/translations/:language/review",
+    async (request, reply) => {
+      const admin=await requireAdminRole(request,reply,CONTENT_REVIEW_ROLES);
+      if(!admin)return;
+      const decision=str(request.body?.decision);
+      if(!["approved","rejected","published"].includes(decision))return reply.code(400).send({error:"invalid_review_decision"});
+      const db=createDatabase();
+      const rows=await db.select().from(schema.questionTranslations).where(and(
+        eq(schema.questionTranslations.questionId,request.params.id),
+        eq(schema.questionTranslations.language,request.params.language)
+      )).limit(1);
+      const translation=rows[0];
+      if(!translation)return reply.code(404).send({error:"translation_not_found"});
+      let next:string;
+      if(decision==="approved"){
+        if(translation.verificationStatus!=="draft"&&translation.verificationStatus!=="review")return reply.code(409).send({error:"translation_not_reviewable"});
+        next="approved";
+      }else if(decision==="rejected"){
+        next="draft";
+      }else{
+        if(translation.verificationStatus!=="approved")return reply.code(409).send({error:"translation_not_approved"});
+        next="published";
+      }
+      await db.update(schema.questionTranslations).set({verificationStatus:next,updatedBy:admin.user.userId,updatedAt:new Date()}).where(eq(schema.questionTranslations.id,translation.id));
+      await db.insert(schema.contentReviews).values({
+        entityType:"question_translation",entityId:translation.id,decision,notes:opt(request.body?.notes),
+        criteria:{language:translation.language},reviewerId:admin.user.userId
+      });
+      await writeAudit({actorUserId:admin.user.userId,action:`translation.${decision}`,entityType:"question_translation",entityId:translation.id,before:translation as unknown as Record<string,unknown>,after:{...translation,verificationStatus:next} as unknown as Record<string,unknown>});
+      return {status:next};
+    }
+  );
+
   app.get<{Params:{id:string}}>(
     "/content/questions/:id/revisions",
     async (request, reply) => {

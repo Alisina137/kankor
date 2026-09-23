@@ -152,6 +152,9 @@ export const questionTranslations = pgTable("question_translations", {
   shortExplanation: text("short_explanation"),
   detailedExplanation: text("detailed_explanation"),
   workedSolution: text("worked_solution"),
+  verificationStatus: varchar("verification_status", { length: 24 }).notNull().default("draft"),
+  version: integer("version").notNull().default(1),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({

@@ -36,10 +36,10 @@ export default function LoginScreen() {
   return (
     <Screen>
       <View style={styles.stack}>
-        <Text style={[styles.title, { textAlign: align }]}>{text.signIn}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.signIn}</Text>
         <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" />
         <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="current-password" />
-        {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
         <AppButton label={text.signIn} loading={busy} onPress={submit} />
         <Pressable onPress={() => router.push("/(auth)/recovery")}><Text style={styles.link}>{text.forgotPassword}</Text></Pressable>
         <Pressable onPress={() => router.push("/(auth)/register")}><Text style={styles.link}>{text.noAccount} {text.createAccount}</Text></Pressable>

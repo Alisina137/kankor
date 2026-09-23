@@ -82,6 +82,7 @@ export function publishCriteria(question: typeof schema.questions.$inferSelect) 
 
   const renderingRequired = sourceMetadata.hasFormula === true || sourceMetadata.hasImage === true;
   const workedSolutionRequired = sourceMetadata.requiresWorkedSolution === true;
+  const detailedExplanationRequired = sourceMetadata.requiresDetailedExplanation === true;
 
   const checks = {
     hasContent: Boolean(question.content.trim()),
@@ -90,14 +91,27 @@ export function publishCriteria(question: typeof schema.questions.$inferSelect) 
     hasCurriculumMapping: Boolean(question.topicId),
     hasSourceType: Boolean(question.sourceType),
     sourceLabeled: question.sourceType !== "official" || Object.keys(sourceMetadata).length > 0,
-    hasShortExplanation: Boolean(question.shortExplanation?.trim()),
+    shortExplanationRecommended: Boolean(question.shortExplanation?.trim()),
+    detailedExplanationSatisfied: !detailedExplanationRequired || Boolean(question.detailedExplanation?.trim()),
     renderingValidated: !renderingRequired || sourceMetadata.renderingValidated === true,
     workedSolutionSatisfied: !workedSolutionRequired || Boolean(question.workedSolution?.trim())
   };
 
+  const requiredChecks = [
+    checks.hasContent,
+    checks.hasFourChoices,
+    checks.correctChoiceExists,
+    checks.hasCurriculumMapping,
+    checks.hasSourceType,
+    checks.sourceLabeled,
+    checks.detailedExplanationSatisfied,
+    checks.renderingValidated,
+    checks.workedSolutionSatisfied
+  ];
+
   return {
     checks,
-    passed: Object.values(checks).every(Boolean)
+    passed: requiredChecks.every(Boolean)
   };
 }
 

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { asc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdmin } from "../../common/admin-auth.js";
+import { requireAdminRole, CONTENT_MANAGE_ROLES } from "../../common/admin-auth.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 
@@ -22,7 +22,7 @@ function boolValue(value: unknown, fallback = true) {
 
 export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   app.get("/curriculum", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
 
     const [grades, subjects, books, chapters, topics] = await Promise.all([
@@ -37,7 +37,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/grades", async (request: BodyRequest, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const number = intValue(request.body.number, -1);
     const nameFa = stringValue(request.body.nameFa);
     if (number < 1 || !nameFa) return reply.code(400).send({ error: "invalid_grade" });
@@ -54,7 +54,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/grades/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const values: Record<string, unknown> = { updatedAt: new Date() };
     if ("nameFa" in request.body) values.nameFa = stringValue(request.body.nameFa);
@@ -67,7 +67,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/subjects", async (request: BodyRequest, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const code = stringValue(request.body.code).toLowerCase();
     const nameFa = stringValue(request.body.nameFa);
     if (!code || !nameFa) return reply.code(400).send({ error: "invalid_subject" });
@@ -82,7 +82,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/subjects/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const values: Record<string, unknown> = { updatedAt: new Date() };
     if ("code" in request.body) values.code = stringValue(request.body.code).toLowerCase();
@@ -96,7 +96,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/books", async (request: BodyRequest, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const subjectId = stringValue(request.body.subjectId);
     const gradeId = stringValue(request.body.gradeId);
     const code = stringValue(request.body.code).toLowerCase();
@@ -114,7 +114,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/books/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const values: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of ["subjectId", "gradeId", "code", "titleFa"] as const) {
@@ -130,7 +130,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/chapters", async (request: BodyRequest, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const bookId = stringValue(request.body.bookId);
     const titleFa = stringValue(request.body.titleFa);
     const number = intValue(request.body.number, -1);
@@ -146,7 +146,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/chapters/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const values: Record<string, unknown> = { updatedAt: new Date() };
     if ("bookId" in request.body) values.bookId = stringValue(request.body.bookId);
@@ -161,7 +161,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/topics", async (request: BodyRequest, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const chapterId = stringValue(request.body.chapterId);
     const titleFa = stringValue(request.body.titleFa);
     if (!chapterId || !titleFa) return reply.code(400).send({ error: "invalid_topic" });
@@ -177,7 +177,7 @@ export const adminCurriculumRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/topics/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, CONTENT_MANAGE_ROLES))) return;
     const db = createDatabase();
     const values: Record<string, unknown> = { updatedAt: new Date() };
     if ("chapterId" in request.body) values.chapterId = stringValue(request.body.chapterId);

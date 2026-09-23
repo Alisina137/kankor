@@ -135,7 +135,15 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       updatedBy: admin.user.userId
     }).returning({ id: schema.questions.id });
 
-    return reply.code(201).send({ question: await tracedQuestion(inserted.id) });
+    const createdQuestion = await tracedQuestion(inserted.id);
+    await writeAudit({
+      actorUserId: admin.user.userId,
+      action: "question.create",
+      entityType: "question",
+      entityId: inserted.id,
+      after: createdQuestion as unknown as Record<string, unknown>
+    });
+    return reply.code(201).send({ question: createdQuestion });
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/questions/:id", async (request, reply) => {
@@ -257,16 +265,33 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       updatedAt: new Date()
     };
 
+    let translationId: string;
+    let beforeTranslation: Record<string, unknown> | null = null;
     if (existing[0]) {
       const currentTranslation = await db.select().from(schema.questionTranslations)
         .where(eq(schema.questionTranslations.id, existing[0].id)).limit(1);
+      beforeTranslation = currentTranslation[0] as unknown as Record<string, unknown> ?? null;
       await db.update(schema.questionTranslations)
         .set({ ...values, version: (currentTranslation[0]?.version ?? 1) + 1 })
         .where(eq(schema.questionTranslations.id, existing[0].id));
+      translationId = existing[0].id;
     } else {
-      await db.insert(schema.questionTranslations).values(values);
+      const [createdTranslation] = await db.insert(schema.questionTranslations).values(values)
+        .returning({ id: schema.questionTranslations.id });
+      translationId = createdTranslation.id;
     }
 
-    return { saved: true };
+    const afterTranslation = await db.select().from(schema.questionTranslations)
+      .where(eq(schema.questionTranslations.id, translationId)).limit(1);
+    await writeAudit({
+      actorUserId: admin.user.userId,
+      action: existing[0] ? "translation.edit" : "translation.create",
+      entityType: "question_translation",
+      entityId: translationId,
+      before: beforeTranslation,
+      after: afterTranslation[0] as unknown as Record<string, unknown>
+    });
+
+    return { saved: true, translation: afterTranslation[0] };
   });
 };

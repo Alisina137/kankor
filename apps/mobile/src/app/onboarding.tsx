@@ -18,7 +18,7 @@ export default function OnboardingScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
 
   if (!loading && !user) return <Redirect href="/(auth)/welcome" />;
   if (user?.onboardingCompleted) return <Redirect href="/(tabs)" />;

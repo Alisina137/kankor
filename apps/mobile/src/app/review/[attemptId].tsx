@@ -120,6 +120,7 @@ export default function ReviewScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [filter, setFilter] = useState<FilterKey>("all");
   const [items, setItems] = useState<ReviewItem[]>([]);
@@ -182,14 +183,14 @@ export default function ReviewScreen() {
 
   return (
     <View style={styles.page}>
-      <View style={styles.header}>
+      <View style={[styles.header, { flexDirection: rowDirection }]}>
         <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
+          <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, { flexDirection: rowDirection }]}>
         {filterKeys.map((key) => (
           <Pressable
             key={key}
@@ -216,9 +217,9 @@ export default function ReviewScreen() {
 
           return (
             <View style={styles.card} key={item.examQuestionId}>
-              <View style={styles.cardTop}>
+              <View style={[styles.cardTop, { flexDirection: rowDirection }]}>
                 <Text style={styles.questionNumber}>{text.question} {item.order}</Text>
-                <View style={styles.statusRow}>
+                <View style={[styles.statusRow, { flexDirection: rowDirection }]}>
                   <Text style={[
                     styles.status,
                     item.correct === true ? styles.statusCorrect : item.correct === false ? styles.statusIncorrect : styles.statusNeutral

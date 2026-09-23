@@ -103,6 +103,7 @@ export default function HistoricalFormsScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [forms, setForms] = useState<HistoricalForm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,9 +170,9 @@ export default function HistoricalFormsScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+      <View style={[styles.header, { flexDirection: rowDirection }]}>
         <Pressable onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
+          <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <View style={styles.headerCopy}>
           <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
@@ -180,7 +181,7 @@ export default function HistoricalFormsScreen() {
       </View>
 
       <View style={styles.filterCard}>
-        <View style={styles.filterRow}>
+        <View style={[styles.filterRow, { flexDirection: rowDirection }]}>
           <TextInput
             value={year}
             onChangeText={setYear}
@@ -195,14 +196,14 @@ export default function HistoricalFormsScreen() {
             style={[styles.input, { textAlign: align }]}
           />
         </View>
-        <View style={styles.filterRow}>
+        <View style={[styles.filterRow, { flexDirection: rowDirection }]}>
           <TextInput
             value={round}
             onChangeText={setRound}
             placeholder={text.round}
             style={[styles.input, { textAlign: align }]}
           />
-          <View style={styles.languageRow}>
+          <View style={[styles.languageRow, { flexDirection: rowDirection }]}>
             {["", "fa", "ps"].map((item) => (
               <Pressable
                 key={item || "all"}
@@ -217,7 +218,7 @@ export default function HistoricalFormsScreen() {
           </View>
         </View>
         {years.length ? (
-          <View style={styles.yearRow}>
+          <View style={[styles.yearRow, { flexDirection: rowDirection }]}>
             {years.slice(0, 8).map((item) => (
               <Pressable key={item} onPress={() => setYear(String(item))} style={styles.yearChip}>
                 <Text style={styles.yearText}>{item}</Text>
@@ -239,7 +240,7 @@ export default function HistoricalFormsScreen() {
 
       {forms.map((form) => (
         <View style={styles.card} key={form.id}>
-          <View style={styles.cardTop}>
+          <View style={[styles.cardTop, { flexDirection: rowDirection }]}>
             <View style={styles.cardTitleWrap}>
               <Text style={[styles.cardTitle, { textAlign: align }]}>{form.title}</Text>
               <Text style={[styles.meta, { textAlign: align }]}>
@@ -252,13 +253,13 @@ export default function HistoricalFormsScreen() {
             <Text style={styles.archiveCode}>{form.archiveCode}</Text>
           </View>
 
-          <View style={styles.badges}>
+          <View style={[styles.badges, { flexDirection: rowDirection }]}>
             <Text style={styles.badge}>{text[form.sourceStatus]}</Text>
             <Text style={styles.badge}>{text[form.originalOrderStatus]}</Text>
             {form.accessTier === "premium" ? <Text style={styles.premiumBadge}>Premium</Text> : null}
           </View>
 
-          <View style={styles.stats}>
+          <View style={[styles.stats, { flexDirection: rowDirection }]}>
             <Text style={styles.stat}>{form.questionCount} {text.questions}</Text>
             <Text style={styles.stat}>
               {form.durationSeconds ? `${Math.round(form.durationSeconds / 60)} ${text.minutes}` : text.noTimer}

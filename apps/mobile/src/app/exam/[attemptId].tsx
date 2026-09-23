@@ -130,6 +130,7 @@ export default function ExamSessionScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
+  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
 
   const [payload, setPayload] = useState<ExamAttemptState | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -407,7 +408,7 @@ export default function ExamSessionScreen() {
 
   return (
     <View style={styles.page}>
-      <View style={styles.topbar}>
+      <View style={[styles.topbar, { flexDirection: rowDirection }]}>
         <View style={styles.titleBlock}>
           <Text style={[styles.examTitle, { textAlign: align }]} numberOfLines={1}>{payload.attempt.title}</Text>
           <Text style={[styles.progressText, { textAlign: align }]}>
@@ -456,7 +457,7 @@ export default function ExamSessionScreen() {
           <Text style={styles.flagText}>{currentAnswer?.flagged ? text.flagged : text.flag}</Text>
         </Pressable>
 
-        <View style={styles.navigator}>
+        <View style={[styles.navigator, { flexDirection: rowDirection }]}>
           {payload.questions.map((question, index) => {
             const answer = answerMap.get(question.id);
             return (
@@ -477,20 +478,20 @@ export default function ExamSessionScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { flexDirection: rowDirection }]}>
         <Pressable
           disabled={currentIndex === 0}
           onPress={() => void moveTo(Math.max(0, currentIndex - 1))}
           style={[styles.footerButton, currentIndex === 0 && styles.disabled]}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+          <Ionicons name={direction === "rtl" ? "chevron-forward" : "chevron-back"} size={20} color={theme.colors.text} />
           <Text style={styles.footerText}>{text.previous}</Text>
         </Pressable>
 
         {currentIndex < payload.questions.length - 1 ? (
-          <Pressable onPress={() => void moveTo(currentIndex + 1)} style={styles.footerButton}>
+          <Pressable onPress={() => void moveTo(currentIndex + 1)} style={[styles.footerButton, { flexDirection: rowDirection }]}>
             <Text style={styles.footerText}>{text.next}</Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
+            <Ionicons name={direction === "rtl" ? "chevron-back" : "chevron-forward"} size={20} color={theme.colors.text} />
           </Pressable>
         ) : (
           <Pressable onPress={confirmSubmit} style={[styles.submitButton, submitting && styles.disabled]}>

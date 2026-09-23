@@ -4,7 +4,7 @@ import { createDatabase, schema } from "@kankor/database";
 import {
   CONTENT_MANAGE_ROLES,
   CONTENT_REVIEW_ROLES,
-  SUPER_ADMIN_ROLES,
+  OPERATIONS_ADMIN_ROLES,
   requireAdminRole
 } from "../../common/admin-auth.js";
 import {
@@ -423,11 +423,14 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{Params:{id:string};Body:{role?:string}}>("/users/:id/role", async (request, reply) => {
-    const admin=await requireAdminRole(request,reply,SUPER_ADMIN_ROLES);
+    const admin=await requireAdminRole(request,reply,OPERATIONS_ADMIN_ROLES);
     if(!admin)return;
     const role=str(request.body?.role);
     const allowed=["student","content_reviewer","content_admin","admin","super_admin"];
     if(!allowed.includes(role))return reply.code(400).send({error:"invalid_role"});
+    if(["admin","super_admin"].includes(role) && admin.user.role !== "super_admin") {
+      return reply.code(403).send({error:"super_admin_required_for_privileged_role"});
+    }
     const db=createDatabase();
     const rows=await db.select().from(schema.users).where(eq(schema.users.id,request.params.id)).limit(1);
     if(!rows[0])return reply.code(404).send({error:"user_not_found"});

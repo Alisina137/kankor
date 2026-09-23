@@ -6,6 +6,7 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").rep
 
 type Dashboard = {
   users: number;
+  activeStudents: number;
   completedExams: number;
   questionHealth: Array<{status:string;count:number}>;
   reportHealth: Array<{status:string;count:number}>;
@@ -16,6 +17,7 @@ type Report = { id:string; questionId:string|null; reportType:string; status:str
 type Audit = { id:string; action:string; entityType:string|null; entityId:string|null; metadata:Record<string,unknown>; createdAt:string; actorEmail:string|null };
 type ImportBatch = { id:string; status:string; totalRows:number; acceptedRows:number; rejectedRows:number; createdAt:string };
 type User = { id:string; email:string; role:string; preferredLanguage:string; targetExamYear:number|null; createdAt:string };
+type Revision = { id:string; version:number; changeReason:string|null; createdAt:string; snapshot:Record<string,unknown> };
 
 async function request<T>(path:string, options:RequestInit={}, token?:string) {
   const headers=new Headers(options.headers);
@@ -41,6 +43,10 @@ export default function ContentQualityPage(){
   const [reportDescription,setReportDescription]=useState("");
   const [status,setStatus]=useState("");
   const [busy,setBusy]=useState(false);
+  const [correctionQuestionId,setCorrectionQuestionId]=useState("");
+  const [correctionReason,setCorrectionReason]=useState("");
+  const [correctionJson,setCorrectionJson]=useState("{}");
+  const [revisions,setRevisions]=useState<Revision[]>([]);
 
   const load=useCallback(async(authToken:string)=>{
     const [d,q,r,i]=await Promise.all([
@@ -111,6 +117,42 @@ export default function ContentQualityPage(){
     finally{setBusy(false);}
   }
 
+
+  async function loadRevisions(){
+    if(!token||!correctionQuestionId.trim())return;
+    setBusy(true);setStatus("");
+    try{
+      const result=await request<{items:Revision[]}>(`/admin/content/questions/${correctionQuestionId.trim()}/revisions`,{},token);
+      setRevisions(result.items);
+      setStatus(`${result.items.length} revision پیدا شد.`);
+    }catch(error){setStatus(`Revision history بارگیری نشد: ${error instanceof Error?error.message:"خطا"}`);}
+    finally{setBusy(false);}
+  }
+
+  async function correctQuestion(){
+    if(!token||!correctionQuestionId.trim()||!correctionReason.trim())return;
+    let patch:Record<string,unknown>;
+    try{
+      const parsed=JSON.parse(correctionJson||"{}");
+      if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error();
+      patch=parsed as Record<string,unknown>;
+    }catch{setStatus("Correction JSON معتبر نیست.");return;}
+    setBusy(true);setStatus("");
+    try{
+      const result=await request<{question:{id:string;version:number};supersededQuestionId:string}>(
+        `/admin/content/questions/${correctionQuestionId.trim()}/correct`,
+        {method:"POST",body:JSON.stringify({...patch,changeReason:correctionReason.trim()})},
+        token
+      );
+      setCorrectionQuestionId(result.question.id);
+      setCorrectionReason("");
+      setCorrectionJson("{}");
+      await load(token);
+      setStatus(`نسخه جدید v${result.question.version} ایجاد شد. سوال قبلی محفوظ و Deprecated شد.`);
+    }catch(error){setStatus(`Correction ناموفق بود: ${error instanceof Error?error.message:"خطا"}`);}
+    finally{setBusy(false);}
+  }
+
   async function resolveReport(id:string,statusValue:"resolved"|"dismissed"){
     if(!token)return;
     setBusy(true);setStatus("");
@@ -143,6 +185,7 @@ export default function ContentQualityPage(){
 
     {dashboard?<section className="stats">
       <div><strong>{dashboard.users}</strong><span>کاربر</span></div>
+      <div><strong>{dashboard.activeStudents}</strong><span>کاربر فعال</span></div>
       <div><strong>{dashboard.completedExams}</strong><span>امتحان تکمیل‌شده</span></div>
       <div><strong>{count(dashboard.questionHealth,"published")}</strong><span>سوال Published</span></div>
       <div><strong>{count(dashboard.questionHealth,"review")}</strong><span>در Review</span></div>
@@ -171,6 +214,24 @@ export default function ContentQualityPage(){
           </div>
         )}
       </div>
+    </section>
+
+
+    <section className="card form">
+      <h2>Published Question Correction & Version History</h2>
+      <p>سوال Published مستقیماً ویرایش نمی‌شود. Correction یک Question جدید با version بالاتر می‌سازد و سوال قبلی برای تلاش‌ها/فورم‌های تاریخی محفوظ می‌ماند.</p>
+      <label>Question ID<input value={correctionQuestionId} onChange={e=>setCorrectionQuestionId(e.target.value)} placeholder="UUID سوال Published"/></label>
+      <label>دلیل تغییر<input value={correctionReason} onChange={e=>setCorrectionReason(e.target.value)} placeholder="مثلاً جواب صحیح اشتباه بود" /></label>
+      <label>فیلدهای اصلاح‌شده (JSON)
+        <textarea rows={8} value={correctionJson} onChange={e=>setCorrectionJson(e.target.value)} placeholder={'{"correctChoice":"B","shortExplanation":"..."}'} />
+      </label>
+      <div className="inline-actions">
+        <button className="secondary" disabled={busy||!correctionQuestionId.trim()} onClick={()=>void loadRevisions()}>Revision History</button>
+        <button disabled={busy||!correctionQuestionId.trim()||!correctionReason.trim()} onClick={()=>void correctQuestion()}>Create corrected Draft version</button>
+      </div>
+      {revisions.length?<div className="list">
+        {revisions.map(r=><div className="list-item" key={r.id}><div><strong>Version {r.version}</strong><small>{r.changeReason??"بدون دلیل"} · {new Date(r.createdAt).toLocaleString()}</small></div><span className="badge">immutable snapshot</span></div>)}
+      </div>:null}
     </section>
 
     <section className="card form">

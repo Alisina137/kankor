@@ -230,10 +230,28 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
       const db = createDatabase();
       const current = await db.select().from(schema.questions).where(eq(schema.questions.id,request.params.id)).limit(1);
       if (!current[0]) return reply.code(404).send({error:"question_not_found"});
-      const items = await db.select().from(schema.questionRevisions)
-        .where(eq(schema.questionRevisions.questionId,request.params.id))
-        .orderBy(desc(schema.questionRevisions.version));
-      return {current:questionSnapshot(current[0]),items};
+      const lineage: Array<{ id: string; snapshot: Record<string, unknown> }> = [];
+      const lineageIds: string[] = [];
+      let cursor = current[0];
+      for (let depth = 0; cursor && depth < 50; depth++) {
+        lineage.push({ id: cursor.id, snapshot: questionSnapshot(cursor) });
+        lineageIds.push(cursor.id);
+        if (!cursor.supersedesQuestionId) break;
+        const parent = await db.select().from(schema.questions)
+          .where(eq(schema.questions.id, cursor.supersedesQuestionId)).limit(1);
+        if (!parent[0]) break;
+        cursor = parent[0];
+      }
+
+      const items = [];
+      for (const questionId of lineageIds) {
+        const rows = await db.select().from(schema.questionRevisions)
+          .where(eq(schema.questionRevisions.questionId, questionId))
+          .orderBy(desc(schema.questionRevisions.version));
+        items.push(...rows);
+      }
+
+      return {current:questionSnapshot(current[0]),lineage,items};
     }
   );
 

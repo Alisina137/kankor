@@ -108,7 +108,7 @@ export default function ProgressScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
   const startAlign = direction === "rtl" ? "flex-end" : "flex-start";
   const [overview, setOverview] = useState<Overview | null>(null);
   const [topics, setTopics] = useState<TopicRow[]>([]);

@@ -410,8 +410,8 @@ export default function ExamSessionScreen() {
     <View style={styles.page}>
       <View style={[styles.topbar, { flexDirection: rowDirection }]}>
         <View style={styles.titleBlock}>
-          <Text style={[styles.examTitle, { textAlign: align }]} numberOfLines={1}>{payload.attempt.title}</Text>
-          <Text style={[styles.progressText, { textAlign: align }]}>
+          <Text style={[styles.examTitle, { textAlign: align, writingDirection: direction }]} numberOfLines={1}>{payload.attempt.title}</Text>
+          <Text style={[styles.progressText, { textAlign: align, writingDirection: direction }]}>
             {text.question} {currentIndex + 1} {text.of} {payload.questions.length}
           </Text>
         </View>
@@ -425,7 +425,7 @@ export default function ExamSessionScreen() {
       {remainingSeconds === 0 ? <Text style={styles.expired}>{text.expired}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.questionText, { textAlign: align }]}>{currentQuestion.content}</Text>
+        <Text style={[styles.questionText, { textAlign: align, writingDirection: direction }]}>{currentQuestion.content}</Text>
 
         <View style={styles.choices}>
           {currentQuestion.choices.map((choice) => {
@@ -438,7 +438,7 @@ export default function ExamSessionScreen() {
                 style={[styles.choice, selected && styles.choiceSelected, locked && styles.disabled]}
               >
                 <Text style={[styles.choiceKey, selected && styles.choiceKeySelected]}>{choice.key}</Text>
-                <Text style={[styles.choiceText, { textAlign: align }]}>{choice.text}</Text>
+                <Text style={[styles.choiceText, { textAlign: align, writingDirection: direction }]}>{choice.text}</Text>
               </Pressable>
             );
           })}

@@ -472,6 +472,9 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
   app.patch<{Params:{id:string};Body:{role?:string}}>("/users/:id/role", async (request, reply) => {
     const admin=await requireAdminRole(request,reply,OPERATIONS_ADMIN_ROLES);
     if(!admin)return;
+    if (request.params.id === admin.user.userId) {
+      return reply.code(409).send({error:"self_role_change_not_allowed"});
+    }
     const role=str(request.body?.role);
     const allowed=["student","content_reviewer","content_admin","admin","super_admin"];
     if(!allowed.includes(role))return reply.code(400).send({error:"invalid_role"});

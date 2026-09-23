@@ -23,16 +23,16 @@ export function FormField({
   const shouldHidePassword = Boolean(secureTextEntry) && !passwordVisible;
 
   return (
-    <View style={styles.field}>
+    <View style={[styles.field, { direction }]}>
       <Text style={[styles.label, { textAlign: align }]}>{label}</Text>
 
-      <View style={[styles.inputShell, error && styles.inputError]}>
+      <View style={[styles.inputShell, { direction }, error && styles.inputError]}>
         <TextInput
           {...props}
           autoCapitalize={props.autoCapitalize ?? "none"}
           placeholderTextColor={theme.colors.mutedText}
           secureTextEntry={shouldHidePassword}
-          style={[styles.input, { textAlign: align }, props.style]}
+          style={[styles.input, { textAlign: align, writingDirection: direction }, props.style]}
         />
 
         {secureToggle && secureTextEntry ? (

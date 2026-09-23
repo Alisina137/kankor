@@ -123,7 +123,7 @@ export default function ExamsScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
 
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [activeAttempt, setActiveAttempt] = useState<ActiveAttemptResponse["attempt"]>(null);

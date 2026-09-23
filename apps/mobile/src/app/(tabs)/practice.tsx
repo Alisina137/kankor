@@ -102,7 +102,7 @@ export default function PracticeScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
 
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);

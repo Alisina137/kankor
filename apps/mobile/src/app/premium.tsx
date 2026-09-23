@@ -118,7 +118,7 @@ export default function PremiumScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
   const [plans, setPlans] = useState<Plan[]>([]);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [checkout, setCheckout] = useState<Checkout | null>(null);

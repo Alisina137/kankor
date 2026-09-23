@@ -69,8 +69,11 @@ const directionalScreens = [
 
 for (const file of directionalScreens) {
   const content = await readFile(resolve(file), "utf8");
-  if (!content.includes('direction === "rtl" ? "row-reverse" : "row"')) {
-    throw new Error(`RTL row direction missing: ${file}`);
+  if (content.includes('"row-reverse"')) {
+    throw new Error(`Content row double-reversal detected: ${file}. Screen already supplies RTL direction.`);
+  }
+  if (!content.includes('const rowDirection = "row";')) {
+    throw new Error(`Direction-aware content row invariant missing: ${file}`);
   }
 }
 
@@ -92,4 +95,4 @@ if (!exam.includes('direction === "rtl" ? "chevron-forward" : "chevron-back"')
   throw new Error("Exam previous/next chevrons must mirror in RTL");
 }
 
-console.log("Mobile RTL verified: Dari/Pashto use RTL screen direction and RTL text writing direction, right-aligned localized content, reversed horizontal flows, mirrored navigation icons, and RTL tab order while English remains LTR.");
+console.log("Mobile RTL verified: Dari/Pashto content inherits RTL from Screen without double reversal, localized text uses RTL writing direction, navigation icons mirror correctly, RTL tab order is preserved, and English remains LTR.");

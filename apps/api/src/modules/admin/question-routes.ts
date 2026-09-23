@@ -266,12 +266,16 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       shortExplanation: optionalString(request.body.shortExplanation),
       detailedExplanation: optionalString(request.body.detailedExplanation),
       workedSolution: optionalString(request.body.workedSolution),
+      verificationStatus: "draft",
+      updatedBy: admin.user.userId,
       updatedAt: new Date()
     };
 
     if (existing[0]) {
+      const currentTranslation = await db.select().from(schema.questionTranslations)
+        .where(eq(schema.questionTranslations.id, existing[0].id)).limit(1);
       await db.update(schema.questionTranslations)
-        .set(values)
+        .set({ ...values, version: (currentTranslation[0]?.version ?? 1) + 1 })
         .where(eq(schema.questionTranslations.id, existing[0].id));
     } else {
       await db.insert(schema.questionTranslations).values(values);

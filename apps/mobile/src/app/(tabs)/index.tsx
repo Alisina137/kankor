@@ -14,17 +14,17 @@ export default function HomeScreen() {
     <Screen>
       <View style={styles.stack}>
         <View>
-          <Text style={[styles.appName, { textAlign: align }]}>{text.appName}</Text>
-          <Text style={[styles.title, { textAlign: align }]}>{text.homeTitle}</Text>
+          <Text style={[styles.appName, { textAlign: align, writingDirection: direction }]}>{text.appName}</Text>
+          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.homeTitle}</Text>
         </View>
 
         <SectionCard title={text.targetLabel}>
-          <Text style={[styles.target, { textAlign: align }]}>{user?.targetExamYear ?? "—"}</Text>
-          <Text style={[styles.body, { textAlign: align }]}>{text.homeBody}</Text>
+          <Text style={[styles.target, { textAlign: align, writingDirection: direction }]}>{user?.targetExamYear ?? "—"}</Text>
+          <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.homeBody}</Text>
         </SectionCard>
 
         <SectionCard title={text.account}>
-          <Text style={[styles.email, { textAlign: align }]}>{user?.email}</Text>
+          <Text style={[styles.email, { textAlign: align, writingDirection: direction }]}>{user?.email}</Text>
         </SectionCard>
       </View>
     </Screen>

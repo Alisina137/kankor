@@ -132,6 +132,7 @@ export const questions = pgTable("questions", {
   sourceMetadata: jsonb("source_metadata").$type<Record<string, unknown>>().notNull().default({}),
   verificationStatus: varchar("verification_status", { length: 24 }).notNull().default("draft"),
   version: integer("version").notNull().default(1),
+  supersedesQuestionId: uuid("supersedes_question_id"),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

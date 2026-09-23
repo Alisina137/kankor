@@ -11,7 +11,6 @@ import {
   latestReview,
   publishCriteria,
   questionSnapshot,
-  saveRevision,
   writeAudit
 } from "./content-quality-service.js";
 
@@ -158,14 +157,23 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
       const values = correctionValues(current, request.body);
       if (!values) return reply.code(400).send({error:"invalid_correction"});
 
-      await saveRevision(current, reason, admin.user.userId);
       const next = await db.transaction(async (tx) => {
+        await tx.insert(schema.questionRevisions).values({
+          questionId:current.id,
+          version:current.version,
+          snapshot:questionSnapshot(current),
+          changeReason:reason,
+          changedBy:admin.user.userId
+        }).onConflictDoNothing();
+
         const [created] = await tx.insert(schema.questions)
           .values({...values,createdBy:admin.user.userId,updatedBy:admin.user.userId})
           .returning();
+
         await tx.update(schema.questions)
           .set({verificationStatus:"deprecated",updatedBy:admin.user.userId,updatedAt:new Date()})
           .where(eq(schema.questions.id,current.id));
+
         return created;
       });
       await writeAudit({
@@ -325,10 +333,10 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
               });
               inserted++;
             }
+            await tx.update(schema.contentImportBatches).set({
+              status:"applied",appliedAt:new Date()
+            }).where(eq(schema.contentImportBatches.id,batch.id));
           });
-          await db.update(schema.contentImportBatches).set({
-            status:"applied",appliedAt:new Date()
-          }).where(eq(schema.contentImportBatches.id,batch.id));
           batch.status="applied";
           batch.appliedAt=new Date();
         } catch (error) {

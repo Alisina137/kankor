@@ -2,11 +2,10 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { and, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireAdminRole, CONTENT_MANAGE_ROLES, CONTENT_REVIEW_ROLES } from "../../common/admin-auth.js";
-import { latestReview, publishCriteria, saveRevision, validLifecycleTransition, writeAudit } from "./content-quality-service.js";
+import { saveRevision, writeAudit } from "./content-quality-service.js";
 
 type BodyRequest = FastifyRequest<{ Body: Record<string, unknown> }>;
 const CHOICES = new Set(["A", "B", "C", "D"]);
-const STATUSES = new Set(["draft", "review", "approved", "published", "deprecated"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "expert"]);
 const LANGUAGES = new Set(["fa", "ps", "en"]);
 
@@ -187,20 +186,7 @@ export const adminQuestionRoutes: FastifyPluginAsync = async (app) => {
       values.difficulty = difficulty;
     }
     if ("verificationStatus" in request.body) {
-      const status = stringValue(request.body.verificationStatus);
-      if (!STATUSES.has(status)) return reply.code(400).send({ error: "invalid_verification_status" });
-      if (!validLifecycleTransition(currentQuestion.verificationStatus, status)) {
-        return reply.code(409).send({ error: "invalid_question_transition", from: currentQuestion.verificationStatus, to: status });
-      }
-      if (status === "published") {
-        const review = await latestReview("question", currentQuestion.id);
-        if (!review || review.decision !== "approved") {
-          return reply.code(409).send({ error: "approved_review_required" });
-        }
-        const criteria = publishCriteria(currentQuestion);
-        if (!criteria.passed) return reply.code(409).send({ error: "publish_criteria_failed", criteria: criteria.checks });
-      }
-      values.verificationStatus = status;
+      return reply.code(409).send({ error: "use_content_review_workflow" });
     }
     if ("shortExplanation" in request.body) values.shortExplanation = optionalString(request.body.shortExplanation);
     if ("detailedExplanation" in request.body) values.detailedExplanation = optionalString(request.body.detailedExplanation);

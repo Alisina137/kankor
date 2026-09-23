@@ -187,7 +187,7 @@ export default function ReviewScreen() {
         <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
-        <Text style={[styles.title, { textAlign: align }]}>{text.title}</Text>
+        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, { flexDirection: rowDirection }]}>
@@ -206,7 +206,7 @@ export default function ReviewScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.content}>
-        {!loading && !items.length ? <Text style={[styles.empty, { textAlign: align }]}>{text.noItems}</Text> : null}
+        {!loading && !items.length ? <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.noItems}</Text> : null}
 
         {items.map((item) => {
           const statusText = item.correct === true
@@ -228,7 +228,7 @@ export default function ReviewScreen() {
                 </View>
               </View>
 
-              <Text style={[styles.question, { textAlign: align }]}>{item.content}</Text>
+              <Text style={[styles.question, { textAlign: align, writingDirection: direction }]}>{item.content}</Text>
 
               <View style={styles.choices}>
                 {item.choices.map((choice) => {
@@ -244,7 +244,7 @@ export default function ReviewScreen() {
                       ]}
                     >
                       <Text style={styles.choiceKey}>{choice.key}</Text>
-                      <Text style={[styles.choiceText, { textAlign: align }]}>{choice.text}</Text>
+                      <Text style={[styles.choiceText, { textAlign: align, writingDirection: direction }]}>{choice.text}</Text>
                       <View style={styles.choiceBadges}>
                         {isSelected ? <Text style={styles.yourBadge}>{text.yourAnswer}</Text> : null}
                         {isCorrect ? <Text style={styles.correctBadge}>{text.correctAnswer}</Text> : null}
@@ -255,33 +255,33 @@ export default function ReviewScreen() {
               </View>
 
               {item.selectedChoice == null ? (
-                <Text style={[styles.unanswered, { textAlign: align }]}>{text.notAnswered}</Text>
+                <Text style={[styles.unanswered, { textAlign: align, writingDirection: direction }]}>{text.notAnswered}</Text>
               ) : null}
 
               {item.explanation?.shortExplanation ? (
                 <View style={styles.explanation}>
-                  <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.explanation}</Text>
-                  <Text style={[styles.body, { textAlign: align }]}>{item.explanation.shortExplanation}</Text>
+                  <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.explanation}</Text>
+                  <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{item.explanation.shortExplanation}</Text>
                 </View>
               ) : null}
 
               {item.explanation?.detailedExplanation ? (
                 <View style={styles.explanation}>
-                  <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.detailed}</Text>
-                  <Text style={[styles.body, { textAlign: align }]}>{item.explanation.detailedExplanation}</Text>
+                  <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.detailed}</Text>
+                  <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{item.explanation.detailedExplanation}</Text>
                 </View>
               ) : null}
 
               {item.explanation?.workedSolution ? (
                 <View style={styles.solution}>
-                  <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.solution}</Text>
-                  <Text style={[styles.body, { textAlign: align }]}>{item.explanation.workedSolution}</Text>
+                  <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.solution}</Text>
+                  <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{item.explanation.workedSolution}</Text>
                 </View>
               ) : null}
 
               <View style={styles.curriculum}>
-                <Text style={[styles.sectionTitle, { textAlign: align }]}>{text.curriculum}</Text>
-                <Text style={[styles.small, { textAlign: align }]}>{curriculumLabel(item)}</Text>
+                <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.curriculum}</Text>
+                <Text style={[styles.small, { textAlign: align, writingDirection: direction }]}>{curriculumLabel(item)}</Text>
                 {item.curriculum?.topic?.id ? (
                   <Pressable style={styles.practiceButton} disabled={Boolean(startingTopic)} onPress={() => void practiceTopic(item.curriculum.topic?.id)}>
                     {startingTopic === item.curriculum.topic.id

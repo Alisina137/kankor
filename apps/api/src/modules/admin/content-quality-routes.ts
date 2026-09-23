@@ -44,9 +44,11 @@ function correctionValues(source: typeof schema.questions.$inferSelect, body: Re
   const difficulty = "difficulty" in body ? str(body.difficulty) : source.difficulty;
   const content = "content" in body ? str(body.content) : source.content;
   const topicId = "topicId" in body ? str(body.topicId) : source.topicId;
+  const marks = "marks" in body ? Number(body.marks) : Number(source.marks);
 
   if (!topicId || !content || !validChoices(choices) || !CHOICES.has(correctChoice)
-    || !LANGUAGES.has(language) || !DIFFICULTIES.has(difficulty)) {
+    || !LANGUAGES.has(language) || !DIFFICULTIES.has(difficulty)
+    || !Number.isFinite(marks) || marks <= 0) {
     return null;
   }
 
@@ -61,7 +63,7 @@ function correctionValues(source: typeof schema.questions.$inferSelect, body: Re
     detailedExplanation: "detailedExplanation" in body ? opt(body.detailedExplanation) : source.detailedExplanation,
     workedSolution: "workedSolution" in body ? opt(body.workedSolution) : source.workedSolution,
     difficulty,
-    marks: "marks" in body ? String(Number(body.marks)) : source.marks,
+    marks: String(marks),
     sourceType: "sourceType" in body ? str(body.sourceType) : source.sourceType,
     sourceMetadata: body.sourceMetadata && typeof body.sourceMetadata === "object"
       ? body.sourceMetadata as Record<string,unknown>
@@ -251,14 +253,29 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
         const errors:string[] = [];
         const topicId=str(raw.topicId), language=str(raw.language)||"fa", content=str(raw.content);
         const correctChoice=str(raw.correctChoice).toUpperCase(), difficulty=str(raw.difficulty)||"medium";
+        const marks=Number(raw.marks??1);
         if (!topicId) errors.push("topicId");
         if (!content) errors.push("content");
         if (!validChoices(raw.choices)) errors.push("choices");
         if (!CHOICES.has(correctChoice)) errors.push("correctChoice");
         if (!LANGUAGES.has(language)) errors.push("language");
         if (!DIFFICULTIES.has(difficulty)) errors.push("difficulty");
+        if (!Number.isFinite(marks) || marks <= 0) errors.push("marks");
         if (errors.length) rejected.push({index,errors});
         else accepted.push({index,value:{...raw,topicId,language,content,correctChoice,difficulty}});
+      }
+
+      if (accepted.length) {
+        const topicIds = [...new Set(accepted.map((item) => String(item.value.topicId)))];
+        const validTopicRows = await db.select({ id: schema.topics.id }).from(schema.topics);
+        const validTopics = new Set(validTopicRows.map((row) => row.id));
+        for (let i = accepted.length - 1; i >= 0; i--) {
+          const item = accepted[i];
+          if (!validTopics.has(String(item.value.topicId))) {
+            rejected.push({ index: item.index, errors: ["topicId_not_found"] });
+            accepted.splice(i, 1);
+          }
+        }
       }
 
       const [batch] = await db.insert(schema.contentImportBatches).values({

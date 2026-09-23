@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { asc, desc, eq } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
-import { requireAdmin } from "../../common/admin-auth.js";
+import { requireAdminRole, OPERATIONS_ADMIN_ROLES } from "../../common/admin-auth.js";
 import { getFreeEntitlements } from "../billing/service.js";
 
 function stringValue(value: unknown) {
@@ -19,7 +19,7 @@ function objectValue(value: unknown) {
 
 export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   app.get("/billing/plans", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     const db = createDatabase();
     const items = await db.select().from(schema.billingPlans)
       .orderBy(asc(schema.billingPlans.sortOrder), asc(schema.billingPlans.priceAfn));
@@ -27,7 +27,7 @@ export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post<{ Body: Record<string, unknown> }>("/billing/plans", async (request, reply) => {
-    const admin = await requireAdmin(request, reply);
+    const admin = await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES);
     if (!admin) return;
 
     const code = stringValue(request.body.code).toLowerCase();
@@ -61,7 +61,7 @@ export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>("/billing/plans/:id", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     const db = createDatabase();
 
     const rows = await db.select().from(schema.billingPlans)
@@ -103,12 +103,12 @@ export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/billing/config", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     return { freeEntitlements: await getFreeEntitlements() };
   });
 
   app.patch<{ Body: Record<string, unknown> }>("/billing/config", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     const value = objectValue(request.body.freeEntitlements);
     if (!Object.keys(value).length) return reply.code(400).send({ error: "free_entitlements_required" });
 
@@ -132,7 +132,7 @@ export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/billing/subscriptions", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     const db = createDatabase();
     const items = await db.select({
       id: schema.subscriptions.id,
@@ -155,7 +155,7 @@ export const adminBillingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/billing/payments", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    if (!(await requireAdminRole(request, reply, OPERATIONS_ADMIN_ROLES))) return;
     const db = createDatabase();
     const items = await db.select({
       id: schema.paymentTransactions.id,

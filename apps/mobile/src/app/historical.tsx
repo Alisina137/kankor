@@ -103,7 +103,7 @@ export default function HistoricalFormsScreen() {
   const { locale, direction } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
-  const rowDirection = direction === "rtl" ? "row-reverse" : "row";
+  const rowDirection = "row";
 
   const [forms, setForms] = useState<HistoricalForm[]>([]);
   const [loading, setLoading] = useState(true);

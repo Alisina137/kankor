@@ -19,7 +19,8 @@ export function questionSnapshot(question: typeof schema.questions.$inferSelect)
     sourceType: question.sourceType,
     sourceMetadata: question.sourceMetadata,
     verificationStatus: question.verificationStatus,
-    version: question.version
+    version: question.version,
+    supersedesQuestionId: question.supersedesQuestionId
   };
 }
 

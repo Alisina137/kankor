@@ -29,13 +29,13 @@ export async function requireAdmin(request: FastifyRequest, reply: FastifyReply)
 
   const isBootstrapAdmin = bootstrapEmails().has(user.email.toLowerCase());
 
-  if (isBootstrapAdmin && !ADMIN_ROLES.has(user.role)) {
+  if (isBootstrapAdmin && !["admin", "super_admin"].includes(user.role)) {
     const db = createDatabase();
     await db.update(schema.users)
-      .set({ role: "content_admin", updatedAt: new Date() })
+      .set({ role: "admin", updatedAt: new Date() })
       .where(eq(schema.users.id, user.userId));
 
-    user = { ...user, role: "content_admin" };
+    user = { ...user, role: "admin" };
   }
 
   if (!ADMIN_ROLES.has(user.role)) {

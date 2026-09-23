@@ -154,7 +154,7 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
       const rows = await db.select().from(schema.questions).where(eq(schema.questions.id, request.params.id)).limit(1);
       const current = rows[0];
       if (!current) return reply.code(404).send({error:"question_not_found"});
-      if (!["published","deprecated"].includes(current.verificationStatus)) return reply.code(409).send({error:"correction_requires_published_question"});
+      if (current.verificationStatus !== "published") return reply.code(409).send({error:"correction_requires_published_question"});
       const values = correctionValues(current, request.body);
       if (!values) return reply.code(400).send({error:"invalid_correction"});
 
@@ -243,7 +243,7 @@ export const adminContentQualityRoutes: FastifyPluginAsync = async (app) => {
         cursor = parent[0];
       }
 
-      const items = [];
+      const items: Array<typeof schema.questionRevisions.$inferSelect> = [];
       for (const questionId of lineageIds) {
         const rows = await db.select().from(schema.questionRevisions)
           .where(eq(schema.questionRevisions.questionId, questionId))

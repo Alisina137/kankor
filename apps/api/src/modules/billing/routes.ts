@@ -3,7 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { and, asc, desc, eq, gt } from "drizzle-orm";
 import { createDatabase, schema } from "@kankor/database";
 import { requireUser } from "../../common/user-auth.js";
-import { confirmPayment, failPayment, getEntitlementState } from "./service.js";
+import { confirmPayment, failPayment, getEntitlementState, getFreeEntitlements } from "./service.js";
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -33,6 +33,25 @@ export const billingRoutes: FastifyPluginAsync = async (app) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
     return getEntitlementState(auth.user.userId);
+  });
+
+  app.get("/subscription/comparison", async (request, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    return {
+      free: await getFreeEntitlements(),
+      premium: {
+        noFreePlanExamLimits: true,
+        historicalArchive: true,
+        detailedExplanations: true,
+        workedSolutions: true,
+        completeAnalytics: true,
+        mistakeNotebook: true,
+        weaknessPractice: true,
+        extendedHistory: true
+      }
+    };
   });
 
   app.post<{ Body: { planId?: string; provider?: string; idempotencyKey?: string } }>("/checkout", async (request, reply) => {

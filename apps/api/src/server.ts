@@ -2,8 +2,10 @@ import { config as loadEnv } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { assertDatabaseReady, databaseErrorSummary } from "@kankor/database";
 import { buildApp } from "./app.js";
+import { assertProductionConfiguration } from "./common/production-config.js";
 
 loadEnv({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+assertProductionConfiguration();
 
 const app = await buildApp();
 const port = Number(process.env.API_PORT ?? 4000);

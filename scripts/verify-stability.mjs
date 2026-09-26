@@ -83,7 +83,8 @@ const databaseVerifier = await readFile(resolve("packages/database/scripts/verif
 for (const marker of [
   "DATABASE_URL and DIRECT_DATABASE_URL point to different database targets",
   "kankor_migrations",
-  "Runtime database and authentication schema are ready"
+  "Runtime database and authentication schema are ready",
+  "Grade 11 curriculum books are present"
 ]) {
   if (!databaseVerifier.includes(marker)) throw new Error(`Runtime database verifier invariant missing: ${marker}`);
 }
@@ -103,6 +104,25 @@ if (!rootPackage.includes('"dev:lan": "node scripts/dev-lan.mjs"')) {
   throw new Error("Integrated LAN development command is missing");
 }
 
+const curriculumRoutes = await readFile(resolve("apps/api/src/modules/curriculum/routes.ts"), "utf8");
+for (const marker of [
+  'Querystring: { gradeId?: string }',
+  'selectDistinct({',
+  'eq(schema.books.gradeId, gradeId)',
+  'eq(schema.books.active, true)'
+]) {
+  if (!curriculumRoutes.includes(marker)) throw new Error(`Grade-aware curriculum API invariant missing: ${marker}`);
+}
+
+const practice = await readFile(resolve("apps/mobile/src/app/(tabs)/practice.tsx"), "utf8");
+for (const marker of [
+  '/subjects?gradeId=',
+  'setSubjectId(null)',
+  'gradeId ? <ChoiceGroup label={text.subject}'
+]) {
+  if (!practice.includes(marker)) throw new Error(`Grade-aware Practice invariant missing: ${marker}`);
+}
+
 const server = await readFile(resolve("apps/api/src/server.ts"), "utf8");
 for (const marker of [
   '"Kankor API listening"',
@@ -113,4 +133,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");

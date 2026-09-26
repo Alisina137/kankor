@@ -226,6 +226,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - `dev:lan` probes every active laptop IPv4 interface after API startup and prints which LAN addresses answer `/health`, making firewall/interface problems visible before Expo testing.
 - `dev:lan` now detects and reuses an already-running Kankor API on the configured port instead of spawning a second watcher and failing with `EADDRINUSE`; if a different service owns the port, startup fails with a clear error.
 - `dev:anywhere` provides IP-independent development with Cloudflare Quick Tunnels: it starts/reuses the local API, creates temporary public HTTPS tunnels for both the API and Expo/Metro, verifies the API tunnel, injects the API URL for the session, clears LAN fallbacks, and uses `EXPO_PACKAGER_PROXY_URL` for the public Metro URL.
+- On Windows x64, `dev:anywhere` no longer uses a Node cloudflared wrapper: it downloads Cloudflare's pinned official `2026.9.3` Windows x64 executable into `.cache/kankor-dev`, verifies the published SHA-256 before execution, and launches it through `cmd.exe` with HTTP/2 to avoid the wrapper's `spawn EFTYPE` failure.
 - Authenticated mobile requests now allow a realistic development timeout so normal Neon latency is not mislabeled as an unreachable API.
 - Session `lastUsedAt` is updated as best-effort telemetry after session validation instead of blocking every authenticated response with a second database round trip.
 - Session-provided tunnel URLs now take precedence over root `.env`, while production build guards remain unchanged.

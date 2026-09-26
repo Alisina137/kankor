@@ -177,7 +177,7 @@ for (const marker of [
 }
 
 const gitignore = await text(".gitignore");
-for (const marker of [".env.production", ".env.*.local", ".eas/", "*.apk", "*.aab"]) {
+for (const marker of [".env.production", ".env.*.local", ".eas/", ".cache/", "*.apk", "*.aab"]) {
   if (!gitignore.split(/\r?\n/).includes(marker)) {
     throw new Error(`Release-sensitive ignore rule missing: ${marker}`);
   }
@@ -215,8 +215,12 @@ for (const script of [
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");
 for (const marker of [
-  'require("cloudflared")',
-  'Tunnel.quick',
+  'CLOUDFLARED_VERSION = "2026.9.3"',
+  'CLOUDFLARED_WINDOWS_X64_SHA256',
+  'cloudflared-windows-amd64.exe',
+  'ensureOfficialCloudflared',
+  'startCloudflareQuickTunnel',
+  '--protocol http2',
   'EXPO_PUBLIC_API_URL: apiTunnelUrl',
   'EXPO_PUBLIC_API_URLS: ""',
   'EXPO_PACKAGER_PROXY_URL: metroTunnelUrl',

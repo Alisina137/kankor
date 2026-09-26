@@ -16,26 +16,27 @@ After cloning:
 npm install
 npm run db:migrate
 npm run db:verify
-npm run dev:lan -- --clear
 ```
 
-For normal same-network development, `npm run dev:lan -- --clear` uses the current Expo/LAN host automatically.
+For browser/same-network development, `npm run dev:lan -- --clear` remains available.
 
-For IP-independent development across home/company/hotspot networks, the preferred development mode is Tailscale:
+For normal testing on a physical Android phone, the preferred workflow is now a **preview APK + EAS Update**:
+
+1. Link/configure the app once with `npm run eas:link` and `npm run eas:update:configure`.
+2. Configure a stable public HTTPS `EXPO_PUBLIC_API_URL` in the EAS `preview` environment.
+3. Run `npm run verify:eas-update`.
+4. Build/install the preview APK once with `npm run build:android:preview`.
+5. For normal JS/UI changes, publish with:
 
 ```powershell
-npm run dev:tailscale -- --clear
+npm run update:preview -- --message "Describe the change"
 ```
 
-Install Tailscale on both the Windows laptop and the phone, sign both into the same tailnet, and keep Tailscale connected. The launcher discovers the laptop's stable Tailscale IPv4 automatically, verifies the API through that address, injects it into the app, and advertises Metro through the same stable address. Normal Wi-Fi/DHCP IP changes therefore do not matter.
+The installed preview APK uses the `preview` update channel and checks for compatible updates on launch. Normal laptop Wi-Fi IP changes therefore do not affect Metro because the installed APK no longer depends on a local Metro server.
 
-A Cloudflare Quick Tunnel fallback remains available:
+See `docs/EAS-UPDATES.md` for the full one-time setup, stable API requirement, update workflow, and cases that still require a new APK.
 
-```powershell
-npm run dev:anywhere -- --clear
-```
-
-That fallback depends on the current network allowing access to Cloudflare Quick Tunnel provisioning; restrictive networks can block `api.trycloudflare.com`.
+The older `dev:anywhere` and `dev:tailscale` launchers remain in the repository as optional network diagnostics, not as the primary physical-phone workflow.
 
 ## Verification
 

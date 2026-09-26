@@ -26,7 +26,7 @@ SELECT
   'تفسیر شریف صنف یازدهم',
   'تفسیر شریف یوولسم ټولګی',
   1398,
-  '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Tafseer.pdf","sourceType":"official_textbook","pages":102}'::jsonb,
+  '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Tafseer(1).pdf","sourceType":"official_textbook","pages":102}'::jsonb,
   true,
   15,
   now(),

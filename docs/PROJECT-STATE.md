@@ -156,6 +156,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Web dependencies are pinned to React Native Web 0.21.1 plus `@expo/metro-runtime` 57.x because a floating 0.21.x install produced a missing vendored NativeEventEmitter path during Metro web bundling.
 - EAS preview and production profiles are defined: preview builds an APK and production builds an Android App Bundle with release configuration enforcement.
 - EAS Update is configured as the primary physical-device iteration model: preview APKs use the `preview` channel/environment, production builds use `production`, `expo-updates` is pinned for SDK 57, and runtime compatibility uses the `appVersion` policy.
+- EAS CLI is pinned locally at version 24.8.0; build, update, and project-link commands use the installed project CLI instead of dynamically fetching `eas-cli` through `npx`/npm exec.
 - Preview APK configuration rejects localhost/non-HTTPS APIs and waits up to five seconds on launch for a compatible OTA update, so normal JS/UI changes can be published without rebuilding the APK.
 - Mobile navigation has a localized screen-level error boundary with retry behavior so render failures do not leave a blank screen.
 - Admin production builds reject missing, localhost, or non-HTTPS API URLs and emit defensive response headers without the Next.js powered-by header.

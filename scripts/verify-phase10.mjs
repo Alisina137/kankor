@@ -30,7 +30,10 @@ for (const marker of [
   "AUTH_EXPOSE_RECOVERY_TOKEN must be false in production",
   "ADMIN_WEB_ORIGIN is required in production",
   "ADMIN_BOOTSTRAP_EMAILS must be empty in production",
-  "TRUST_PROXY must be either true or false"
+  "TRUST_PROXY must be either true or false",
+  "PROFILE_PHOTO_S3_BUCKET",
+  "PROFILE_PHOTO_S3_SECRET_ACCESS_KEY",
+  "PROFILE_PHOTO_S3_FORCE_PATH_STYLE"
 ]) {
   if (!productionConfig.includes(marker)) {
     throw new Error(`Production API safety invariant missing: ${marker}`);
@@ -89,6 +92,12 @@ if (!mobileApp.expo?.ios?.buildNumber) throw new Error("iOS buildNumber is requi
 if (!(mobileApp.expo?.plugins ?? []).includes("expo-secure-store")) {
   throw new Error("expo-secure-store config plugin is required for release builds");
 }
+const imagePickerPlugin = (mobileApp.expo?.plugins ?? []).some((item) =>
+  item === "expo-image-picker" || (Array.isArray(item) && item[0] === "expo-image-picker")
+);
+if (!imagePickerPlugin) {
+  throw new Error("expo-image-picker config plugin is required for profile photo selection");
+}
 if (mobileApp.expo?.ios?.config?.usesNonExemptEncryption !== false) {
   throw new Error("iOS SecureStore export-compliance configuration is missing");
 }
@@ -100,6 +109,7 @@ for (const [name, version] of Object.entries({
   "expo-router": "~57.0.23",
   "expo-secure-store": "~57.0.4",
   "expo-status-bar": "~57.0.1",
+  "expo-image-picker": "~57.0.20",
   "react-native": "0.86.3",
   "react-native-safe-area-context": "~5.7.0",
   "react-native-screens": "~4.26.0"
@@ -119,6 +129,33 @@ if (eas.build?.production?.android?.buildType !== "app-bundle") {
 }
 if (eas.build?.production?.env?.KANKOR_RELEASE_BUILD !== "true") {
   throw new Error("EAS production profile must enforce release mobile configuration");
+}
+
+const profilePhotoStorage = await text("apps/api/src/modules/auth/profile-photo-storage.ts");
+for (const marker of [
+  "PutObjectCommand",
+  "GetObjectCommand",
+  "HeadObjectCommand",
+  "DeleteObjectCommand",
+  "getSignedUrl",
+  "MAX_PROFILE_PHOTO_BYTES",
+  "profilePhotoStorageConfigured"
+]) {
+  if (!profilePhotoStorage.includes(marker)) {
+    throw new Error(`Profile photo storage invariant missing: ${marker}`);
+  }
+}
+
+const apiPackage = JSON.parse(await text("apps/api/package.json"));
+for (const dependency of ["@aws-sdk/client-s3", "@aws-sdk/s3-request-presigner"]) {
+  if (!apiPackage.dependencies?.[dependency]) {
+    throw new Error(`Profile photo storage dependency missing: ${dependency}`);
+  }
+}
+
+const profilePhotoMigration = await text("packages/database/drizzle/0016_user_profile_photo.sql");
+if (!profilePhotoMigration.includes("profile_photo_key")) {
+  throw new Error("Profile photo migration is missing");
 }
 
 const adminConfig = await text("apps/admin/next.config.ts");
@@ -148,7 +185,11 @@ for (const marker of [
   "NEXT_PUBLIC_API_URL=https://",
   "ADMIN_WEB_ORIGIN=https://",
   "AUTH_EXPOSE_RECOVERY_TOKEN=false",
-  "BILLING_WEBHOOK_SECRET="
+  "BILLING_WEBHOOK_SECRET=",
+  "PROFILE_PHOTO_S3_BUCKET=",
+  "PROFILE_PHOTO_S3_REGION=",
+  "PROFILE_PHOTO_S3_ACCESS_KEY_ID=",
+  "PROFILE_PHOTO_S3_SECRET_ACCESS_KEY="
 ]) {
   if (!productionExample.includes(marker)) {
     throw new Error(`Production environment template invariant missing: ${marker}`);
@@ -176,4 +217,4 @@ for (const marker of [
   if (!releaseRunbook.includes(marker)) throw new Error(`Release runbook invariant missing: ${marker}`);
 }
 
-console.log("Phase 10 structure verified: production guards, liveness/readiness health, secure headers, mobile error fallback, release build metadata, EAS profiles, environment validation, deterministic-dependency gate, release checks, and release runbook are present.");
+console.log("Phase 10 structure verified: production guards, liveness/readiness health, secure headers, mobile error fallback, profile-photo storage/upload configuration, release build metadata, EAS profiles, environment validation, deterministic-dependency gate, release checks, and release runbook are present.");

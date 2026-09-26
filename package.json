@@ -49,7 +49,8 @@
     "eas:link": "npm --workspace @kankor/mobile run eas:link",
     "eas:update:configure": "npm --workspace @kankor/mobile run eas:update:configure",
     "update:preview": "npm --workspace @kankor/mobile run update:preview --",
-    "update:production": "npm --workspace @kankor/mobile run update:production --"
+    "update:production": "npm --workspace @kankor/mobile run update:production --",
+    "verify:eas-update": "node scripts/verify-eas-update.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -173,15 +173,17 @@ Phase 9 — Administration and Content Quality completed in source.
 - PostgreSQL migration tooling pins sslmode=verify-full to preserve current certificate-verification semantics.
 - API startup validates API_PORT, verifies the runtime auth database schema before listening, and logs the deepest database error cause when readiness fails.
 - Migration tooling refuses to proceed when `DATABASE_URL` and `DIRECT_DATABASE_URL` point to different Neon database targets, preventing migrations from silently landing on a different branch/database.
-- `npm run db:verify` checks the runtime database, authentication schema, and complete migration ledger before local API testing.
-- `npm run dev:lan -- --clear` is the normal physical-device development launcher: it validates the LAN host, verifies the database, starts the API, waits for `/health`, and only then starts Expo LAN mode.
+- `npm run db:verify` checks the runtime database, authentication schema, complete migration ledger, and Grade 11 curriculum before local API testing; PostgreSQL SSL modes are normalized to `verify-full` to avoid the pg v9 compatibility warning.
+- `npm run dev:lan -- --clear` is the normal physical-device development launcher: it validates the LAN host, verifies the database, starts the API, waits for `/health`, and only then starts Expo LAN mode. On Windows it invokes npm through Node's `npm_execpath` instead of spawning `npm.cmd` directly, avoiding Node 24 `EINVAL`.
 - verify:stability and verify:dev-network guard the repaired paths.
 - Grade 10 and Grade 11 official textbook curriculum imports are present through migration 0014.
+- The five remaining supplied Grade 11 textbooks are represented by migrations 0013–0014: Islamic Education (Hanafi), Mathematics, Pashto for Dari speakers, Physics, and Tafseer Sharif. Source metadata is aligned with the uploaded PDFs.
+- Migration 0013 preserves Pashto source lesson titles in both `title_fa` (required schema fallback) and `title_ps`, avoiding the previous `23502` NOT NULL failure without inventing Dari lesson translations.
 - Practice curriculum navigation is grade-aware: after a grade is selected, the API returns only subjects with active books for that grade, preventing misleading empty book lists.
 - Runtime database verification checks that the Grade 11 curriculum contains at least the 10 active official books supplied by migrations 0012–0014.
 
 ## Latest source baseline
-Post-Phase-9 auth/database, integrated LAN startup, and Grade 11 Practice curriculum hardening prepared for `main`.
+Post-Phase-9 auth/database, Windows-safe LAN startup, and complete Grade 11 Practice curriculum hardening prepared for `main`.
 
 ## Next phase
 Phase 10 — Release Readiness.

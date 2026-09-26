@@ -16,27 +16,15 @@ A new APK is still required after native-runtime changes such as adding/removing
 npm install
 ```
 
-2. Sign in to Expo/EAS if needed, then link the Kankor app to the EAS project owned by `alisina137`:
+2. Sign in to Expo/EAS if needed, then run the automated linker:
 
 ```powershell
 npm run eas:link
 ```
 
-3. Configure EAS Update:
+It creates or links `@alisina137/kankorprep-afghanistan`, captures the returned EAS project ID, and writes both `expo.extra.eas.projectId` and the matching `expo.updates.url` into `apps/mobile/app.json`. The repository already owns the `appVersion` runtime policy and the preview/production update channels.
 
-```powershell
-npm run eas:update:configure
-```
-
-Because this project has dynamic `app.config.ts`, confirm that these values ultimately exist in `apps/mobile/app.json`:
-
-- `expo.extra.eas.projectId`
-- `expo.updates.url = https://u.expo.dev/<project-id>`
-- `expo.runtimeVersion.policy = appVersion`
-
-The repository already owns the runtime policy, preview/production channels, and update startup behavior. Do not replace them with a different runtime policy.
-
-4. The preview build must use a stable public HTTPS Kankor API. Configure it in the EAS `preview` environment:
+3. The preview build must use a stable public HTTPS Kankor API. Configure it in the EAS `preview` environment:
 
 ```powershell
 cd C:\projects\kankor\apps\mobile
@@ -47,13 +35,13 @@ cd C:\projects\kankor
 
 Do not use localhost, a `10.x.x.x` LAN address, or another laptop-only address for the preview APK.
 
-5. Verify the EAS Update linkage:
+4. Verify the EAS Update linkage:
 
 ```powershell
 npm run verify:eas-update
 ```
 
-6. Build the preview APK once:
+5. Build the preview APK once:
 
 ```powershell
 npm run build:android:preview

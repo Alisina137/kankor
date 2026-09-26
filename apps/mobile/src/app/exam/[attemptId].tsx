@@ -331,25 +331,14 @@ export default function ExamSessionScreen() {
     await commitCurrentElapsed();
 
     const current = payloadRef.current;
-    if (current?.answers.length) {
-      try {
-        await apiRequest(`/attempts/${attemptId}/answers`, {
-          method: "PATCH",
-          body: JSON.stringify({ answers: current.answers })
-        }, token);
-      } catch (error) {
-        if (!(error instanceof ApiError && error.code === "attempt_time_expired")) {
-          setOffline(true);
-          setSubmitting(false);
-          return;
-        }
-      }
-    }
 
     try {
       await apiRequest(`/attempts/${attemptId}/submit`, {
         method: "POST",
-        body: JSON.stringify({ submissionKey: `attempt:${attemptId}` })
+        body: JSON.stringify({
+          submissionKey: `attempt:${attemptId}`,
+          answers: current?.answers ?? []
+        })
       }, token);
       await removePersistedExam(attemptId);
       setSubmitted(true);

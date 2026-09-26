@@ -182,6 +182,7 @@ Phase 9 — Administration and Content Quality completed in source.
 - The five remaining supplied Grade 11 textbooks are represented by migrations 0013–0014: Islamic Education (Hanafi), Mathematics, Pashto for Dari speakers, Physics, and Tafseer Sharif. Source metadata is aligned with the uploaded PDFs.
 - Migration 0013 preserves Pashto source lesson titles in both `title_fa` (required schema fallback) and `title_ps`, avoiding the previous `23502` NOT NULL failure without inventing Dari lesson translations.
 - Practice curriculum navigation is grade-aware: after a grade is selected, the API returns only subjects with active books for that grade, preventing misleading empty book lists.
+- Practice now exposes per-level loading states for Grade → Subject → Book → Chapter → Topic, clears stale child selections immediately when a parent changes, ignores late responses from obsolete selections, and shows localized gentle empty-state messages when a successful request returns no items.
 - Runtime database verification checks that Grade 10 contains at least 11 active official books and Grade 11 contains at least 10 active official books.
 
 ## Latest source baseline

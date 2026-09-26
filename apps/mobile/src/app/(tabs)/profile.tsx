@@ -1,9 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { localeMeta, theme, type SupportedLocale } from "@kankor/config";
 import Constants from "expo-constants";
+import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState, type ComponentProps } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../../components/app-button";
 import { Screen } from "../../components/screen";
 import { apiRequest } from "../../lib/api";
@@ -82,7 +83,17 @@ const copy = {
     version: "نسخه برنامه",
     danger: "منطقه خطر",
     dangerBody: "حذف حساب تمام اطلاعات مربوط به این حساب را حذف می‌کند و قابل برگشت نیست.",
-    delete: "حذف حساب"
+    delete: "حذف حساب",
+    profilePhoto: "عکس پروفایل",
+    choosePhoto: "انتخاب عکس",
+    changePhoto: "تغییر عکس",
+    removePhoto: "حذف عکس",
+    photoPermission: "برای انتخاب عکس پروفایل، اجازه دسترسی به عکس‌ها لازم است.",
+    photoStorageUnavailable: "ذخیره‌سازی عکس پروفایل هنوز تنظیم نشده است.",
+    photoTooLarge: "حجم عکس باید کمتر از ۵ مگابایت باشد.",
+    photoUnsupported: "فرمت عکس پشتیبانی نمی‌شود. JPG، PNG یا WebP انتخاب کنید.",
+    photoUploadError: "عکس پروفایل بارگذاری نشد. دوباره تلاش کنید.",
+    removePhotoConfirm: "عکس پروفایل حذف شود؟"
   },
   ps: {
     title: "پروفایل",
@@ -134,7 +145,17 @@ const copy = {
     version: "د اپ نسخه",
     danger: "خطرناکه برخه",
     dangerBody: "د حساب ړنګول د دې حساب معلومات حذف کوي او بېرته نه راګرځي.",
-    delete: "حساب ړنګول"
+    delete: "حساب ړنګول",
+    profilePhoto: "د پروفایل انځور",
+    choosePhoto: "انځور وټاکئ",
+    changePhoto: "انځور بدل کړئ",
+    removePhoto: "انځور لرې کړئ",
+    photoPermission: "د پروفایل انځور ټاکلو لپاره د عکسونو اجازه اړینه ده.",
+    photoStorageUnavailable: "د پروفایل انځور ذخیره لا نه ده تنظیم شوې.",
+    photoTooLarge: "انځور باید له ۵ مېګابایټ څخه کوچنی وي.",
+    photoUnsupported: "د انځور بڼه نه ملاتړ کېږي. JPG، PNG یا WebP وټاکئ.",
+    photoUploadError: "د پروفایل انځور پورته نه شو. بیا هڅه وکړئ.",
+    removePhotoConfirm: "د پروفایل انځور لرې شي؟"
   },
   en: {
     title: "Profile",
@@ -186,7 +207,17 @@ const copy = {
     version: "App version",
     danger: "Danger zone",
     dangerBody: "Deleting your account removes the data connected to this account and cannot be undone.",
-    delete: "Delete account"
+    delete: "Delete account",
+    profilePhoto: "Profile photo",
+    choosePhoto: "Choose photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove photo",
+    photoPermission: "Photo-library permission is required to choose a profile picture.",
+    photoStorageUnavailable: "Profile photo storage has not been configured yet.",
+    photoTooLarge: "The photo must be smaller than 5 MB.",
+    photoUnsupported: "Unsupported image format. Choose JPG, PNG, or WebP.",
+    photoUploadError: "The profile photo could not be uploaded. Try again.",
+    removePhotoConfirm: "Remove your profile photo?"
   }
 } as const;
 
@@ -206,6 +237,10 @@ export default function ProfileScreen() {
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [comparison, setComparison] = useState<SubscriptionComparison | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoStorageConfigured, setPhotoStorageConfigured] = useState<boolean | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(true);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const loadSubscription = useCallback(async () => {
     if (!token) return;
@@ -221,9 +256,25 @@ export default function ProfileScreen() {
     setPlanLoading(false);
   }, [token]);
 
+  const loadProfilePhoto = useCallback(async () => {
+    if (!token) return;
+    setPhotoLoading(true);
+    try {
+      const result = await apiRequest<{ configured: boolean; url: string | null }>("/auth/profile-photo", {}, token);
+      setPhotoStorageConfigured(result.configured);
+      setPhotoUrl(result.url);
+    } catch {
+      setPhotoStorageConfigured(null);
+      setPhotoUrl(null);
+    } finally {
+      setPhotoLoading(false);
+    }
+  }, [token]);
+
   useFocusEffect(useCallback(() => {
     void loadSubscription();
-  }, [loadSubscription]));
+    void loadProfilePhoto();
+  }, [loadSubscription, loadProfilePhoto]));
 
   const initials = useMemo(() => {
     const local = user?.email?.split("@")[0] ?? "?";
@@ -239,6 +290,107 @@ export default function ProfileScreen() {
     if (locale === "en") return plan.planNameEn || plan.planNameFa || text.premium;
     return plan.planNameFa || text.premium;
   }, [subscription, locale, text.free, text.premium]);
+
+  function profilePhotoMimeType(asset: ImagePicker.ImagePickerAsset, blobType: string) {
+    const candidate = (asset.mimeType || blobType || "").toLowerCase();
+    if (["image/jpeg", "image/png", "image/webp"].includes(candidate)) return candidate;
+
+    const name = (asset.fileName || asset.uri).toLowerCase();
+    if (/\.jpe?g(?:$|\?)/.test(name)) return "image/jpeg";
+    if (/\.png(?:$|\?)/.test(name)) return "image/png";
+    if (/\.webp(?:$|\?)/.test(name)) return "image/webp";
+    return "";
+  }
+
+  async function chooseProfilePhoto() {
+    if (!token || photoUploading) return;
+    if (photoStorageConfigured === false) {
+      Alert.alert(text.profilePhoto, text.photoStorageUnavailable);
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(text.profilePhoto, text.photoPermission);
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setPhotoUploading(true);
+    try {
+      const asset = result.assets[0];
+      const sourceResponse = await fetch(asset.uri);
+      const blob = await sourceResponse.blob();
+      const contentType = profilePhotoMimeType(asset, blob.type);
+      const fileSize = asset.fileSize ?? blob.size;
+
+      if (!contentType) {
+        Alert.alert(text.profilePhoto, text.photoUnsupported);
+        return;
+      }
+      if (!fileSize || fileSize > 5 * 1024 * 1024) {
+        Alert.alert(text.profilePhoto, text.photoTooLarge);
+        return;
+      }
+
+      const upload = await apiRequest<{ key: string; uploadUrl: string }>("/auth/profile-photo/upload", {
+        method: "POST",
+        body: JSON.stringify({ contentType, fileSize })
+      }, token);
+
+      const uploaded = await fetch(upload.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: blob
+      });
+      if (!uploaded.ok) throw new Error("profile_photo_upload_failed");
+
+      const confirmed = await apiRequest<{ url: string; user: unknown }>("/auth/profile-photo/confirm", {
+        method: "POST",
+        body: JSON.stringify({ key: upload.key })
+      }, token);
+
+      setPhotoUrl(confirmed.url);
+      setPhotoStorageConfigured(true);
+    } catch {
+      Alert.alert(text.profilePhoto, text.photoUploadError);
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  function confirmRemoveProfilePhoto() {
+    if (!token || !photoUrl || photoUploading) return;
+    Alert.alert(text.profilePhoto, text.removePhotoConfirm, [
+      { text: text.cancel, style: "cancel" },
+      {
+        text: text.removePhoto,
+        style: "destructive",
+        onPress: () => void removeProfilePhoto()
+      }
+    ]);
+  }
+
+  async function removeProfilePhoto() {
+    if (!token) return;
+    setPhotoUploading(true);
+    try {
+      await apiRequest("/auth/profile-photo", { method: "DELETE" }, token);
+      setPhotoUrl(null);
+    } catch {
+      Alert.alert(text.profilePhoto, text.photoUploadError);
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   function preparationLabel(level: string | null) {
     if (level === "starting") return text.starting;
@@ -357,9 +509,47 @@ export default function ProfileScreen() {
       <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
 
       <View style={styles.identityCard}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
+        <View style={styles.avatarWrap}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={photoUrl ? text.changePhoto : text.choosePhoto}
+            onPress={() => void chooseProfilePhoto()}
+            style={styles.avatar}
+          >
+            {photoUrl ? (
+              <Image source={{ uri: photoUrl }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <Text style={styles.avatarText}>{initials}</Text>
+            )}
+            {(photoLoading || photoUploading) ? (
+              <View style={styles.avatarLoading}><ActivityIndicator color="#FFFFFF" /></View>
+            ) : null}
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={photoUrl ? text.changePhoto : text.choosePhoto}
+            style={styles.photoEditBadge}
+            onPress={() => void chooseProfilePhoto()}
+          >
+            <Ionicons name="camera-outline" size={16} color="#FFFFFF" />
+          </Pressable>
+        </View>
+
         <View style={styles.identityCopy}>
           <Text style={[styles.email, { textAlign: align, writingDirection: direction }]} numberOfLines={1}>{user?.email}</Text>
+          <View style={[styles.photoActions, { flexDirection: rowDirection }]}>
+            <Pressable onPress={() => void chooseProfilePhoto()} disabled={photoUploading}>
+              <Text style={styles.photoActionText}>{photoUrl ? text.changePhoto : text.choosePhoto}</Text>
+            </Pressable>
+            {photoUrl ? (
+              <Pressable onPress={confirmRemoveProfilePhoto} disabled={photoUploading}>
+                <Text style={styles.removePhotoText}>{text.removePhoto}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {photoStorageConfigured === false ? (
+            <Text style={[styles.photoHint, { textAlign: align, writingDirection: direction }]}>{text.photoStorageUnavailable}</Text>
+          ) : null}
           <Pressable style={[styles.planPill, isPremium && styles.planPillPremium]} onPress={() => router.push("/premium")}>
             <Ionicons name={isPremium ? "diamond-outline" : "person-circle-outline"} size={15} color={isPremium ? theme.colors.primary : theme.colors.mutedText} />
             {planLoading
@@ -570,9 +760,17 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 140, gap: theme.spacing.md },
   title: { color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "900" },
   identityCard: { flexDirection: "row", alignItems: "center", gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
-  avatar: { width: 58, height: 58, alignItems: "center", justifyContent: "center", borderRadius: 29, backgroundColor: theme.colors.primary },
-  avatarText: { color: "#FFFFFF", fontSize: 19, fontWeight: "900" },
+  avatarWrap: { position: "relative", width: 72, height: 72 },
+  avatar: { width: 72, height: 72, overflow: "hidden", alignItems: "center", justifyContent: "center", borderRadius: 36, backgroundColor: theme.colors.primary },
+  avatarImage: { width: "100%", height: "100%" },
+  avatarLoading: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.35)" },
+  avatarText: { color: "#FFFFFF", fontSize: 21, fontWeight: "900" },
+  photoEditBadge: { position: "absolute", right: -1, bottom: 1, width: 28, height: 28, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 2, borderColor: theme.colors.surface, backgroundColor: theme.colors.primary },
   identityCopy: { flex: 1, gap: 8 },
+  photoActions: { flexWrap: "wrap", gap: theme.spacing.md },
+  photoActionText: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "800" },
+  removePhotoText: { color: theme.colors.danger, fontSize: theme.typography.small, fontWeight: "800" },
+  photoHint: { color: theme.colors.warning, fontSize: 11, lineHeight: 16 },
   email: { color: theme.colors.text, fontSize: theme.typography.body, fontWeight: "800" },
   planPill: { minHeight: 34, maxWidth: 180, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.pill, backgroundColor: theme.colors.background },
   planPillPremium: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },

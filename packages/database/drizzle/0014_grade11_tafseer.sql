@@ -1,5 +1,5 @@
 -- Grade 11 Tafseer Sharif — official Ministry of Education Dari textbook.
--- Source: user-provided G11-Dr-Tafseer.pdf, print year 1398 SH.
+-- Source: user-provided G11-Dr-Tafseer(1).pdf, print year 1398 SH.
 -- The source table of contents lists 20 lessons.
 
 INSERT INTO "subjects" (

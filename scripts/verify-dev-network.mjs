@@ -30,7 +30,10 @@ if (!Number.isInteger(apiPort) || apiPort < 1 || apiPort > 65535) {
   process.exit(1);
 }
 
-for (const [label, value] of [["EXPO_PUBLIC_API_URL", primary], ...fallbacks.map((value, index) => [`EXPO_PUBLIC_API_URLS[${index}]`, value])]) {
+for (const [label, value] of [
+  ["EXPO_PUBLIC_API_URL", primary],
+  ...fallbacks.map((value, index) => [`EXPO_PUBLIC_API_URLS[${index}]`, value])
+]) {
   try {
     const url = new URL(value);
     if (!["http:", "https:"].includes(url.protocol)) throw new Error();

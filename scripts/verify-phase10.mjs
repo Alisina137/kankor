@@ -215,12 +215,13 @@ for (const script of [
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");
 for (const marker of [
-  '@expo/ngrok',
-  'ngrok.connect',
+  'require("cloudflared")',
+  'Tunnel.quick',
   'EXPO_PUBLIC_API_URL: apiTunnelUrl',
   'EXPO_PUBLIC_API_URLS: ""',
-  '"start:tunnel"',
-  'Public Kankor API tunnel ready'
+  'EXPO_PACKAGER_PROXY_URL: metroTunnelUrl',
+  'Public Kankor API tunnel ready',
+  'Cloudflare Quick Tunnel for Expo/Metro'
 ]) {
   if (!anywhereDev.includes(marker)) throw new Error(`Anywhere-development invariant missing: ${marker}`);
 }

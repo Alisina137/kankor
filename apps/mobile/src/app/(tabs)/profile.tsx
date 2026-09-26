@@ -210,19 +210,15 @@ export default function ProfileScreen() {
   const loadSubscription = useCallback(async () => {
     if (!token) return;
     setPlanLoading(true);
-    try {
-      const [subscriptionResult, comparisonResult] = await Promise.all([
-        apiRequest<SubscriptionState>("/subscription", {}, token),
-        apiRequest<SubscriptionComparison>("/subscription/comparison", {}, token)
-      ]);
-      setSubscription(subscriptionResult);
-      setComparison(comparisonResult);
-    } catch {
-      setSubscription(null);
-      setComparison(null);
-    } finally {
-      setPlanLoading(false);
-    }
+
+    const [subscriptionResult, comparisonResult] = await Promise.allSettled([
+      apiRequest<SubscriptionState>("/subscription", {}, token),
+      apiRequest<SubscriptionComparison>("/subscription/comparison", {}, token)
+    ]);
+
+    setSubscription(subscriptionResult.status === "fulfilled" ? subscriptionResult.value : null);
+    setComparison(comparisonResult.status === "fulfilled" ? comparisonResult.value : null);
+    setPlanLoading(false);
   }, [token]);
 
   useFocusEffect(useCallback(() => {

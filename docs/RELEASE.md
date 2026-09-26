@@ -61,6 +61,7 @@ Required release properties include:
 - `AUTH_EXPOSE_RECOVERY_TOKEN=false`;
 - no bootstrap admin emails after permanent roles are assigned;
 - a strong billing webhook secret;
+- S3-compatible profile-photo storage credentials (bucket, region, access key, secret key, and optional HTTPS endpoint);
 - an intentional `TRUST_PROXY` setting for the hosting topology.
 
 ## 4. Production release check
@@ -154,6 +155,9 @@ Run these against the same candidate build/environment that will be released.
 - login/logout;
 - session survives app restart;
 - onboarding persists language, target year, and preparation level;
+- Profile edits language, target year, and preparation level without rerunning onboarding;
+- profile photo can be selected/cropped, uploaded, displayed, replaced, and removed;
+- unsupported/oversized profile photos are rejected;
 - invalid login and rate-limit messages are readable;
 - account deletion requires the intended confirmation flow.
 
@@ -186,7 +190,8 @@ Run these against the same candidate build/environment that will be released.
 
 ### Progress
 
-- completed exams update mastery/mistakes;
+- a new account sees a useful start-here state instead of a blank page;
+- completed exams update the overall score card, trend, learning journey, weak topics, subject bars, and recent results;
 - repeated misses appear in Mistake Notebook;
 - weakness/topic re-practice starts the expected exam;
 - free/premium progress depth remains enforced.
@@ -219,6 +224,19 @@ Historical archive infrastructure is complete, but authoritative historical Kank
 ### Scoring and commercial configuration
 
 Verify the authoritative annual Kankor scoring policy, configure the active full-Kankor blueprint, and set the final Premium plan/pricing before launch.
+
+### Profile photo object storage
+
+Profile photo source support is implemented using signed S3-compatible uploads. Before production, configure:
+
+- `PROFILE_PHOTO_S3_BUCKET`;
+- `PROFILE_PHOTO_S3_REGION`;
+- `PROFILE_PHOTO_S3_ACCESS_KEY_ID`;
+- `PROFILE_PHOTO_S3_SECRET_ACCESS_KEY`;
+- optional `PROFILE_PHOTO_S3_ENDPOINT` for an S3-compatible provider;
+- `PROFILE_PHOTO_S3_FORCE_PATH_STYLE` when required by the provider.
+
+The bucket may remain private. The API signs short-lived PUT and GET URLs; object-store credentials are never sent to the mobile client.
 
 ### Store/EAS ownership and branding
 

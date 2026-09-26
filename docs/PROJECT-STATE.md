@@ -162,8 +162,21 @@ Phase 9 — Administration and Content Quality completed in source.
 - No final Premium price is hard-coded. Administrators must create/activate plans after willingness-to-pay validation.
 - Development checkout uses the simulated provider only. Production payment availability, app-store policy, provider credentials, webhook signature method, and legal/privacy obligations must be rechecked before commercial launch.
 
+### Post-Phase-9 stability audit
+- Expo mobile configuration reads EXPO_PUBLIC_API_URL from the repository-root .env, so a second mobile env file is not required.
+- Expected API connectivity failures no longer use console.warn/LogBox warnings.
+- Mobile API requests classify network, rate-limit, and server failures and use bounded request timeouts.
+- Registration/login/recovery/reset expose precise localized errors and normalize email addresses before sending.
+- Temporary startup connectivity failures no longer erase a valid saved session; the user gets an explicit retry state.
+- Expo tunnel dependency is declared in the mobile workspace for reproducible tunnel development.
+- Attempt submission carries the final local answer snapshot so last-second/offline answers are revision-upserted before scoring.
+- PostgreSQL migration tooling pins sslmode=verify-full to preserve current certificate-verification semantics.
+- API startup validates API_PORT and logs the actual listening host/address.
+- verify:stability and verify:dev-network guard the repaired paths.
+- Grade 10 and Grade 11 official textbook curriculum imports are present through migration 0014.
+
 ## Latest source baseline
-Phase 9 implementation prepared for `main`.
+Post-Phase-9 stability audit prepared for `main`.
 
 ## Next phase
 Phase 10 — Release Readiness.

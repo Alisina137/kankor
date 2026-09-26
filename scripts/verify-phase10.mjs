@@ -250,7 +250,9 @@ for (const script of [
   "verify:eas-update",
   "eas:link",
   "update:preview",
-  "update:production"
+  "update:production",
+  "eas:preview:env:list",
+  "eas:preview:env:set-api"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
 }
@@ -270,6 +272,18 @@ for (const marker of [
 }
 if (easLinker.includes("--package=eas-cli") || easLinker.includes('"exec"')) {
   throw new Error("EAS linker must not dynamically fetch eas-cli");
+}
+
+const previewEnvHelper = await text("scripts/eas-preview-env.mjs");
+for (const marker of [
+  '"env:list"',
+  '"env:set"',
+  '"EXPO_PUBLIC_API_URL"',
+  '"KANKOR_PREVIEW_BUILD"',
+  'Preview API URL must use HTTPS.',
+  'private/LAN addresses are not allowed'
+]) {
+  if (!previewEnvHelper.includes(marker)) throw new Error(`Preview EAS environment helper invariant missing: ${marker}`);
 }
 
 const previewUpdateLauncher = await text("scripts/eas-update-preview.mjs");

@@ -223,6 +223,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Development API failover uses a shorter timeout, while production retains the longer network timeout.
 - `verify:dev-network` now validates `API_HOST=0.0.0.0`, accepts location-independent localhost configuration, reports all active laptop IPv4 addresses, and does not fail because an optional fallback belongs to another network.
 - `dev:lan` probes every active laptop IPv4 interface after API startup and prints which LAN addresses answer `/health`, making firewall/interface problems visible before Expo testing.
+- `dev:lan` now detects and reuses an already-running Kankor API on the configured port instead of spawning a second watcher and failing with `EADDRINUSE`; if a different service owns the port, startup fails with a clear error.
 - Home is now an actionable student dashboard: active-attempt resume, personalized weak-topic recommendation, progress snapshot, quick Practice/Full Kankor/Historical/Mistakes access, subscription badge, and recent result links.
 - Home refreshes when focused and reuses existing authoritative attempts/progress/billing APIs; it can also surface a locally persisted in-progress attempt while connectivity recovers.
 - Profile is now an account/preferences center with identity, current subscription, preparation settings, app version, logout, and a separated destructive account-deletion section.

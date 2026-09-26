@@ -35,6 +35,11 @@ function apiUrlForBuild() {
 }
 
 function apiFallbackUrls() {
+  const releaseBuild =
+    process.env.EAS_BUILD_PROFILE === "production" ||
+    process.env.KANKOR_RELEASE_BUILD === "true";
+  if (releaseBuild) return [];
+
   const raw = process.env.EXPO_PUBLIC_API_URLS?.trim();
   if (!raw) return [];
 

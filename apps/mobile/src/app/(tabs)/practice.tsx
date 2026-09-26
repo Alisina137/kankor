@@ -263,7 +263,14 @@ export default function PracticeScreen() {
 
     void apiRequest<{ items: Chapter[] }>(`/chapters?bookId=${encodeURIComponent(bookId)}`)
       .then((result) => {
-        if (active) setChapters(result.items);
+        if (!active) return;
+
+        setChapters(result.items);
+
+        if (result.items.length === 1) {
+          setTopicsLoading(true);
+          setChapterId(result.items[0].id);
+        }
       })
       .catch(() => {
         if (active) setError(text.error);
@@ -380,7 +387,7 @@ export default function PracticeScreen() {
       subject && displayName(subject.nameFa, subject.namePs),
       grades.find((item) => item.id === gradeId)?.number,
       book && displayName(book.titleFa, book.titlePs),
-      chapter && displayName(chapter.titleFa, chapter.titlePs),
+      chapter && chapters.length > 1 && displayName(chapter.titleFa, chapter.titlePs),
       topic && displayName(topic.titleFa, topic.titlePs)
     ].filter(Boolean);
     return parts.join(" • ");
@@ -521,16 +528,24 @@ export default function PracticeScreen() {
             emptyMessage={text.emptyBooks}
           />
         ) : null}
-        {bookId ? (
+        {bookId && chaptersLoading ? (
+          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
+          </View>
+        ) : null}
+        {bookId && !chaptersLoading && chapters.length > 1 ? (
           <ChoiceGroup
             label={text.chapter}
             items={chapters}
             selected={chapterId}
             onSelect={selectChapter}
             getLabel={(item) => `${item.number}. ${displayName(item.titleFa, item.titlePs)}`}
-            loading={chaptersLoading}
             emptyMessage={text.emptyChapters}
           />
+        ) : null}
+        {bookId && !chaptersLoading && chapters.length === 0 ? (
+          <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.emptyChapters}</Text>
         ) : null}
         {chapterId ? (
           <ChoiceGroup

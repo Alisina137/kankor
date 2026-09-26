@@ -74,12 +74,19 @@ try {
           AND table_name = 'users'
           AND column_name = 'role'
       ) AS role_column,
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'users'
+          AND column_name = 'profile_photo_key'
+      ) AS profile_photo_column,
       to_regclass('public.kankor_migrations') IS NOT NULL AS migration_table
   `);
 
   const state = schemaCheck.rows[0];
 
-  if (!state?.users_table || !state?.role_column || !state?.migration_table) {
+  if (!state?.users_table || !state?.role_column || !state?.profile_photo_column || !state?.migration_table) {
     throw new Error('Runtime database schema is incomplete. Run "npm run db:migrate".');
   }
 

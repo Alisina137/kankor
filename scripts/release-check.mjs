@@ -102,6 +102,7 @@ for (const script of [
   "verify:phase8",
   "verify:phase9",
   "verify:phase10",
+  "verify:home-profile",
   "verify:rtl",
   "verify:stability"
 ]) {

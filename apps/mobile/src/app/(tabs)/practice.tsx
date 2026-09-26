@@ -310,22 +310,56 @@ export default function PracticeScreen() {
   }, [chapterId, text.error]);
 
   function selectGrade(id: string) {
-    if (id !== gradeId) setSubjectsLoading(true);
+    if (id === gradeId) return;
+    setError("");
+    setSubjectsLoading(true);
+    setBooksLoading(false);
+    setChaptersLoading(false);
+    setTopicsLoading(false);
+    setSubjectId(null);
+    setBookId(null);
+    setChapterId(null);
+    setTopicId(null);
+    setSubjects([]);
+    setBooks([]);
+    setChapters([]);
+    setTopics([]);
     setGradeId(id);
   }
 
   function selectSubject(id: string) {
-    if (id !== subjectId) setBooksLoading(true);
+    if (id === subjectId) return;
+    setError("");
+    setBooksLoading(true);
+    setChaptersLoading(false);
+    setTopicsLoading(false);
+    setBookId(null);
+    setChapterId(null);
+    setTopicId(null);
+    setBooks([]);
+    setChapters([]);
+    setTopics([]);
     setSubjectId(id);
   }
 
   function selectBook(id: string) {
-    if (id !== bookId) setChaptersLoading(true);
+    if (id === bookId) return;
+    setError("");
+    setChaptersLoading(true);
+    setTopicsLoading(false);
+    setChapterId(null);
+    setTopicId(null);
+    setChapters([]);
+    setTopics([]);
     setBookId(id);
   }
 
   function selectChapter(id: string) {
-    if (id !== chapterId) setTopicsLoading(true);
+    if (id === chapterId) return;
+    setError("");
+    setTopicsLoading(true);
+    setTopicId(null);
+    setTopics([]);
     setChapterId(id);
   }
 
@@ -522,7 +556,7 @@ export default function PracticeScreen() {
               {displayName(selectedBook.titleFa, selectedBook.titlePs)}
             </Text>
             <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
-              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chapters.length} {text.chapter}
+              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chaptersLoading ? text.loading : `${chapters.length} ${text.chapter}`}
             </Text>
           </View>
         ) : null}

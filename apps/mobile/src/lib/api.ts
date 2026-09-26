@@ -96,8 +96,21 @@ export async function apiRequest<T>(
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), __DEV__ ? 2500 : 6000);
+      const requestHeaders = new Headers(headers);
+
+      if (__DEV__) {
+        try {
+          const hostname = new URL(baseUrl).hostname.toLowerCase();
+          if (hostname.endsWith(".ngrok.io") || hostname.endsWith(".ngrok-free.app")) {
+            requestHeaders.set("ngrok-skip-browser-warning", "true");
+          }
+        } catch {
+          // Invalid candidates will fail through fetch and fall through normally.
+        }
+      }
+
       try {
-        response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers, signal: controller.signal });
+        response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers: requestHeaders, signal: controller.signal });
       } finally {
         clearTimeout(timeout);
       }

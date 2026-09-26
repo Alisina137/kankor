@@ -317,7 +317,9 @@ export default function PracticeScreen() {
 
     void apiRequest<{ items: Topic[] }>(`/topics?chapterId=${encodeURIComponent(chapterId)}`)
       .then((result) => {
-        if (active) setTopics(result.items);
+        if (!active) return;
+        setTopics(result.items);
+        if (result.items.length <= 1) setTopicId(null);
       })
       .catch(() => {
         if (active) setError(text.error);
@@ -404,7 +406,7 @@ export default function PracticeScreen() {
       grades.find((item) => item.id === gradeId)?.number,
       book && displayName(book.titleFa, book.titlePs),
       chapter && chapters.length > 1 && displayName(chapter.titleFa, chapter.titlePs),
-      topic && displayName(topic.titleFa, topic.titlePs)
+      topic && topics.length > 1 && displayName(topic.titleFa, topic.titlePs)
     ].filter(Boolean);
     return parts.join(" • ");
   }, [subjects, grades, books, chapters, topics, subjectId, gradeId, bookId, chapterId, topicId, locale]);
@@ -563,16 +565,24 @@ export default function PracticeScreen() {
         {bookId && !chaptersLoading && chapters.length === 0 ? (
           <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.emptyChapters}</Text>
         ) : null}
-        {chapterId ? (
+        {chapterId && topicsLoading ? (
+          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
+          </View>
+        ) : null}
+        {chapterId && !topicsLoading && topics.length > 1 ? (
           <ChoiceGroup
             label={countLabel(topics.length, text.topic, text.topics)}
             items={topics}
             selected={topicId}
             onSelect={setTopicId}
             getLabel={(item) => displayName(item.titleFa, item.titlePs)}
-            loading={topicsLoading}
             emptyMessage={text.emptyTopics}
           />
+        ) : null}
+        {chapterId && !topicsLoading && topics.length === 0 ? (
+          <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.emptyTopics}</Text>
         ) : null}
 
         {selectedBook ? (

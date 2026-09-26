@@ -22,6 +22,11 @@ type SubscriptionState = {
   entitlements: Record<string, unknown>;
 };
 
+type SubscriptionComparison = {
+  free: Record<string, unknown>;
+  premium: Record<string, boolean>;
+};
+
 const years = Array.from({ length: 16 }, (_, index) => 1405 + index);
 const languages: SupportedLocale[] = ["fa", "ps", "en"];
 const levels = [null, "starting", "some_preparation", "intensive"] as const;
@@ -199,15 +204,22 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"" | "saved" | "error">("");
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
+  const [comparison, setComparison] = useState<SubscriptionComparison | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
 
   const loadSubscription = useCallback(async () => {
     if (!token) return;
     setPlanLoading(true);
     try {
-      setSubscription(await apiRequest<SubscriptionState>("/subscription", {}, token));
+      const [subscriptionResult, comparisonResult] = await Promise.all([
+        apiRequest<SubscriptionState>("/subscription", {}, token),
+        apiRequest<SubscriptionComparison>("/subscription/comparison", {}, token)
+      ]);
+      setSubscription(subscriptionResult);
+      setComparison(comparisonResult);
     } catch {
       setSubscription(null);
+      setComparison(null);
     } finally {
       setPlanLoading(false);
     }
@@ -240,7 +252,9 @@ export default function ProfileScreen() {
   }
 
   function entitlementNumber(key: string, fallback = 0) {
-    const value = Number(subscription?.entitlements?.[key]);
+    const source = comparison?.free
+      ?? (subscription?.tier === "free" ? subscription.entitlements : null);
+    const value = Number(source?.[key]);
     return Number.isFinite(value) ? value : fallback;
   }
 

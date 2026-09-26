@@ -18,17 +18,44 @@ for (const marker of [
   if (!migration.includes(marker)) throw new Error(`Missing Grade 11 book marker: ${marker}`);
 }
 
-const biology = new Set(migration.match(/biology-g11-c\d{2}/g) ?? []);
-const chemistry = new Set(migration.match(/chemistry-g11-c\d{2}/g) ?? []);
+const biologyChapters = [
+  "مطالعه حجره و انواع میکروسکوپ‌ها",
+  "ساختمان حجره، حجره پروکاریوت و یوکاریوت و اعضای حجره یوکاریوت",
+  "حجره و محیط آن، انتقال غیر فعال و انتقال فعال",
+  "ترکیب کیمیایی",
+  "تنفس حجروی",
+  "دوران حجره و تقسیم حجروی",
+  "طبقه‌بندی حیوانات غیر فقاریه و مشخصات آن‌ها",
+  "مقایسه سیستم‌های حیوانات غیر فقاریه",
+  "حیوانات فقاریه و مشخصات حیوانات فقاریه",
+  "مقایسه سیستم‌های فقاریه",
+  "عمل متقابل بین جمعیت‌ها",
+  "بایوم‌ها"
+];
+const chemistryChapters = [
+  "غلظت محلول‌ها",
+  "خواص محلول‌ها",
+  "سرعت تعاملات کیمیاوی",
+  "تعادل کیمیاوی",
+  "محلول‌های آبی تیزاب‌ها و القلی‌ها",
+  "تعاملات تیزاب‌ها و القلی‌ها",
+  "تولید برق از تعاملات کیمیاوی",
+  "تجزیه برقی",
+  "فلزات",
+  "غیر فلزات",
+  "عناصر شبه فلزات"
+];
+for (const title of biologyChapters) if (!migration.includes(title)) throw new Error(`Missing Biology chapter: ${title}`);
+for (const title of chemistryChapters) if (!migration.includes(title)) throw new Error(`Missing Chemistry chapter: ${title}`);
+
 const dari = new Set(migration.match(/dari-g11-l\d{2}/g) ?? []);
 const geography = new Set(migration.match(/geography-g11-l\d{2}/g) ?? []);
 const history = new Set(migration.match(/history-g11-l\d{2}/g) ?? []);
-
-if (biology.size !== 12) throw new Error(`Expected 12 Biology chapters/topics, found ${biology.size}`);
-if (chemistry.size !== 11) throw new Error(`Expected 11 Chemistry chapters/topics, found ${chemistry.size}`);
 if (dari.size !== 28) throw new Error(`Expected 28 Dari lessons, found ${dari.size}`);
 if (geography.size !== 54) throw new Error(`Expected 54 Geography lessons, found ${geography.size}`);
 if (history.size !== 38) throw new Error(`Expected 38 History topics, found ${history.size}`);
+if (!migration.includes("'biology-g11-c'||lpad")) throw new Error("Biology dynamic topic-code generation missing");
+if (!migration.includes("'chemistry-g11-c'||lpad")) throw new Error("Chemistry dynamic topic-code generation missing");
 
 for (const marker of [
   '"sourceType":"official_textbook"',

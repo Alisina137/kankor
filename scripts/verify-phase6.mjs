@@ -75,7 +75,8 @@ const app = await readFile(resolve("apps/api/src/app.ts"), "utf8");
 if (!app.includes("historicalExamRoutes") || !app.includes("adminHistoricalFormRoutes")) {
   throw new Error("Historical routes are not registered");
 }
-if (!app.includes("phase: 6")) throw new Error("API health must report Phase 6");
+const currentPhase = Number(app.match(/phase:\s*(\d+)/)?.[1] ?? 0);
+if (currentPhase < 6) throw new Error("API health must report Phase 6 or later");
 
 const resultRoutes = await readFile(resolve("apps/api/src/modules/results/routes.ts"), "utf8");
 if (!resultRoutes.includes("historical:")) throw new Error("Results must return historical provenance");

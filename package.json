@@ -42,7 +42,8 @@
     "release:check": "node scripts/release-check.mjs",
     "release:check:production": "node scripts/release-check.mjs --production",
     "build:android:preview": "npm --workspace @kankor/mobile run build:android:preview",
-    "build:android:production": "npm --workspace @kankor/mobile run build:android:production"
+    "build:android:production": "npm --workspace @kankor/mobile run build:android:production",
+    "verify:home-profile": "node scripts/verify-home-profile.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

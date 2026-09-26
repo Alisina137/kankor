@@ -34,8 +34,15 @@ function runRequired(args, label) {
 }
 
 function parseEnvValue(text, key) {
-  const match = text.match(new RegExp(`^\\s*${key}\\s*=\\s*([^\\r\\n#]+)\\s*$`, "m"));
-  return match?.[1]?.trim().replace(/^["']|["']$/g, "") ?? "";
+  for (const line of text.split(/\r?\n/)) {
+    const match = line.match(/^[ \t]*([A-Z0-9_]+)[ \t]*=[ \t]*(.*)$/i);
+    if (!match || match[1] !== key) continue;
+
+    const raw = match[2].split("#", 1)[0].trim();
+    return raw.replace(/^["']|["']$/g, "");
+  }
+
+  return "";
 }
 
 function spawnNpm(args, env = process.env) {

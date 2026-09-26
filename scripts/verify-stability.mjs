@@ -84,6 +84,7 @@ for (const marker of [
   "DATABASE_URL and DIRECT_DATABASE_URL point to different database targets",
   "kankor_migrations",
   "Runtime database and authentication schema are ready",
+  "Grade 10 curriculum books are present",
   "Grade 11 curriculum books are present",
   "securePgConnectionString",
   'url.searchParams.set("sslmode", "verify-full")'
@@ -132,6 +133,35 @@ for (const marker of [
   if (!practice.includes(marker)) throw new Error(`Grade-aware Practice invariant missing: ${marker}`);
 }
 
+const grade10RemainingMigration = await readFile(resolve("packages/database/drizzle/0015_grade10_remaining_official_books.sql"), "utf8");
+for (const marker of [
+  "'geology-grade-10-fa-1398'",
+  "'islamic-studies-grade-10-hanafi-fa-1398'",
+  "'math-grade-10-fa-1398'",
+  "'physics-grade-10-fa-1398'",
+  "'tafseer-grade-10-fa-1398'",
+  '"sourceFilename":"G10-Dr-Geology(1).pdf"',
+  '"sourceFilename":"G10-Dr-Islamic_Study_hanafi.pdf"',
+  '"sourceFilename":"G10-Dr-Math(1).pdf"',
+  '"sourceFilename":"G10-Dr-physic(1).pdf"',
+  '"sourceFilename":"G10-Dr-Tafseer(1).pdf"'
+]) {
+  if (!grade10RemainingMigration.includes(marker)) {
+    throw new Error(`Grade 10 remaining-book migration invariant missing: ${marker}`);
+  }
+}
+
+const grade10RemainingVerifier = await readFile(resolve("scripts/verify-grade10-remaining-books.mjs"), "utf8");
+for (const marker of [
+  "Expected 21 Grade 10 Geology curriculum topics",
+  "Expected 47 Grade 10 Islamic Education lessons",
+  "Expected 24 Grade 10 Tafseer lessons"
+]) {
+  if (!grade10RemainingVerifier.includes(marker)) {
+    throw new Error(`Grade 10 remaining-book verifier invariant missing: ${marker}`);
+  }
+}
+
 const grade11RemainingMigration = await readFile(resolve("packages/database/drizzle/0013_grade11_remaining_official_books.sql"), "utf8");
 for (const marker of [
   'SELECT c."id",v.code,v.title_ps,v.title_ps',
@@ -161,4 +191,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, repaired Grade 11 remaining-book migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

@@ -49,7 +49,9 @@
     "eas:link": "node scripts/link-eas-project.mjs",
     "update:preview": "node scripts/eas-update-preview.mjs",
     "update:production": "node scripts/eas-update-production.mjs",
-    "verify:eas-update": "node scripts/verify-eas-update.mjs"
+    "verify:eas-update": "node scripts/verify-eas-update.mjs",
+    "eas:preview:env:list": "node scripts/eas-preview-env.mjs list",
+    "eas:preview:env:set-api": "node scripts/eas-preview-env.mjs set-api"
   },
   "engines": {
     "node": ">=22.13.0"

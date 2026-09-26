@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
   avatarWrap: { position: "relative", width: 72, height: 72 },
   avatar: { width: 72, height: 72, overflow: "hidden", alignItems: "center", justifyContent: "center", borderRadius: 36, backgroundColor: theme.colors.primary },
   avatarImage: { width: "100%", height: "100%" },
-  avatarLoading: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.35)" },
+  avatarLoading: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.35)" },
   avatarText: { color: "#FFFFFF", fontSize: 21, fontWeight: "900" },
   photoEditBadge: { position: "absolute", right: -1, bottom: 1, width: 28, height: 28, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 2, borderColor: theme.colors.surface, backgroundColor: theme.colors.primary },
   identityCopy: { flex: 1, gap: 8 },

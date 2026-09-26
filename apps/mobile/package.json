@@ -11,11 +11,11 @@
     "typecheck": "tsc --noEmit",
     "start:lan": "expo start --lan",
     "check:expo": "npx expo install --check",
-    "build:android:preview": "npx eas-cli build --platform android --profile preview",
-    "build:android:production": "npx eas-cli build --platform android --profile production",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:android:production": "eas build --platform android --profile production",
     "eas:link": "node ../../scripts/link-eas-project.mjs",
-    "update:preview": "npx eas-cli update --channel preview --environment preview",
-    "update:production": "npx eas-cli update --channel production --environment production"
+    "update:preview": "eas update --channel preview --environment preview",
+    "update:production": "eas update --channel production --environment production"
   },
   "dependencies": {
     "@kankor/config": "*",

@@ -82,7 +82,6 @@ export async function createProfilePhotoUpload(userId: string, contentType: stri
       Bucket: config.bucket,
       Key: key,
       ContentType: contentType,
-      ContentLength: fileSize,
       CacheControl: "private, max-age=31536000, immutable"
     }),
     { expiresIn: 300 }

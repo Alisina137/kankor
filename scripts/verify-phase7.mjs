@@ -69,8 +69,9 @@ for (const marker of [
 }
 
 const app = await readFile(resolve("apps/api/src/app.ts"), "utf8");
-if (!app.includes("progressRoutes") || !app.includes("phase: 7")) {
-  throw new Error("Progress routes or Phase 7 API status missing");
+const currentPhase = Number(app.match(/phase:\s*(\d+)/)?.[1] ?? 0);
+if (!app.includes("progressRoutes") || currentPhase < 7) {
+  throw new Error("Progress routes or Phase 7+ API status missing");
 }
 
 const progressPage = await readFile(resolve("apps/mobile/src/app/(tabs)/progress.tsx"), "utf8");

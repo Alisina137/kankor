@@ -173,6 +173,56 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return reply.send({ user: publicUser(updated[0]) });
   });
 
+  app.patch("/profile", async (request: AuthRequest, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    const body = request.body ?? {};
+    const hasLanguage = Object.prototype.hasOwnProperty.call(body, "preferredLanguage");
+    const hasTargetYear = Object.prototype.hasOwnProperty.call(body, "targetExamYear");
+    const hasPreparation = Object.prototype.hasOwnProperty.call(body, "preparationLevel");
+
+    if (!hasLanguage && !hasTargetYear && !hasPreparation) {
+      return reply.code(400).send({ error: "profile_update_required" });
+    }
+
+    if (hasLanguage && !validLanguage(body.preferredLanguage)) {
+      return reply.code(400).send({ error: "invalid_profile_data" });
+    }
+    if (hasTargetYear && !validTargetYear(body.targetExamYear)) {
+      return reply.code(400).send({ error: "invalid_profile_data" });
+    }
+    if (hasPreparation && !validPreparationLevel(body.preparationLevel)) {
+      return reply.code(400).send({ error: "invalid_profile_data" });
+    }
+
+    const updates: {
+      preferredLanguage?: string;
+      targetExamYear?: number;
+      preparationLevel?: string | null;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+
+    if (hasLanguage) updates.preferredLanguage = body.preferredLanguage as string;
+    if (hasTargetYear) updates.targetExamYear = body.targetExamYear as number;
+    if (hasPreparation) updates.preparationLevel = body.preparationLevel as string | null;
+
+    const db = createDatabase();
+    const updated = await db.update(schema.users)
+      .set(updates)
+      .where(eq(schema.users.id, auth.user.userId))
+      .returning({
+        id: schema.users.id,
+        email: schema.users.email,
+        preferredLanguage: schema.users.preferredLanguage,
+        targetExamYear: schema.users.targetExamYear,
+        preparationLevel: schema.users.preparationLevel,
+        onboardingCompletedAt: schema.users.onboardingCompletedAt
+      });
+
+    return reply.send({ user: publicUser(updated[0]) });
+  });
+
   app.post("/recovery", authRateLimit, async (request: AuthRequest, reply) => {
     const email = normalizeEmail(request.body?.email);
     if (!validEmail(email)) {

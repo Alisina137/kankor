@@ -97,8 +97,9 @@ if (!results.includes("premiumLocked") || !results.includes("detailedExplanation
 }
 
 const app = await readFile(resolve("apps/api/src/app.ts"), "utf8");
-if (!app.includes("billingRoutes") || !app.includes("adminBillingRoutes") || !app.includes("phase: 8")) {
-  throw new Error("Phase 8 billing routes are not registered");
+const currentPhase = Number(app.match(/phase:\s*(\d+)/)?.[1] ?? 0);
+if (!app.includes("billingRoutes") || !app.includes("adminBillingRoutes") || currentPhase < 8) {
+  throw new Error("Phase 8 billing routes or Phase 8+ API status are missing");
 }
 
 const premium = await readFile(resolve("apps/mobile/src/app/premium.tsx"), "utf8");

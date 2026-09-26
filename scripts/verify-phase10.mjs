@@ -115,7 +115,8 @@ for (const [name, version] of Object.entries({
   "expo-image-picker": "~57.0.20",
   "react-native": "0.86.3",
   "react-dom": "19.2.3",
-  "react-native-web": "~0.21.0",
+  "react-native-web": "0.21.1",
+  "@expo/metro-runtime": "~57.0.0",
   "react-native-safe-area-context": "~5.7.0",
   "react-native-screens": "~4.26.0"
 })) {

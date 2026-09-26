@@ -2,7 +2,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
 
-loadEnv({ path: resolve(__dirname, "../../.env"), override: false });
+loadEnv({ path: resolve(__dirname, "../../.env"), override: true });
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,

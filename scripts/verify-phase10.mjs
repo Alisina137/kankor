@@ -135,14 +135,20 @@ for (const [name, version] of Object.entries({
   }
 }
 if (!mobilePackage.scripts?.["check:expo"]) throw new Error("Expo dependency validation script is missing");
-for (const script of ["build:android:preview", "build:android:production", "update:preview", "update:production"]) {
+for (const script of ["build:android:preview", "build:android:production"]) {
   const command = mobilePackage.scripts?.[script] ?? "";
   if (!command.startsWith("eas ")) {
-    throw new Error(`Mobile EAS command ${script} must use the pinned local eas-cli`);
+    throw new Error(`Mobile EAS build command ${script} must use the pinned local eas-cli`);
   }
   if (command.includes("npx") || command.includes("npm exec")) {
-    throw new Error("Mobile EAS commands must use the pinned local eas-cli");
+    throw new Error("Mobile EAS build commands must use the pinned local eas-cli");
   }
+}
+if (mobilePackage.scripts?.["update:preview"] !== "node ../../scripts/eas-update-preview.mjs") {
+  throw new Error("Mobile preview updates must use the guarded launcher");
+}
+if (mobilePackage.scripts?.["update:production"] !== "node ../../scripts/eas-update-production.mjs") {
+  throw new Error("Mobile production updates must use the guarded launcher");
 }
 
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
@@ -264,6 +270,24 @@ for (const marker of [
 }
 if (easLinker.includes("--package=eas-cli") || easLinker.includes('"exec"')) {
   throw new Error("EAS linker must not dynamically fetch eas-cli");
+}
+
+const previewUpdateLauncher = await text("scripts/eas-update-preview.mjs");
+for (const marker of [
+  '"preview"',
+  '"--environment"',
+  'KANKOR_PREVIEW_BUILD: "true"'
+]) {
+  if (!previewUpdateLauncher.includes(marker)) throw new Error(`Preview OTA invariant missing: ${marker}`);
+}
+
+const productionUpdateLauncher = await text("scripts/eas-update-production.mjs");
+for (const marker of [
+  '"production"',
+  '"--environment"',
+  'KANKOR_RELEASE_BUILD: "true"'
+]) {
+  if (!productionUpdateLauncher.includes(marker)) throw new Error(`Production OTA invariant missing: ${marker}`);
 }
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");

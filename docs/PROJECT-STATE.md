@@ -186,6 +186,7 @@ Phase 9 — Administration and Content Quality completed in source.
 - Practice adapts the hierarchy to book structure: books with exactly one chapter auto-select that chapter and go directly from Book → Topic; books with two or more chapters keep the explicit Chapter step, while zero-chapter books show the gentle empty state.
 - Practice also adapts the final layer: when a selected chapter has exactly one topic, the Topic step is hidden and the chapter itself remains the practice scope; two or more topics show the Topic selector, while zero topics show the gentle empty state.
 - Practice titles are count-aware: each layer uses its singular label for exactly one item and its plural label for multiple items (Class/Classes, Subject/Subjects, Book/Books, Chapter/Chapters, Topic/Topics), localized in Dari, Pashto, and English.
+- Historical Archive Year, Province, and Round filters use select-style controls instead of free text. Their option lists are derived from all published historical forms, remain stable while filters are applied, include an All option, and expose every currently available value.
 - Runtime database verification checks that Grade 10 contains at least 11 active official books and Grade 11 contains at least 10 active official books.
 
 ## Latest source baseline

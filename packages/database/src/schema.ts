@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   preferredLanguage: varchar("preferred_language", { length: 8 }).notNull().default("fa"),
   targetExamYear: integer("target_exam_year"),
   preparationLevel: varchar("preparation_level", { length: 24 }),
+  profilePhotoKey: varchar("profile_photo_key", { length: 512 }),
   onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()

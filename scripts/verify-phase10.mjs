@@ -208,7 +208,8 @@ for (const script of [
   "verify:production-env",
   "release:check",
   "release:check:production",
-  "dev:anywhere"
+  "dev:anywhere",
+  "dev:tailscale"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
 }
@@ -235,6 +236,20 @@ for (const marker of [
   'Cloudflare Quick Tunnel for Expo/Metro'
 ]) {
   if (!anywhereDev.includes(marker)) throw new Error(`Anywhere-development invariant missing: ${marker}`);
+}
+
+const tailscaleDev = await text("scripts/dev-tailscale.mjs");
+for (const marker of [
+  '["ip", "-4"]',
+  'EXPO_PUBLIC_API_URL: apiUrl',
+  'EXPO_PUBLIC_API_URLS: ""',
+  'EXPO_PACKAGER_PROXY_URL: metroUrl',
+  'assertTailscaleApiReachable',
+  'Keep Tailscale connected on both the laptop and phone.'
+]) {
+  if (!tailscaleDev.includes(marker)) {
+    throw new Error(`Tailscale-development invariant missing: ${marker}`);
+  }
 }
 
 const releaseRunbook = await text("docs/RELEASE.md");

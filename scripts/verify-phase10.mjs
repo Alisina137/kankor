@@ -76,9 +76,12 @@ const mobileConfig = await text("apps/mobile/app.config.ts");
 for (const marker of [
   'process.env.EAS_BUILD_PROFILE === "production"',
   'process.env.KANKOR_RELEASE_BUILD === "true"',
-  "EXPO_PUBLIC_API_URL is required for a production mobile build",
-  "must use https for a production mobile build",
-  "must not point to localhost"
+  'process.env.EAS_BUILD_PROFILE === "preview"',
+  'process.env.KANKOR_PREVIEW_BUILD === "true"',
+  "EXPO_PUBLIC_API_URL is required for a",
+  "must use https for a",
+  "must not point to localhost for a",
+  'fallbackToCacheTimeout: mode.preview ? 5000'
 ]) {
   if (!mobileConfig.includes(marker)) {
     throw new Error(`Mobile release configuration invariant missing: ${marker}`);
@@ -104,6 +107,12 @@ if (mobileApp.expo?.ios?.config?.usesNonExemptEncryption !== false) {
 if (mobileApp.expo?.web?.bundler !== "metro") {
   throw new Error("Expo Router web builds must use the Metro bundler");
 }
+if (mobileApp.expo?.runtimeVersion?.policy !== "appVersion") {
+  throw new Error('EAS Update runtimeVersion must use the "appVersion" policy');
+}
+if (mobileApp.expo?.updates?.checkAutomatically !== "ON_LOAD") {
+  throw new Error('EAS Update must check for updates on app load');
+}
 
 const mobilePackage = JSON.parse(await text("apps/mobile/package.json"));
 for (const [name, version] of Object.entries({
@@ -113,6 +122,7 @@ for (const [name, version] of Object.entries({
   "expo-secure-store": "~57.0.4",
   "expo-status-bar": "~57.0.1",
   "expo-image-picker": "~57.0.20",
+  "expo-updates": "~57.0.23",
   "react-native": "0.86.3",
   "react-dom": "19.2.3",
   "react-native-web": "0.21.1",
@@ -129,6 +139,15 @@ if (!mobilePackage.scripts?.["check:expo"]) throw new Error("Expo dependency val
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
 if (eas.build?.preview?.android?.buildType !== "apk") {
   throw new Error("EAS preview profile must produce an APK");
+}
+if (eas.build?.preview?.channel !== "preview" || eas.build?.preview?.environment !== "preview") {
+  throw new Error("EAS preview profile must use the preview update channel and environment");
+}
+if (eas.build?.production?.channel !== "production" || eas.build?.production?.environment !== "production") {
+  throw new Error("EAS production profile must use the production update channel and environment");
+}
+if (eas.build?.preview?.env?.KANKOR_PREVIEW_BUILD !== "true") {
+  throw new Error("EAS preview profile must enforce preview mobile configuration");
 }
 if (eas.build?.production?.android?.buildType !== "app-bundle") {
   throw new Error("EAS production profile must produce an Android App Bundle");
@@ -209,7 +228,12 @@ for (const script of [
   "release:check",
   "release:check:production",
   "dev:anywhere",
-  "dev:tailscale"
+  "dev:tailscale",
+  "verify:eas-update",
+  "eas:link",
+  "eas:update:configure",
+  "update:preview",
+  "update:production"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
 }

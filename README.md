@@ -21,13 +21,21 @@ npm run dev:lan -- --clear
 
 For normal same-network development, `npm run dev:lan -- --clear` uses the current Expo/LAN host automatically.
 
-For IP-independent development across home/company/hotspot networks, use:
+For IP-independent development across home/company/hotspot networks, the preferred development mode is Tailscale:
+
+```powershell
+npm run dev:tailscale -- --clear
+```
+
+Install Tailscale on both the Windows laptop and the phone, sign both into the same tailnet, and keep Tailscale connected. The launcher discovers the laptop's stable Tailscale IPv4 automatically, verifies the API through that address, injects it into the app, and advertises Metro through the same stable address. Normal Wi-Fi/DHCP IP changes therefore do not matter.
+
+A Cloudflare Quick Tunnel fallback remains available:
 
 ```powershell
 npm run dev:anywhere -- --clear
 ```
 
-This starts/reuses the local API, downloads and SHA-256 verifies a pinned official Cloudflare tunnel binary on first Windows x64 use, creates temporary Quick Tunnels for both the API and Expo/Metro, injects the public API URL into the app, and points Expo at the public Metro URL. No Cloudflare account or token is required. Both laptop and phone need internet access, but they do not need the same LAN or a fixed IP.
+That fallback depends on the current network allowing access to Cloudflare Quick Tunnel provisioning; restrictive networks can block `api.trycloudflare.com`.
 
 ## Verification
 

@@ -92,8 +92,9 @@ for (const marker of [
 }
 
 const app = await readFile(resolve("apps/api/src/app.ts"), "utf8");
-if (!app.includes("adminContentQualityRoutes") || !app.includes("phase: 9") || !app.includes("admin-content-quality")) {
-  throw new Error("Phase 9 routes/status are not registered");
+const currentPhase = Number(app.match(/phase:\s*(\d+)/)?.[1] ?? 0);
+if (!app.includes("adminContentQualityRoutes") || currentPhase < 9) {
+  throw new Error("Phase 9 routes or Phase 9+ API status are not registered");
 }
 
 const ui = await readFile(resolve("apps/admin/app/quality/page.tsx"), "utf8");

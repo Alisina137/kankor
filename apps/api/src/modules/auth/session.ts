@@ -58,10 +58,13 @@ export async function getSessionUser(token: string) {
 
   if (!rows[0]) return null;
 
-  await db
+  // lastUsedAt is telemetry, not part of session validity. Do not make every
+  // authenticated API response wait for a second database round trip.
+  void db
     .update(schema.sessions)
     .set({ lastUsedAt: now })
-    .where(eq(schema.sessions.id, rows[0].sessionId));
+    .where(eq(schema.sessions.id, rows[0].sessionId))
+    .catch(() => undefined);
 
   return rows[0];
 }

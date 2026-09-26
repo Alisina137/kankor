@@ -34,12 +34,23 @@ function apiUrlForBuild() {
   return configured.replace(/\/$/, "");
 }
 
+function apiFallbackUrls() {
+  const raw = process.env.EXPO_PUBLIC_API_URLS?.trim();
+  if (!raw) return [];
+
+  return raw
+    .split(",")
+    .map((value) => value.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: config.name ?? "KankorPrep Afghanistan",
   slug: config.slug ?? "kankorprep-afghanistan",
   extra: {
     ...config.extra,
-    apiUrl: apiUrlForBuild()
+    apiUrl: apiUrlForBuild(),
+    apiUrls: apiFallbackUrls()
   }
 });

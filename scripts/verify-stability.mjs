@@ -144,7 +144,12 @@ for (const marker of [
   'if (active) setSubjects(result.items)',
   'if (active) setBooks(result.items)',
   'if (active) setChapters(result.items)',
-  'if (active) setTopics(result.items)'
+  'if (active) setTopics(result.items)',
+  'if (result.items.length === 1)',
+  'setChapterId(result.items[0].id)',
+  'chapters.length > 1',
+  'chapters.length === 0',
+  'chapter && chapters.length > 1'
 ]) {
   if (!practice.includes(marker)) throw new Error(`Grade-aware Practice loading/empty-state invariant missing: ${marker}`);
 }
@@ -207,4 +212,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders and gentle empty states, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders, gentle empty states, and automatic single-chapter skipping, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

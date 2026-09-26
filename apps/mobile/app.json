@@ -30,6 +30,15 @@
     },
     "web": {
       "bundler": "metro"
+    },
+    "owner": "alisina137",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

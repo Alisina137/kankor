@@ -354,6 +354,7 @@ export default function ProfileScreen() {
 
   const version = Constants.expoConfig?.version ?? "0.4.0";
   const isPremium = subscription?.tier === "premium";
+  const isFree = subscription?.tier === "free";
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
@@ -464,7 +465,7 @@ export default function ProfileScreen() {
                 <Text style={[styles.activePlanName, { textAlign: align, writingDirection: direction }]}>{planLabel}</Text>
               )}
             </View>
-            {!planLoading ? (
+            {!planLoading && subscription ? (
               <View style={styles.activeBadge}>
                 <Ionicons name="checkmark-circle" size={15} color={theme.colors.success} />
                 <Text style={styles.activeBadgeText}>{text.active}</Text>
@@ -489,8 +490,8 @@ export default function ProfileScreen() {
             <View style={styles.featureColumn}>
               <Text style={[styles.comparisonHeaderText, { textAlign: align, writingDirection: direction }]}>{text.feature}</Text>
             </View>
-            <View style={[styles.planColumn, !isPremium && styles.currentPlanColumn]}>
-              <Text style={[styles.comparisonHeaderText, !isPremium && styles.currentPlanText]}>{text.free}</Text>
+            <View style={[styles.planColumn, isFree && styles.currentPlanColumn]}>
+              <Text style={[styles.comparisonHeaderText, isFree && styles.currentPlanText]}>{text.free}</Text>
             </View>
             <View style={[styles.planColumn, isPremium && styles.currentPlanColumn]}>
               <Text style={[styles.comparisonHeaderText, isPremium && styles.currentPlanText]}>{text.premium}</Text>
@@ -502,7 +503,7 @@ export default function ProfileScreen() {
               <View style={styles.featureColumn}>
                 <Text style={[styles.featureLabel, { textAlign: align, writingDirection: direction }]}>{item.label}</Text>
               </View>
-              <View style={[styles.planColumn, !isPremium && styles.currentPlanColumnSoft]}>
+              <View style={[styles.planColumn, isFree && styles.currentPlanColumnSoft]}>
                 <Text style={[styles.planValue, { textAlign: "center", writingDirection: direction }]}>{item.free}</Text>
               </View>
               <View style={[styles.planColumn, isPremium && styles.currentPlanColumnSoft]}>

@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ComponentProps } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
 import { ApiError, apiRequest } from "../../lib/api";
@@ -245,6 +245,11 @@ export default function ProgressScreen() {
 
   const weakestTopic = topics[0] ?? null;
   const hasProgress = Boolean(overview?.completedExams);
+  const previewItems: Array<{ icon: ComponentProps<typeof Ionicons>["name"]; label: string }> = [
+    { icon: "stats-chart-outline", label: text.comingTrend },
+    { icon: "alert-circle-outline", label: text.comingWeak },
+    { icon: "school-outline", label: text.comingSubjects }
+  ];
 
   if (loading && !overview) {
     return <Screen><View style={styles.center}><ActivityIndicator color={theme.colors.primary} /></View></Screen>;
@@ -286,16 +291,12 @@ export default function ProgressScreen() {
           <View style={styles.card}>
             <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.coming}</Text>
             <View style={styles.previewGrid}>
-              {[
-                ["stats-chart-outline", text.comingTrend],
-                ["alert-circle-outline", text.comingWeak],
-                ["school-outline", text.comingSubjects]
-              ].map(([icon, label]) => (
-                <View key={String(label)} style={styles.previewItem}>
+              {previewItems.map((item) => (
+                <View key={item.label} style={styles.previewItem}>
                   <View style={styles.previewIcon}>
-                    <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color={theme.colors.primary} />
+                    <Ionicons name={item.icon} size={20} color={theme.colors.primary} />
                   </View>
-                  <Text style={[styles.previewLabel, { textAlign: align, writingDirection: direction }]}>{label}</Text>
+                  <Text style={[styles.previewLabel, { textAlign: align, writingDirection: direction }]}>{item.label}</Text>
                 </View>
               ))}
             </View>

@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { localeMeta, theme, type SupportedLocale } from "@kankor/config";
 import Constants from "expo-constants";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ComponentProps } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../../components/app-button";
 import { Screen } from "../../components/screen";
@@ -215,7 +215,7 @@ export default function ProfileScreen() {
   }
 
   function confirmDelete() {
-    Alert.alert(text.delete, direction === "rtl" ? copy[locale].dangerBody : text.dangerBody, [
+    Alert.alert(text.delete, text.dangerBody, [
       { text: text.cancel, style: "cancel" },
       {
         text: text.delete,
@@ -362,7 +362,7 @@ function InfoRow({
   value,
   direction
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
   value: string;
   direction: "rtl" | "ltr";

@@ -155,6 +155,8 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Expo Web development is explicitly supported with React DOM 19.2.3, React Native Web 0.21.x, and Metro web bundling so Expo Router can render the mobile workspace in a browser.
 - Web dependencies are pinned to React Native Web 0.21.1 plus `@expo/metro-runtime` 57.x because a floating 0.21.x install produced a missing vendored NativeEventEmitter path during Metro web bundling.
 - EAS preview and production profiles are defined: preview builds an APK and production builds an Android App Bundle with release configuration enforcement.
+- EAS Update is configured as the primary physical-device iteration model: preview APKs use the `preview` channel/environment, production builds use `production`, `expo-updates` is pinned for SDK 57, and runtime compatibility uses the `appVersion` policy.
+- Preview APK configuration rejects localhost/non-HTTPS APIs and waits up to five seconds on launch for a compatible OTA update, so normal JS/UI changes can be published without rebuilding the APK.
 - Mobile navigation has a localized screen-level error boundary with retry behavior so render failures do not leave a blank screen.
 - Admin production builds reject missing, localhost, or non-HTTPS API URLs and emit defensive response headers without the Next.js powered-by header.
 - `.env.production.example` documents production settings; `verify:production-env` rejects placeholder/insecure URLs, Neon target mismatches, weak webhook secrets, exposed recovery tokens, and lingering bootstrap admin emails.
@@ -186,6 +188,8 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Production password-reset delivery is not implemented: reset tokens are securely created, but no production email/SMS provider currently delivers them. Raw recovery tokens remain development-only by design.
 - The repository did not contain a committed `package-lock.json` at Phase 10 implementation time. Generate/review/commit it with `npm install` before the production release gate.
 - Expo/EAS project ownership, signing credentials, final app icon/splash/store artwork, store listing content, privacy/support URLs, and store declarations must be supplied by the product owner/provider before store submission.
+- The Kankor EAS project must be linked once so `extra.eas.projectId` and `updates.url` are known; `verify:eas-update` blocks OTA readiness until that account-specific linkage exists.
+- Preview APK/OTA updates require a stable public HTTPS API URL configured as `EXPO_PUBLIC_API_URL` in the EAS `preview` environment. The Fastify API is still local in this repository and must be deployed to a stable host before the installed preview APK can be fully independent of the laptop.
 
 ### Post-Phase-9 stability and Phase 10 release audit
 - Expo mobile configuration reads EXPO_PUBLIC_API_URL from the repository-root .env, so a second mobile env file is not required.
@@ -193,7 +197,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Mobile API requests classify network, rate-limit, and server failures and use bounded request timeouts.
 - Registration/login/recovery/reset expose precise localized errors and normalize email addresses before sending.
 - Temporary startup connectivity failures no longer erase a valid saved session; the user gets an explicit retry state.
-- Expo tunnel dependency is declared in the mobile workspace for reproducible tunnel development.
+- Physical-device iteration now prefers an installed preview APK plus EAS Update; local tunnel tooling is optional rather than required for normal UI/JavaScript changes.
 - Attempt submission carries the final local answer snapshot so last-second/offline answers are revision-upserted before scoring.
 - PostgreSQL migration tooling pins sslmode=verify-full to preserve current certificate-verification semantics.
 - API startup validates API_PORT, verifies the runtime auth database schema before listening, and logs the deepest database error cause when readiness fails.

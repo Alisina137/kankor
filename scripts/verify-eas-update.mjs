@@ -67,10 +67,41 @@ for (const marker of [
   }
 }
 
-for (const script of ["build:android:preview", "build:android:production", "update:preview", "update:production"]) {
+for (const script of ["build:android:preview", "build:android:production"]) {
   const command = mobilePackage.scripts?.[script] ?? "";
   if (!command.startsWith("eas ") || command.includes("npx")) {
     throw new Error(`${script} must use the pinned local EAS CLI.`);
+  }
+}
+
+if (mobilePackage.scripts?.["update:preview"] !== "node ../../scripts/eas-update-preview.mjs") {
+  throw new Error("Preview OTA updates must use the guarded preview launcher.");
+}
+if (mobilePackage.scripts?.["update:production"] !== "node ../../scripts/eas-update-production.mjs") {
+  throw new Error("Production OTA updates must use the guarded production launcher.");
+}
+
+const previewUpdateLauncher = await text("scripts/eas-update-preview.mjs");
+for (const marker of [
+  '"--channel"',
+  '"preview"',
+  '"--environment"',
+  'KANKOR_PREVIEW_BUILD: "true"'
+]) {
+  if (!previewUpdateLauncher.includes(marker)) {
+    throw new Error(`Preview OTA launcher invariant missing: ${marker}`);
+  }
+}
+
+const productionUpdateLauncher = await text("scripts/eas-update-production.mjs");
+for (const marker of [
+  '"--channel"',
+  '"production"',
+  '"--environment"',
+  'KANKOR_RELEASE_BUILD: "true"'
+]) {
+  if (!productionUpdateLauncher.includes(marker)) {
+    throw new Error(`Production OTA launcher invariant missing: ${marker}`);
   }
 }
 

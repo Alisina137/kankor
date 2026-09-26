@@ -128,7 +128,11 @@ const practice = await readFile(resolve("apps/mobile/src/app/(tabs)/practice.tsx
 for (const marker of [
   '/subjects?gradeId=',
   'setSubjectId(null)',
-  'label={text.subject}',
+  'countLabel(grades.length, text.grade, text.grades)',
+  'countLabel(subjects.length, text.subject, text.subjects)',
+  'countLabel(books.length, text.book, text.books)',
+  'countLabel(chapters.length, text.chapter, text.chapters)',
+  'countLabel(topics.length, text.topic, text.topics)',
   'onSelect={selectSubject}',
   'const [subjectsLoading, setSubjectsLoading] = useState(false)',
   'const [booksLoading, setBooksLoading] = useState(false)',
@@ -213,4 +217,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders, gentle empty states, and automatic single-chapter skipping, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders, gentle empty states, automatic single-chapter skipping, and count-aware singular/plural labels, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

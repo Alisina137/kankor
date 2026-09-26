@@ -231,11 +231,23 @@ for (const script of [
   "dev:tailscale",
   "verify:eas-update",
   "eas:link",
-  "eas:update:configure",
   "update:preview",
   "update:production"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
+}
+
+const easLinker = await text("scripts/link-eas-project.mjs");
+for (const marker of [
+  '"project:init"',
+  '"--account"',
+  '"alisina137"',
+  '"--json"',
+  '"--non-interactive"',
+  'app.expo.extra.eas.projectId = projectId',
+  'url: `https://u.expo.dev/${projectId}`'
+]) {
+  if (!easLinker.includes(marker)) throw new Error(`EAS linker invariant missing: ${marker}`);
 }
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");

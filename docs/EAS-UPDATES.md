@@ -59,6 +59,8 @@ npm run update:preview -- --message "Describe the change"
 
 The update is published to the `preview` channel using the EAS `preview` environment, so the same stable `EXPO_PUBLIC_API_URL` is embedded in both the original APK and later OTA updates.
 
+The repository command uses a guarded launcher that also forces `KANKOR_PREVIEW_BUILD=true`. This means a preview update fails fast if the EAS preview environment does not provide a non-local HTTPS `EXPO_PUBLIC_API_URL`; it cannot silently fall back to the laptop's local `.env`.
+
 The preview APK checks for updates when it starts. It waits up to five seconds during preview startup for a new update. If the update does not apply on the first launch because the download takes longer, close and reopen the app once more.
 
 ## When an APK rebuild is required

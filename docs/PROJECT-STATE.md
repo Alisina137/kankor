@@ -217,6 +217,11 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Mobile route render failures show a localized retry screen.
 - Release-sensitive production env/build artifacts are excluded from Git.
 - Source and production release gates are available through `release:check` and `release:check:production`.
+- LAN development no longer depends on one fixed Wi-Fi address: the mobile client prefers the current Expo host, then tries optional comma-separated `EXPO_PUBLIC_API_URLS` fallbacks (for example company/home addresses).
+- A stable `EXPO_PUBLIC_API_URL=http://localhost:4000` can remain in development; on a physical device localhost is omitted from the candidate list and the current Expo host is used instead.
+- Development API failover uses a shorter timeout, while production retains the longer network timeout.
+- `verify:dev-network` now validates `API_HOST=0.0.0.0`, accepts location-independent localhost configuration, reports all active laptop IPv4 addresses, and does not fail because an optional fallback belongs to another network.
+- `dev:lan` probes every active laptop IPv4 interface after API startup and prints which LAN addresses answer `/health`, making firewall/interface problems visible before Expo testing.
 - Home is now an actionable student dashboard: active-attempt resume, personalized weak-topic recommendation, progress snapshot, quick Practice/Full Kankor/Historical/Mistakes access, subscription badge, and recent result links.
 - Home refreshes when focused and reuses existing authoritative attempts/progress/billing APIs; it can also surface a locally persisted in-progress attempt while connectivity recovers.
 - Profile is now an account/preferences center with identity, current subscription, preparation settings, app version, logout, and a separated destructive account-deletion section.

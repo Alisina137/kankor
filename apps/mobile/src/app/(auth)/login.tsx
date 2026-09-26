@@ -27,7 +27,14 @@ export default function LoginScreen() {
       router.replace(user.onboardingCompleted ? "/(tabs)" : "/onboarding");
     } catch (e) {
       const code = e instanceof ApiError ? e.code : "";
-      setError(code === "invalid_credentials" ? text.invalidCredentials : code === "network_error" ? text.networkError : text.genericError);
+      setError(
+        code === "invalid_credentials" ? text.invalidCredentials
+          : code === "invalid_login_data" ? text.invalidLogin
+            : code === "rate_limited" ? text.rateLimited
+              : code === "network_error" ? text.networkError
+                : code === "server_error" ? text.serverError
+                  : text.genericError
+      );
     } finally {
       setBusy(false);
     }
@@ -37,7 +44,7 @@ export default function LoginScreen() {
     <Screen>
       <View style={styles.stack}>
         <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.signIn}</Text>
-        <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" />
+        <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" autoCapitalize="none" autoCorrect={false} />
         <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="current-password" />
         {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
         <AppButton label={text.signIn} loading={busy} onPress={submit} />

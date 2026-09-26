@@ -412,8 +412,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const auth = await requireUser(request, reply);
     if (!auth) return;
 
+    const profilePhotoKey = auth.user.profilePhotoKey ?? null;
     const db = createDatabase();
     await db.delete(schema.users).where(eq(schema.users.id, auth.user.userId));
+    await deleteProfilePhotoObject(profilePhotoKey).catch(() => undefined);
     return reply.code(204).send();
   });
 };

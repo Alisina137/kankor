@@ -128,9 +128,25 @@ const practice = await readFile(resolve("apps/mobile/src/app/(tabs)/practice.tsx
 for (const marker of [
   '/subjects?gradeId=',
   'setSubjectId(null)',
-  'gradeId ? <ChoiceGroup label={text.subject}'
+  'gradeId ? <ChoiceGroup label={text.subject}',
+  'const [subjectsLoading, setSubjectsLoading] = useState(false)',
+  'const [booksLoading, setBooksLoading] = useState(false)',
+  'const [chaptersLoading, setChaptersLoading] = useState(false)',
+  'const [topicsLoading, setTopicsLoading] = useState(false)',
+  'loading={subjectsLoading}',
+  'loading={booksLoading}',
+  'loading={chaptersLoading}',
+  'loading={topicsLoading}',
+  'emptyMessage={text.emptySubjects}',
+  'emptyMessage={text.emptyBooks}',
+  'emptyMessage={text.emptyChapters}',
+  'emptyMessage={text.emptyTopics}',
+  'if (active) setSubjects(result.items)',
+  'if (active) setBooks(result.items)',
+  'if (active) setChapters(result.items)',
+  'if (active) setTopics(result.items)'
 ]) {
-  if (!practice.includes(marker)) throw new Error(`Grade-aware Practice invariant missing: ${marker}`);
+  if (!practice.includes(marker)) throw new Error(`Grade-aware Practice loading/empty-state invariant missing: ${marker}`);
 }
 
 const grade10RemainingMigration = await readFile(resolve("packages/database/drizzle/0015_grade10_remaining_official_books.sql"), "utf8");
@@ -191,4 +207,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders and gentle empty states, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

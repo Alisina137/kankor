@@ -23,11 +23,29 @@ import {
 export async function buildApp() {
   const app = Fastify({ logger: true, trustProxy: resolveTrustProxy() });
 
+  const configuredOrigins = (process.env.ADMIN_WEB_ORIGIN ?? "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   await app.register(cors, {
-    origin: (process.env.ADMIN_WEB_ORIGIN ?? "http://localhost:3000")
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (configuredOrigins.includes(origin)) return callback(null, true);
+
+      if (process.env.NODE_ENV !== "production") {
+        try {
+          const url = new URL(origin);
+          if (["localhost", "127.0.0.1"].includes(url.hostname)) {
+            return callback(null, true);
+          }
+        } catch {
+          // Invalid origins are rejected below.
+        }
+      }
+
+      return callback(new Error("origin_not_allowed"), false);
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   });
 

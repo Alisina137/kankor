@@ -18,6 +18,28 @@ for (const marker of [
   if (!authRoutes.includes(marker)) throw new Error(`Editable profile API invariant missing: ${marker}`);
 }
 
+const profilePhotoStorage = await source("apps/api/src/modules/auth/profile-photo-storage.ts");
+for (const marker of [
+  "createProfilePhotoUpload",
+  "createProfilePhotoDownloadUrl",
+  "verifyProfilePhotoUpload",
+  "deleteProfilePhotoObject",
+  "MAX_PROFILE_PHOTO_BYTES"
+]) {
+  if (!profilePhotoStorage.includes(marker)) throw new Error(`Profile photo storage invariant missing: ${marker}`);
+}
+
+for (const marker of [
+  'app.get("/profile-photo"',
+  'app.post("/profile-photo/upload"',
+  'app.post("/profile-photo/confirm"',
+  'app.delete("/profile-photo"',
+  "profilePhotoKey: schema.users.profilePhotoKey",
+  "hasProfilePhoto"
+]) {
+  if (!authRoutes.includes(marker)) throw new Error(`Profile photo API invariant missing: ${marker}`);
+}
+
 const authProvider = await source("apps/mobile/src/providers/auth-provider.tsx");
 for (const marker of [
   "updateProfile:",
@@ -64,6 +86,13 @@ for (const marker of [
   "upgradePremium",
   "managePremium",
   "Promise.allSettled",
+  "chooseProfilePhoto",
+  "removeProfilePhoto",
+  '"/auth/profile-photo/upload"',
+  '"/auth/profile-photo/confirm"',
+  '"/auth/profile-photo"',
+  "expo-image-picker",
+  "photoStorageConfigured",
   "Constants.expoConfig?.version",
   "startEditing",
   "cancelEditing",
@@ -88,8 +117,28 @@ for (const marker of [
   if (!billingRoutes.includes(marker)) throw new Error(`Subscription comparison invariant missing: ${marker}`);
 }
 
+const progress = await source("apps/mobile/src/app/(tabs)/progress.tsx");
+for (const marker of [
+  "emptyHero",
+  "emptyTitle",
+  "startPractice",
+  "browseExams",
+  "summaryCard",
+  "scoreCircle",
+  "trendRow",
+  "journeyRow",
+  "nextStep",
+  "weakestTopic",
+  "barTrack",
+  "history.slice(0, 5)",
+  "useFocusEffect",
+  "Promise.allSettled"
+]) {
+  if (!progress.includes(marker)) throw new Error(`Progress UX invariant missing: ${marker}`);
+}
+
 if (home.includes("homeBody") || profile.includes('label="Premium"')) {
   throw new Error("Legacy Home/Profile placeholder UI must not return");
 }
 
-console.log("Home/Profile verified: actionable dashboard, progress/recommendation/resume data, active subscription card, live Free-vs-Premium comparison, editable preparation preferences, app/account management, and persistent profile updates are present.");
+console.log("Student UX verified: actionable Home dashboard, visual/non-empty Progress states, active subscription comparison, editable preparation preferences, secure profile-photo upload/removal, and account management are present.");

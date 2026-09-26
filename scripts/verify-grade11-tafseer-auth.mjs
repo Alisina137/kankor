@@ -7,7 +7,7 @@ const api = await readFile(resolve("apps/mobile/src/lib/api.ts"), "utf8");
 for (const marker of [
   "'tafseer-grade-11-fa-1398'",
   "'تفسیر شریف صنف یازدهم'",
-  '"sourceFilename":"G11-Dr-Tafseer.pdf"',
+  '"sourceFilename":"G11-Dr-Tafseer(1).pdf"',
   '"sourceType":"official_textbook"'
 ]) {
   if (!migration.includes(marker)) throw new Error(`Missing Tafseer marker: ${marker}`);

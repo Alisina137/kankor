@@ -1,23 +1,25 @@
+import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 const repositoryRoot = resolve(".");
 const mobileRoot = resolve(repositoryRoot, "apps", "mobile");
 const appJsonPath = resolve(mobileRoot, "app.json");
-const npmExecPath = process.env.npm_execpath;
+const require = createRequire(import.meta.url);
 
-if (!npmExecPath) {
-  throw new Error('npm_execpath is unavailable. Start this with "npm run eas:link".');
+let easRunPath;
+try {
+  const easPackagePath = require.resolve("eas-cli/package.json");
+  easRunPath = resolve(dirname(easPackagePath), "bin", "run");
+} catch {
+  throw new Error(
+    'Local eas-cli is not installed. Run "npm install" in C:\\projects\\kankor, then retry "npm run eas:link".'
+  );
 }
 
 const args = [
-  npmExecPath,
-  "exec",
-  "--yes",
-  "--package=eas-cli",
-  "--",
-  "eas",
+  easRunPath,
   "project:init",
   "--account",
   "alisina137",

@@ -35,18 +35,25 @@ for (const title of [
 if (!migration.includes("'math-g11-c'||lpad")) throw new Error("Math chapter-topic generation missing");
 if (!migration.includes("'physics-g11-c'||lpad")) throw new Error("Physics chapter-topic generation missing");
 
+if (migration.includes('SELECT c."id",v.code,NULL,v.title_ps')) {
+  throw new Error("Pashto topics must not insert NULL into required title_fa");
+}
+if (!migration.includes('SELECT c."id",v.code,v.title_ps,v.title_ps')) {
+  throw new Error("Pashto source-title fallback for required title_fa is missing");
+}
+
 if (migration.includes("chemistry-grade-11-fa-1398")) {
   throw new Error("Duplicate Grade 11 Chemistry must not be inserted by migration 0013");
 }
 
 for (const marker of [
-  '"sourceFilename":"G11-Dr-Islamic_Study_Hanafi.pdf"',
-  '"sourceFilename":"G11-Dr-Math(1).pdf"',
-  '"sourceFilename":"G11-Dr-Pashto.pdf"',
-  '"sourceFilename":"G11-Dr-Physic.pdf"',
+  '"sourceFilename":"G11-Dr-Islamic_Study_Hanafi(1).pdf"',
+  '"sourceFilename":"G11-Dr-Math(2).pdf"',
+  '"sourceFilename":"G11-Dr-Pashto(1).pdf"',
+  '"sourceFilename":"G11-Dr-Physic(1).pdf"',
   '"sourceType":"official_textbook"'
 ]) {
   if (!migration.includes(marker)) throw new Error(`Missing source metadata: ${marker}`);
 }
 
-console.log("Grade 11 remaining-book import verified: Islamic Studies 42 lessons, Math 8 chapters, Pashto 28 lessons, Physics 8 chapters, and no duplicate Chemistry record.");
+console.log("Grade 11 remaining-book import verified: Islamic Studies 42 lessons, Math 8 chapters, Pashto 28 lessons with non-null source-title fallback, Physics 8 chapters, and no duplicate Chemistry record.");

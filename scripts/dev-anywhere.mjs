@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const repositoryRoot = resolve(".");
@@ -18,6 +18,7 @@ const cloudflaredPath = join(
   devCacheDir,
   `cloudflared-${CLOUDFLARED_VERSION}-windows-amd64.exe`
 );
+const cloudflaredPartialPath = `${cloudflaredPath}.part`;
 
 if (!npmExecPath) {
   throw new Error(
@@ -72,6 +73,116 @@ async function fileSha256(path) {
   return sha256(await readFile(path));
 }
 
+async function verifiedSystemCloudflared() {
+  const where = spawnSync("where.exe", ["cloudflared.exe"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+    shell: false,
+    windowsHide: true
+  });
+
+  if (where.status !== 0 || !where.stdout?.trim()) return null;
+
+  for (const candidate of where.stdout.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
+    try {
+      const digest = await fileSha256(candidate);
+      if (digest === CLOUDFLARED_WINDOWS_X64_SHA256) {
+        console.log(`✓ Using SHA-256 verified system cloudflared: ${candidate}`);
+        return candidate;
+      }
+    } catch {
+      // Ignore unreadable PATH candidates and fall back to the managed copy.
+    }
+  }
+
+  return null;
+}
+
+async function partialFileSize() {
+  try {
+    return (await stat(cloudflaredPartialPath)).size;
+  } catch {
+    return 0;
+  }
+}
+
+function formatMiB(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+async function downloadOfficialCloudflared() {
+  const existingPartial = await partialFileSize();
+  const headers = {};
+
+  if (existingPartial > 0) {
+    headers.Range = `bytes=${existingPartial}-`;
+    console.log(`→ Resuming cloudflared download from ${formatMiB(existingPartial)}`);
+  }
+
+  const response = await fetch(CLOUDFLARED_WINDOWS_X64_URL, {
+    redirect: "follow",
+    headers,
+    signal: AbortSignal.timeout(15 * 60_000)
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(
+      `Failed to download cloudflared: HTTP ${response.status} ${response.statusText}`
+    );
+  }
+
+  const resumed = existingPartial > 0 && response.status === 206;
+  const startingBytes = resumed ? existingPartial : 0;
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  const totalBytes = contentLength > 0 ? startingBytes + contentLength : 0;
+  const file = await open(cloudflaredPartialPath, resumed ? "a" : "w");
+  const reader = response.body.getReader();
+
+  let downloaded = startingBytes;
+  let nextProgress = downloaded + 5 * 1024 * 1024;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      await file.write(value);
+      downloaded += value.byteLength;
+
+      if (downloaded >= nextProgress) {
+        const total = totalBytes > 0 ? ` / ${formatMiB(totalBytes)}` : "";
+        console.log(`  Downloaded ${formatMiB(downloaded)}${total}`);
+        nextProgress = downloaded + 5 * 1024 * 1024;
+      }
+    }
+  } finally {
+    await file.close();
+  }
+
+  if (downloaded < 2) {
+    throw new Error("Downloaded cloudflared asset is empty.");
+  }
+
+  const binary = await readFile(cloudflaredPartialPath);
+  if (binary[0] !== 0x4d || binary[1] !== 0x5a) {
+    await unlink(cloudflaredPartialPath).catch(() => undefined);
+    throw new Error("Downloaded cloudflared asset is not a valid Windows PE executable.");
+  }
+
+  const digest = sha256(binary);
+  if (digest !== CLOUDFLARED_WINDOWS_X64_SHA256) {
+    await unlink(cloudflaredPartialPath).catch(() => undefined);
+    throw new Error(
+      `cloudflared SHA-256 mismatch. Expected ${CLOUDFLARED_WINDOWS_X64_SHA256}, received ${digest}.`
+    );
+  }
+
+  await unlink(cloudflaredPath).catch(() => undefined);
+  await rename(cloudflaredPartialPath, cloudflaredPath);
+  console.log("✓ Official cloudflared binary downloaded and SHA-256 verified");
+  return cloudflaredPath;
+}
+
 async function ensureOfficialCloudflared() {
   if (process.platform !== "win32" || process.arch !== "x64") {
     throw new Error(
@@ -91,42 +202,21 @@ async function ensureOfficialCloudflared() {
       return cloudflaredPath;
     }
 
-    console.warn("Cached cloudflared binary failed checksum verification; downloading a clean copy.");
+    console.warn("Cached cloudflared binary failed checksum verification; replacing it.");
     await unlink(cloudflaredPath).catch(() => undefined);
   } catch {
-    // First run: binary is not cached yet.
+    // Managed binary is not cached yet.
   }
+
+  const systemBinary = await verifiedSystemCloudflared();
+  if (systemBinary) return systemBinary;
 
   console.log(
     `\n→ Downloading official Cloudflare cloudflared ${CLOUDFLARED_VERSION} for Windows x64`
   );
+  console.log("  Slow connections are supported; interrupted downloads resume on the next run.");
 
-  const response = await fetch(CLOUDFLARED_WINDOWS_X64_URL, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(120_000)
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to download cloudflared: HTTP ${response.status} ${response.statusText}`
-    );
-  }
-
-  const binary = Buffer.from(await response.arrayBuffer());
-  if (binary.length < 2 || binary[0] !== 0x4d || binary[1] !== 0x5a) {
-    throw new Error("Downloaded cloudflared asset is not a valid Windows PE executable.");
-  }
-
-  const digest = sha256(binary);
-  if (digest !== CLOUDFLARED_WINDOWS_X64_SHA256) {
-    throw new Error(
-      `cloudflared SHA-256 mismatch. Expected ${CLOUDFLARED_WINDOWS_X64_SHA256}, received ${digest}.`
-    );
-  }
-
-  await writeFile(cloudflaredPath, binary);
-  console.log("✓ Official cloudflared binary downloaded and SHA-256 verified");
-  return cloudflaredPath;
+  return downloadOfficialCloudflared();
 }
 
 async function probeKankorApi(url) {

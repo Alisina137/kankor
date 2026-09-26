@@ -107,7 +107,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const register = useCallback(async (email: string, password: string) => {
     const payload = await apiRequest<AuthPayload>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password })
     });
     return applyPayload(payload);
   }, [applyPayload]);
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const login = useCallback(async (email: string, password: string) => {
     const payload = await apiRequest<AuthPayload>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password })
     });
     return applyPayload(payload);
   }, [applyPayload]);
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const requestRecovery = useCallback((email: string) =>
     apiRequest<{ accepted: boolean; developmentToken?: string }>("/auth/recovery", {
       method: "POST",
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email: email.trim().toLowerCase() })
     }), []);
 
   const resetPassword = useCallback(async (resetToken: string, password: string) => {

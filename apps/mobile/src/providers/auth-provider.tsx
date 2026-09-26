@@ -40,6 +40,11 @@ interface AuthContextValue {
     targetExamYear: number;
     preparationLevel?: string | null;
   }) => Promise<StudentUser>;
+  updateProfile: (input: {
+    preferredLanguage: SupportedLocale;
+    targetExamYear: number;
+    preparationLevel?: string | null;
+  }) => Promise<StudentUser>;
   requestRecovery: (email: string) => Promise<{ accepted: boolean; developmentToken?: string }>;
   resetPassword: (token: string, password: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -146,6 +151,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return result.user;
   }, [token, setLocale]);
 
+  const updateProfile = useCallback(async (input: {
+    preferredLanguage: SupportedLocale;
+    targetExamYear: number;
+    preparationLevel?: string | null;
+  }) => {
+    if (!token) throw new Error("unauthorized");
+    const result = await apiRequest<{ user: StudentUser }>("/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    }, token);
+    setUser(result.user);
+    setLocale(result.user.preferredLanguage);
+    return result.user;
+  }, [token, setLocale]);
+
   const requestRecovery = useCallback((email: string) =>
     apiRequest<{ accepted: boolean; developmentToken?: string }>("/auth/recovery", {
       method: "POST",
@@ -178,6 +198,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     login,
     logout,
     completeOnboarding,
+    updateProfile,
     requestRecovery,
     resetPassword,
     deleteAccount
@@ -191,6 +212,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     login,
     logout,
     completeOnboarding,
+    updateProfile,
     requestRecovery,
     resetPassword,
     deleteAccount

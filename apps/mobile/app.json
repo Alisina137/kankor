@@ -27,6 +27,9 @@
       "config": {
         "usesNonExemptEncryption": false
       }
+    },
+    "web": {
+      "bundler": "metro"
     }
   }
 }

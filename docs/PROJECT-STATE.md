@@ -177,9 +177,11 @@ Phase 9 — Administration and Content Quality completed in source.
 - `npm run dev:lan -- --clear` is the normal physical-device development launcher: it validates the LAN host, verifies the database, starts the API, waits for `/health`, and only then starts Expo LAN mode.
 - verify:stability and verify:dev-network guard the repaired paths.
 - Grade 10 and Grade 11 official textbook curriculum imports are present through migration 0014.
+- Practice curriculum navigation is grade-aware: after a grade is selected, the API returns only subjects with active books for that grade, preventing misleading empty book lists.
+- Runtime database verification checks that the Grade 11 curriculum contains at least the 10 active official books supplied by migrations 0012–0014.
 
 ## Latest source baseline
-Post-Phase-9 auth/database and integrated LAN startup hardening prepared for `main`.
+Post-Phase-9 auth/database, integrated LAN startup, and Grade 11 Practice curriculum hardening prepared for `main`.
 
 ## Next phase
 Phase 10 — Release Readiness.

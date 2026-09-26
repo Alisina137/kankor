@@ -3,11 +3,23 @@
     "name": "KankorPrep Afghanistan",
     "slug": "kankorprep-afghanistan",
     "scheme": "kankorprep",
-    "version": "0.1.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "plugins": ["expo-router"],
-    "android": {"package": "com.kankorprep.afghanistan"},
-    "ios": {"bundleIdentifier": "com.kankorprep.afghanistan"}
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "android": {
+      "package": "com.kankorprep.afghanistan",
+      "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "com.kankorprep.afghanistan",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    }
   }
 }

@@ -5,6 +5,11 @@ async function text(path) {
   return readFile(resolve(path), "utf8");
 }
 
+const rootPackage = JSON.parse(await text("package.json"));
+if (rootPackage.devDependencies?.["eas-cli"] !== "24.8.0") {
+  throw new Error("eas-cli 24.8.0 must be installed as a root development dependency.");
+}
+
 const mobilePackage = JSON.parse(await text("apps/mobile/package.json"));
 if (mobilePackage.dependencies?.["expo-updates"] !== "~57.0.23") {
   throw new Error("expo-updates must be installed at ~57.0.23 for Expo SDK 57.");
@@ -59,6 +64,13 @@ for (const marker of [
 ]) {
   if (!appConfig.includes(marker)) {
     throw new Error(`EAS Update app-config invariant missing: ${marker}`);
+  }
+}
+
+for (const script of ["build:android:preview", "build:android:production", "update:preview", "update:production"]) {
+  const command = mobilePackage.scripts?.[script] ?? "";
+  if (!command.startsWith("eas ") || command.includes("npx")) {
+    throw new Error(`${script} must use the pinned local EAS CLI.`);
   }
 }
 

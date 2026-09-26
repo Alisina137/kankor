@@ -1,7 +1,9 @@
+import { createRequire } from "node:module";
 import { spawn, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { Tunnel } from "cloudflared";
+const require = createRequire(import.meta.url);
+const { Tunnel } = require("cloudflared");
 
 const repositoryRoot = resolve(".");
 const npmExecPath = process.env.npm_execpath;

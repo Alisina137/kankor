@@ -184,6 +184,7 @@ Phase 9 — Administration and Content Quality completed in source.
 - Practice curriculum navigation is grade-aware: after a grade is selected, the API returns only subjects with active books for that grade, preventing misleading empty book lists.
 - Practice now exposes per-level loading states for Grade → Subject → Book → Chapter → Topic, clears stale child selections immediately when a parent changes, ignores late responses from obsolete selections, and shows localized gentle empty-state messages when a successful request returns no items.
 - Practice adapts the hierarchy to book structure: books with exactly one chapter auto-select that chapter and go directly from Book → Topic; books with two or more chapters keep the explicit Chapter step, while zero-chapter books show the gentle empty state.
+- Practice also adapts the final layer: when a selected chapter has exactly one topic, the Topic step is hidden and the chapter itself remains the practice scope; two or more topics show the Topic selector, while zero topics show the gentle empty state.
 - Practice titles are count-aware: each layer uses its singular label for exactly one item and its plural label for multiple items (Class/Classes, Subject/Subjects, Book/Books, Chapter/Chapters, Topic/Topics), localized in Dari, Pashto, and English.
 - Runtime database verification checks that Grade 10 contains at least 11 active official books and Grade 11 contains at least 10 active official books.
 

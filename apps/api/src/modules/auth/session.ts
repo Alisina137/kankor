@@ -45,6 +45,7 @@ export async function getSessionUser(token: string) {
       preferredLanguage: schema.users.preferredLanguage,
       targetExamYear: schema.users.targetExamYear,
       preparationLevel: schema.users.preparationLevel,
+      profilePhotoKey: schema.users.profilePhotoKey,
       onboardingCompletedAt: schema.users.onboardingCompletedAt
     })
     .from(schema.sessions)

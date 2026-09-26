@@ -61,4 +61,25 @@ export function assertProductionConfiguration() {
       "ADMIN_BOOTSTRAP_EMAILS must be empty in production after permanent admin roles are assigned."
     );
   }
+
+  for (const name of [
+    "PROFILE_PHOTO_S3_BUCKET",
+    "PROFILE_PHOTO_S3_REGION",
+    "PROFILE_PHOTO_S3_ACCESS_KEY_ID",
+    "PROFILE_PHOTO_S3_SECRET_ACCESS_KEY"
+  ]) {
+    if (!normalized(process.env[name])) {
+      throw new Error(`${name} is required in production for profile photo upload.`);
+    }
+  }
+
+  const photoEndpoint = normalized(process.env.PROFILE_PHOTO_S3_ENDPOINT);
+  if (photoEndpoint) {
+    assertHttpsPublicUrl("PROFILE_PHOTO_S3_ENDPOINT", photoEndpoint);
+  }
+
+  const forcePathStyle = normalized(process.env.PROFILE_PHOTO_S3_FORCE_PATH_STYLE).toLowerCase();
+  if (forcePathStyle && forcePathStyle !== "true" && forcePathStyle !== "false") {
+    throw new Error("PROFILE_PHOTO_S3_FORCE_PATH_STYLE must be either true or false.");
+  }
 }

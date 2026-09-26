@@ -44,7 +44,8 @@
     "build:android:preview": "npm --workspace @kankor/mobile run build:android:preview",
     "build:android:production": "npm --workspace @kankor/mobile run build:android:production",
     "verify:home-profile": "node scripts/verify-home-profile.mjs",
-    "dev:anywhere": "node scripts/dev-anywhere.mjs"
+    "dev:anywhere": "node scripts/dev-anywhere.mjs",
+    "dev:tailscale": "node scripts/dev-tailscale.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

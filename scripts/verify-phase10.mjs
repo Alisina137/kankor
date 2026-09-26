@@ -135,6 +135,15 @@ for (const [name, version] of Object.entries({
   }
 }
 if (!mobilePackage.scripts?.["check:expo"]) throw new Error("Expo dependency validation script is missing");
+for (const script of ["build:android:preview", "build:android:production", "update:preview", "update:production"]) {
+  const command = mobilePackage.scripts?.[script] ?? "";
+  if (!command.startsWith("eas ")) {
+    throw new Error(`Mobile EAS command ${script} must use the pinned local eas-cli`);
+  }
+  if (command.includes("npx") || command.includes("npm exec")) {
+    throw new Error("Mobile EAS commands must use the pinned local eas-cli");
+  }
+}
 
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
 if (eas.build?.preview?.android?.buildType !== "apk") {
@@ -222,6 +231,9 @@ for (const marker of [
 }
 
 const rootPackage = JSON.parse(await text("package.json"));
+if (rootPackage.devDependencies?.["eas-cli"] !== "24.8.0") {
+  throw new Error("Root eas-cli must be pinned to 24.8.0 for reproducible EAS commands");
+}
 for (const script of [
   "verify:phase10",
   "verify:production-env",
@@ -239,6 +251,7 @@ for (const script of [
 
 const easLinker = await text("scripts/link-eas-project.mjs");
 for (const marker of [
+  'require.resolve("eas-cli/package.json")',
   '"project:init"',
   '"--account"',
   '"alisina137"',
@@ -248,6 +261,9 @@ for (const marker of [
   'url: `https://u.expo.dev/${projectId}`'
 ]) {
   if (!easLinker.includes(marker)) throw new Error(`EAS linker invariant missing: ${marker}`);
+}
+if (easLinker.includes("--package=eas-cli") || easLinker.includes('"exec"')) {
+  throw new Error("EAS linker must not dynamically fetch eas-cli");
 }
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");

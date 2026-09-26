@@ -24,16 +24,19 @@ npm run eas:link
 
 It creates or links `@alisina137/kankorprep-afghanistan`, captures the returned EAS project ID, and writes both `expo.extra.eas.projectId` and the matching `expo.updates.url` into `apps/mobile/app.json`. The repository already owns the `appVersion` runtime policy and the preview/production update channels.
 
-3. The preview build must use a stable public HTTPS Kankor API. Configure it in the EAS `preview` environment:
+3. The preview build must use a stable public HTTPS Kankor API. First inspect the current preview variables:
 
 ```powershell
-cd C:\projects\kankor\apps\mobile
-npx eas-cli env:set --name EXPO_PUBLIC_API_URL --value https://YOUR-STABLE-API.example.com --environment preview --visibility plaintext
-npx eas-cli env:set --name KANKOR_PREVIEW_BUILD --value true --environment preview --visibility plaintext
-cd C:\projects\kankor
+npm run eas:preview:env:list
 ```
 
-Do not use localhost, a `10.x.x.x` LAN address, or another laptop-only address for the preview APK.
+Then configure the stable API URL:
+
+```powershell
+npm run eas:preview:env:set-api -- https://YOUR-STABLE-API.example.com
+```
+
+The helper uses the repository's pinned local EAS CLI, sets both `EXPO_PUBLIC_API_URL` and `KANKOR_PREVIEW_BUILD=true`, and rejects localhost/private-LAN URLs.
 
 4. Verify the EAS Update linkage:
 

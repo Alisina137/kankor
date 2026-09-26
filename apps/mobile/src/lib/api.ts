@@ -49,17 +49,19 @@ function apiCandidates() {
     candidates.push(`http://${expoHost}:4000`);
   }
 
-  candidates.push(...configured);
-
-  // If any configured URL is localhost, the current Expo host remains the
-  // physical-device LAN candidate. Keeping localhost in .env is therefore safe
-  // across home/company Wi-Fi changes.
-  const hasLocalhost = configured.some((value) =>
-    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value)
+  const physicalDeviceLanHost = Boolean(
+    __DEV__ &&
+    expoHost &&
+    !expoHostIsTunnel &&
+    expoHost !== "localhost" &&
+    expoHost !== "127.0.0.1"
   );
-  if (hasLocalhost && expoHost && !expoHostIsTunnel) {
-    candidates.unshift(`http://${expoHost}:4000`);
-  }
+
+  const configuredForDevice = physicalDeviceLanHost
+    ? configured.filter((value) => !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value))
+    : configured;
+
+  candidates.push(...configuredForDevice);
 
   return [...new Set(candidates)];
 }
@@ -93,7 +95,7 @@ export async function apiRequest<T>(
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
+      const timeout = setTimeout(() => controller.abort(), __DEV__ ? 2500 : 6000);
       try {
         response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers, signal: controller.signal });
       } finally {

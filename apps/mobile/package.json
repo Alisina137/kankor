@@ -14,8 +14,8 @@
     "build:android:preview": "eas build --platform android --profile preview",
     "build:android:production": "eas build --platform android --profile production",
     "eas:link": "node ../../scripts/link-eas-project.mjs",
-    "update:preview": "eas update --channel preview --environment preview",
-    "update:production": "eas update --channel production --environment production"
+    "update:preview": "node ../../scripts/eas-update-preview.mjs",
+    "update:production": "node ../../scripts/eas-update-production.mjs"
   },
   "dependencies": {
     "@kankor/config": "*",

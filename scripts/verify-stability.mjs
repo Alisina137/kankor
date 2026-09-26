@@ -163,6 +163,35 @@ for (const marker of [
   if (!practice.includes(marker)) throw new Error(`Grade-aware Practice loading/empty-state invariant missing: ${marker}`);
 }
 
+
+const historicalRoutes = await readFile(resolve("apps/api/src/modules/exams/historical-routes.ts"), "utf8");
+for (const marker of [
+  "filterOptions",
+  "optionRows",
+  "schema.historicalForms.year",
+  "schema.historicalForms.province",
+  "schema.historicalForms.round"
+]) {
+  if (!historicalRoutes.includes(marker)) throw new Error(`Historical archive filter-options invariant missing: ${marker}`);
+}
+
+const historicalMobile = await readFile(resolve("apps/mobile/src/app/historical.tsx"), "utf8");
+for (const marker of [
+  "HistoricalFilterOptions",
+  "SelectFilter",
+  'filterKey="year"',
+  'filterKey="province"',
+  'filterKey="round"',
+  "filterOptions.years.map(String)",
+  "filterOptions.provinces",
+  "filterOptions.rounds"
+]) {
+  if (!historicalMobile.includes(marker)) throw new Error(`Historical archive select-filter invariant missing: ${marker}`);
+}
+if (historicalMobile.includes("TextInput")) {
+  throw new Error("Historical archive filters must not regress to free-text inputs");
+}
+
 const grade10RemainingMigration = await readFile(resolve("packages/database/drizzle/0015_grade10_remaining_official_books.sql"), "utf8");
 for (const marker of [
   "'geology-grade-10-fa-1398'",
@@ -221,4 +250,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders, gentle empty states, automatic single-chapter and single-topic skipping, and count-aware singular/plural labels, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading with per-level loaders, gentle empty states, automatic single-chapter and single-topic skipping, and count-aware singular/plural labels, select-based Historical Archive filters with complete published options, complete Grade 10 and Grade 11 textbook migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

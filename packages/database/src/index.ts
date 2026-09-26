@@ -34,7 +34,8 @@ export async function assertDatabaseReady(databaseUrl = process.env.DATABASE_URL
     const db = createDatabase(databaseUrl);
     await db.select({
       id: schema.users.id,
-      role: schema.users.role
+      role: schema.users.role,
+      profilePhotoKey: schema.users.profilePhotoKey
     }).from(schema.users).limit(1);
   } catch (error) {
     throw new Error(

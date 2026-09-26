@@ -1,12 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../components/screen";
 import { apiRequest, ApiError } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import { useLocale } from "../providers/locale-provider";
+
+type HistoricalFilterOptions = {
+  years: number[];
+  provinces: string[];
+  rounds: string[];
+};
 
 type HistoricalForm = {
   id: string;
@@ -113,6 +119,12 @@ export default function HistoricalFormsScreen() {
   const [province, setProvince] = useState("");
   const [round, setRound] = useState("");
   const [language, setLanguage] = useState("");
+  const [filterOptions, setFilterOptions] = useState<HistoricalFilterOptions>({
+    years: [],
+    provinces: [],
+    rounds: []
+  });
+  const [openFilter, setOpenFilter] = useState<"year" | "province" | "round" | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -126,12 +138,16 @@ export default function HistoricalFormsScreen() {
 
     try {
       const query = params.toString();
-      const result = await apiRequest<{ items: HistoricalForm[] }>(
+      const result = await apiRequest<{
+        items: HistoricalForm[];
+        filterOptions: HistoricalFilterOptions;
+      }>(
         `/exams/history${query ? `?${query}` : ""}`,
         {},
         token
       );
       setForms(result.items);
+      setFilterOptions(result.filterOptions);
     } catch {
       setError(text.error);
     } finally {
@@ -141,7 +157,81 @@ export default function HistoricalFormsScreen() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const years = useMemo(() => [...new Set(forms.map((item) => item.year))], [forms]);
+  function SelectFilter({
+    filterKey,
+    label,
+    value,
+    options,
+    onSelect
+  }: {
+    filterKey: "year" | "province" | "round";
+    label: string;
+    value: string;
+    options: string[];
+    onSelect: (value: string) => void;
+  }) {
+    return (
+      <>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          accessibilityState={{ expanded: openFilter === filterKey }}
+          onPress={() => setOpenFilter(filterKey)}
+          style={styles.select}
+        >
+          <View style={styles.selectCopy}>
+            <Text style={[styles.selectLabel, { textAlign: align, writingDirection: direction }]}>{label}</Text>
+            <Text
+              numberOfLines={1}
+              style={[styles.selectValue, { textAlign: align, writingDirection: direction }]}
+            >
+              {value || text.all}
+            </Text>
+          </View>
+          <Ionicons name="chevron-down" size={18} color={theme.colors.mutedText} />
+        </Pressable>
+
+        <Modal
+          transparent
+          animationType="fade"
+          visible={openFilter === filterKey}
+          onRequestClose={() => setOpenFilter(null)}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setOpenFilter(null)}>
+            <Pressable style={styles.selectModal} onPress={() => undefined}>
+              <Text style={[styles.selectModalTitle, { textAlign: align, writingDirection: direction }]}>{label}</Text>
+              <ScrollView style={styles.selectOptions} contentContainerStyle={styles.selectOptionsContent}>
+                {["", ...options].map((option) => {
+                  const selected = value === option;
+                  return (
+                    <Pressable
+                      key={option || "all"}
+                      onPress={() => {
+                        onSelect(option);
+                        setOpenFilter(null);
+                      }}
+                      style={[styles.selectOption, selected && styles.selectOptionActive]}
+                    >
+                      <Text
+                        style={[
+                          styles.selectOptionText,
+                          selected && styles.selectOptionTextActive,
+                          { textAlign: align, writingDirection: direction }
+                        ]}
+                      >
+                        {option || text.all}
+                      </Text>
+                      {selected ? <Ionicons name="checkmark" size={18} color={theme.colors.primary} /> : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </>
+    );
+  }
 
   async function startForm(id: string) {
     const selected = forms.find((item) => item.id === id);
@@ -182,26 +272,28 @@ export default function HistoricalFormsScreen() {
 
       <View style={styles.filterCard}>
         <View style={[styles.filterRow, { flexDirection: rowDirection }]}>
-          <TextInput
+          <SelectFilter
+            filterKey="year"
+            label={text.year}
             value={year}
-            onChangeText={setYear}
-            placeholder={text.year}
-            keyboardType="number-pad"
-            style={[styles.input, { textAlign: align, writingDirection: direction }]}
+            options={filterOptions.years.map(String)}
+            onSelect={setYear}
           />
-          <TextInput
+          <SelectFilter
+            filterKey="province"
+            label={text.province}
             value={province}
-            onChangeText={setProvince}
-            placeholder={text.province}
-            style={[styles.input, { textAlign: align, writingDirection: direction }]}
+            options={filterOptions.provinces}
+            onSelect={setProvince}
           />
         </View>
         <View style={[styles.filterRow, { flexDirection: rowDirection }]}>
-          <TextInput
+          <SelectFilter
+            filterKey="round"
+            label={text.round}
             value={round}
-            onChangeText={setRound}
-            placeholder={text.round}
-            style={[styles.input, { textAlign: align, writingDirection: direction }]}
+            options={filterOptions.rounds}
+            onSelect={setRound}
           />
           <View style={[styles.languageRow, { flexDirection: rowDirection }]}>
             {["", "fa", "ps"].map((item) => (
@@ -217,15 +309,6 @@ export default function HistoricalFormsScreen() {
             ))}
           </View>
         </View>
-        {years.length ? (
-          <View style={[styles.yearRow, { flexDirection: rowDirection }]}>
-            {years.slice(0, 8).map((item) => (
-              <Pressable key={item} onPress={() => setYear(String(item))} style={styles.yearChip}>
-                <Text style={styles.yearText}>{item}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
       </View>
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
@@ -290,15 +373,24 @@ const styles = StyleSheet.create({
   body: { color: theme.colors.mutedText, lineHeight: 24 },
   filterCard: { gap: 10, padding: theme.spacing.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg },
   filterRow: { flexDirection: "row", gap: 10 },
-  input: { flex: 1, minHeight: 44, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingHorizontal: 12, color: theme.colors.text, backgroundColor: theme.colors.background },
+  select: { flex: 1, minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: theme.colors.background },
+  selectCopy: { flex: 1, minWidth: 0, gap: 2 },
+  selectLabel: { color: theme.colors.mutedText, fontSize: 11, fontWeight: "700" },
+  selectValue: { color: theme.colors.text, fontWeight: "700" },
+  modalBackdrop: { flex: 1, justifyContent: "center", padding: theme.spacing.lg, backgroundColor: "rgba(0,0,0,0.35)" },
+  selectModal: { maxHeight: "70%", gap: theme.spacing.sm, padding: theme.spacing.md, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
+  selectModalTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
+  selectOptions: { maxHeight: 420 },
+  selectOptionsContent: { gap: 6 },
+  selectOption: { minHeight: 46, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 12, borderRadius: theme.radius.md },
+  selectOptionActive: { backgroundColor: theme.colors.primarySoft },
+  selectOptionText: { flex: 1, color: theme.colors.text, fontWeight: "600" },
+  selectOptionTextActive: { color: theme.colors.primary, fontWeight: "800" },
   languageRow: { flex: 1, flexDirection: "row", gap: 6 },
   languageChip: { flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md },
   languageChipActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
   languageText: { color: theme.colors.text, fontWeight: "600" },
   languageTextActive: { color: theme.colors.primary, fontWeight: "800" },
-  yearRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  yearChip: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: theme.radius.pill, backgroundColor: theme.colors.background },
-  yearText: { color: theme.colors.text, fontWeight: "700" },
   emptyCard: { alignItems: "center", gap: 10, padding: theme.spacing.xl, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
   card: { gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
   cardTop: { flexDirection: "row", justifyContent: "space-between", gap: 10 },

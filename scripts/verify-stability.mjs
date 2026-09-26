@@ -84,7 +84,9 @@ for (const marker of [
   "DATABASE_URL and DIRECT_DATABASE_URL point to different database targets",
   "kankor_migrations",
   "Runtime database and authentication schema are ready",
-  "Grade 11 curriculum books are present"
+  "Grade 11 curriculum books are present",
+  "securePgConnectionString",
+  'url.searchParams.set("sslmode", "verify-full")'
 ]) {
   if (!databaseVerifier.includes(marker)) throw new Error(`Runtime database verifier invariant missing: ${marker}`);
 }
@@ -94,9 +96,16 @@ for (const marker of [
   'runRequired(["run", "verify:dev-network"]',
   'runRequired(["run", "db:verify"]',
   'waitForApi(`http://127.0.0.1:${apiPort}/health`',
-  '"start:lan"'
+  '"start:lan"',
+  "process.env.npm_execpath",
+  "process.execPath",
+  "spawnNpm"
 ]) {
   if (!lanLauncher.includes(marker)) throw new Error(`LAN development launcher invariant missing: ${marker}`);
+}
+
+if (lanLauncher.includes('"npm.cmd"')) {
+  throw new Error("Windows LAN launcher must not spawn npm.cmd directly");
 }
 
 const rootPackage = await readFile(resolve("package.json"), "utf8");
@@ -123,6 +132,25 @@ for (const marker of [
   if (!practice.includes(marker)) throw new Error(`Grade-aware Practice invariant missing: ${marker}`);
 }
 
+const grade11RemainingMigration = await readFile(resolve("packages/database/drizzle/0013_grade11_remaining_official_books.sql"), "utf8");
+for (const marker of [
+  'SELECT c."id",v.code,v.title_ps,v.title_ps',
+  '"sourceFilename":"G11-Dr-Islamic_Study_Hanafi(1).pdf"',
+  '"sourceFilename":"G11-Dr-Math(2).pdf"',
+  '"sourceFilename":"G11-Dr-Pashto(1).pdf"',
+  '"sourceFilename":"G11-Dr-Physic(1).pdf"'
+]) {
+  if (!grade11RemainingMigration.includes(marker)) throw new Error(`Grade 11 remaining-book migration invariant missing: ${marker}`);
+}
+if (grade11RemainingMigration.includes('SELECT c."id",v.code,NULL,v.title_ps')) {
+  throw new Error("Grade 11 Pashto topics must not violate required title_fa");
+}
+
+const grade11TafseerMigration = await readFile(resolve("packages/database/drizzle/0014_grade11_tafseer.sql"), "utf8");
+if (!grade11TafseerMigration.includes('"sourceFilename":"G11-Dr-Tafseer(1).pdf"')) {
+  throw new Error("Grade 11 Tafseer source metadata is not aligned with the uploaded textbook");
+}
+
 const server = await readFile(resolve("apps/api/src/server.ts"), "utf8");
 for (const marker of [
   '"Kankor API listening"',
@@ -133,4 +161,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, Windows-safe integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, grade-aware Practice curriculum loading, repaired Grade 11 remaining-book migrations, final-answer submission persistence, secure runtime database verification, and fail-fast API database readiness are present.");

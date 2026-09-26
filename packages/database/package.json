@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:verify": "node scripts/verify-runtime.mjs",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "db:seed:test-questions": "node scripts/seed-initial-question-bank.mjs"

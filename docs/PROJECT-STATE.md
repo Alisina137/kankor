@@ -216,9 +216,16 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Mobile route render failures show a localized retry screen.
 - Release-sensitive production env/build artifacts are excluded from Git.
 - Source and production release gates are available through `release:check` and `release:check:production`.
+- Home is now an actionable student dashboard: active-attempt resume, personalized weak-topic recommendation, progress snapshot, quick Practice/Full Kankor/Historical/Mistakes access, subscription badge, and recent result links.
+- Home refreshes when focused and reuses existing authoritative attempts/progress/billing APIs; it can also surface a locally persisted in-progress attempt while connectivity recovers.
+- Profile is now an account/preferences center with identity, current subscription, preparation settings, app version, logout, and a separated destructive account-deletion section.
+- Auth exposes an authenticated `PATCH /api/v1/auth/profile` endpoint for post-onboarding preference edits with the same language/year/preparation validation used during onboarding.
+- Mobile auth state exposes `updateProfile`; successful edits update both the cached user and active locale immediately.
+- Profile editing supports preferred language, target Kankor year, and preparation level without forcing the user through onboarding again.
+- `verify:home-profile` guards the dashboard and persistent editable-profile flow and is included in the integrated release gate.
 
 ## Latest source baseline
-Phase 10 release-readiness source implemented on `main`, including production guards, release verification, build profiles, readiness/error handling, and release runbook.
+Phase 10 release-readiness source plus post-phase student UX refinement implemented on `main`: production guards/release verification remain intact, while Home and Profile now expose the already-built study/account capabilities instead of early-phase placeholder shells.
 
 ## Next milestone
 Production launch preparation: resolve the external blockers in `docs/RELEASE.md`, run `npm run release:check:production`, complete the manual release-candidate smoke checklist, then create/store-test the signed production build.

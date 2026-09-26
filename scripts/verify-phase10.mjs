@@ -13,7 +13,9 @@ for (const marker of [
   'X-Content-Type-Options',
   'X-Frame-Options',
   'Referrer-Policy',
-  'Cache-Control'
+  'Cache-Control',
+  'app.get("/ready"',
+  'status: "not_ready"'
 ]) {
   if (!apiApp.includes(marker)) throw new Error(`Phase 10 API release invariant missing: ${marker}`);
 }
@@ -52,6 +54,18 @@ for (const marker of [
 ]) {
   if (!billingRoutes.includes(marker)) {
     throw new Error(`Billing release safety invariant missing: ${marker}`);
+  }
+}
+
+const mobileLayout = await text("apps/mobile/src/app/_layout.tsx");
+for (const marker of [
+  "ScreenErrorBoundary",
+  "unstable_screenErrorBoundary",
+  "Your account information has not been deleted",
+  "ستاسو د حساب معلومات نه دي حذف شوي"
+]) {
+  if (!mobileLayout.includes(marker)) {
+    throw new Error(`Mobile release error-boundary invariant missing: ${marker}`);
   }
 }
 
@@ -119,6 +133,13 @@ for (const marker of [
   if (!adminConfig.includes(marker)) throw new Error(`Admin release invariant missing: ${marker}`);
 }
 
+const gitignore = await text(".gitignore");
+for (const marker of [".env.production", ".env.*.local", ".eas/", "*.apk", "*.aab"]) {
+  if (!gitignore.split(/\r?\n/).includes(marker)) {
+    throw new Error(`Release-sensitive ignore rule missing: ${marker}`);
+  }
+}
+
 const productionExample = await text(".env.production.example");
 for (const marker of [
   "NODE_ENV=production",
@@ -144,6 +165,15 @@ for (const script of [
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
 }
 
-await text("docs/RELEASE.md");
+const releaseRunbook = await text("docs/RELEASE.md");
+for (const marker of [
+  "Password recovery delivery",
+  "Production payments",
+  "package-lock.json",
+  "Manual smoke checklist",
+  "npm run release:check:production"
+]) {
+  if (!releaseRunbook.includes(marker)) throw new Error(`Release runbook invariant missing: ${marker}`);
+}
 
-console.log("Phase 10 structure verified: production guards, secure headers, release build metadata, EAS profiles, environment validation, dependency gates, release checks, and release runbook are present.");
+console.log("Phase 10 structure verified: production guards, liveness/readiness health, secure headers, mobile error fallback, release build metadata, EAS profiles, environment validation, deterministic-dependency gate, release checks, and release runbook are present.");

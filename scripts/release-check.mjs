@@ -51,6 +51,24 @@ let childEnv = {
   CI: "1"
 };
 
+let lockfilePresent = true;
+try {
+  await readFile(resolve("package-lock.json"), "utf8");
+} catch {
+  lockfilePresent = false;
+}
+
+if (!lockfilePresent) {
+  if (production) {
+    throw new Error(
+      "package-lock.json is required for a production release. Run npm install, review the lockfile, and commit it."
+    );
+  }
+  console.warn(
+    "\n⚠ package-lock.json is not present. Generate and commit it before the production release check."
+  );
+}
+
 if (production) {
   const productionText = await readFile(resolve(envPath), "utf8").catch(() => {
     throw new Error(

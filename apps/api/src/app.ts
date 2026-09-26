@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import { assertDatabaseReady } from "@kankor/database";
 import { resolveTrustProxy } from "./common/production-config.js";
 import { authRoutes } from "./modules/auth/index.js";
 import { curriculumRoutes } from "./modules/curriculum/index.js";
@@ -49,6 +50,23 @@ export async function buildApp() {
     service: "kankor-api",
     phase: 10
   }));
+
+  app.get("/ready", async (_request, reply) => {
+    try {
+      await assertDatabaseReady();
+      return {
+        status: "ready",
+        service: "kankor-api",
+        phase: 10
+      };
+    } catch {
+      return reply.code(503).send({
+        status: "not_ready",
+        service: "kankor-api",
+        phase: 10
+      });
+    }
+  });
 
   app.get("/api/v1", async () => ({
     name: "KankorPrep API",

@@ -26,7 +26,7 @@ const shared = {
     recoveryAccepted: "اگر این ایمیل ثبت شده باشد، درخواست بازیابی ایجاد شد.", diagnosticLater: "آزمون تشخیصی پس از تکمیل سیستم امتحانات فعال می‌شود.",
     required: "این فیلد ضروری است.", invalidEmail: "ایمیل معتبر وارد کنید.", passwordLength: "رمز عبور باید حداقل ۸ حرف باشد.",
     passwordMismatch: "رمزهای عبور یکسان نیستند.", genericError: "مشکلی رخ داد. دوباره تلاش کنید.", networkError: "اتصال با سرور برقرار نشد.",
-    emailExists: "این ایمیل قبلاً ثبت شده است.", invalidCredentials: "ایمیل یا رمز عبور نادرست است."
+    emailExists: "این ایمیل قبلاً ثبت شده است.", invalidCredentials: "ایمیل یا رمز عبور نادرست است.", invalidRegistration: "اطلاعات ثبت‌نام معتبر نیست.", invalidLogin: "اطلاعات ورود معتبر نیست.", rateLimited: "درخواست‌های زیادی فرستاده شد. کمی بعد دوباره تلاش کنید.", serverError: "سرور موقتاً با مشکل روبه‌رو است.", invalidResetToken: "کُد بازیابی نامعتبر یا منقضی شده است.", retryConnection: "تلاش دوباره", sessionCheckFailed: "اتصال به سرور برقرار نشد. حساب شما حذف نشده است."
   },
   ps: {
     appName: "کانکور چمتووالی", home: "کور", practice: "تمرین", exams: "ازموینې", progress: "پرمختګ", profile: "پروفایل",
@@ -45,7 +45,7 @@ const shared = {
     recoveryAccepted: "که دا برېښنالیک ثبت وي، د بېرته ترلاسه کولو غوښتنه جوړه شوه.", diagnosticLater: "تشخیصي ازموینه به د ازموینو سیستم له بشپړېدو وروسته فعاله شي.",
     required: "دا برخه اړینه ده.", invalidEmail: "سم برېښنالیک ولیکئ.", passwordLength: "پټنوم باید لږ تر لږه ۸ توري ولري.",
     passwordMismatch: "پټنومونه یو شان نه دي.", genericError: "ستونزه رامنځته شوه. بیا هڅه وکړئ.", networkError: "له سرور سره اړیکه ونه شوه.",
-    emailExists: "دا برېښنالیک مخکې ثبت شوی.", invalidCredentials: "برېښنالیک یا پټنوم سم نه دی."
+    emailExists: "دا برېښنالیک مخکې ثبت شوی.", invalidCredentials: "برېښنالیک یا پټنوم سم نه دی.", invalidRegistration: "د نوم‌لیکنې معلومات سم نه دي.", invalidLogin: "د ننوتلو معلومات سم نه دي.", rateLimited: "ډېرې غوښتنې ولېږل شوې. لږ وروسته بیا هڅه وکړئ.", serverError: "سرور لنډمهاله ستونزه لري.", invalidResetToken: "د بېرته ترلاسه کولو کوډ ناسم یا پای ته رسېدلی.", retryConnection: "بیا هڅه", sessionCheckFailed: "له سرور سره اړیکه ونه شوه. ستاسو حساب نه دی حذف شوی."
   },
   en: {
     appName: "KankorPrep", home: "Home", practice: "Practice", exams: "Exams", progress: "Progress", profile: "Profile",
@@ -64,7 +64,7 @@ const shared = {
     recoveryAccepted: "If that email exists, a recovery request has been created.", diagnosticLater: "The diagnostic exam will become available when the exam engine is implemented.",
     required: "This field is required.", invalidEmail: "Enter a valid email.", passwordLength: "Password must be at least 8 characters.",
     passwordMismatch: "Passwords do not match.", genericError: "Something went wrong. Try again.", networkError: "Could not connect to the server.",
-    emailExists: "This email is already registered.", invalidCredentials: "Email or password is incorrect."
+    emailExists: "This email is already registered.", invalidCredentials: "Email or password is incorrect.", invalidRegistration: "Registration information is invalid.", invalidLogin: "Login information is invalid.", rateLimited: "Too many requests. Try again shortly.", serverError: "The server is temporarily unavailable.", invalidResetToken: "The recovery code is invalid or expired.", retryConnection: "Try again", sessionCheckFailed: "Could not reach the server. Your saved session was not deleted."
   }
 } as const;
 

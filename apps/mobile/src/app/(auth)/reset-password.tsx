@@ -5,6 +5,7 @@ import { theme } from "@kankor/config";
 import { AppButton } from "../../components/app-button";
 import { FormField } from "../../components/form-field";
 import { Screen } from "../../components/screen";
+import { ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
@@ -19,13 +20,21 @@ export default function ResetPasswordScreen() {
 
   async function submit() {
     setError("");
+    if (!token.trim()) return setError(text.required);
     if (password.length < 8) return setError(text.passwordLength);
     setBusy(true);
     try {
       await resetPassword(token, password);
       router.replace("/(auth)/login");
-    } catch {
-      setError(text.genericError);
+    } catch (error) {
+      const code = error instanceof ApiError ? error.code : "";
+      setError(
+        code === "invalid_or_expired_reset_token" ? text.invalidResetToken
+          : code === "rate_limited" ? text.rateLimited
+            : code === "network_error" ? text.networkError
+              : code === "server_error" ? text.serverError
+                : text.genericError
+      );
     } finally {
       setBusy(false);
     }

@@ -11,10 +11,21 @@ const repositoryRoot = join(packageRoot, "..", "..");
 
 loadEnv({ path: join(repositoryRoot, ".env") });
 
-const connectionString = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-if (!connectionString) {
+const rawConnectionString = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+if (!rawConnectionString) {
   throw new Error("DIRECT_DATABASE_URL or DATABASE_URL is required in the repository root .env file.");
 }
+
+function securePgConnectionString(value) {
+  const url = new URL(value);
+  const mode = url.searchParams.get("sslmode");
+  if (mode === "prefer" || mode === "require" || mode === "verify-ca") {
+    url.searchParams.set("sslmode", "verify-full");
+  }
+  return url.toString();
+}
+
+const connectionString = securePgConnectionString(rawConnectionString);
 
 const migrationsDir = join(packageRoot, "drizzle");
 const files = (await readdir(migrationsDir))

@@ -31,7 +31,9 @@
     "verify:grade10-four-books": "node scripts/verify-grade10-four-books.mjs",
     "verify:grade11-five-books": "node scripts/verify-grade11-five-books.mjs",
     "verify:grade11-remaining-books": "node scripts/verify-grade11-remaining-books.mjs",
-    "verify:grade11-tafseer-auth": "node scripts/verify-grade11-tafseer-auth.mjs"
+    "verify:grade11-tafseer-auth": "node scripts/verify-grade11-tafseer-auth.mjs",
+    "verify:stability": "node scripts/verify-stability.mjs",
+    "verify:dev-network": "node scripts/verify-dev-network.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

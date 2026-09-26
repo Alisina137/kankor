@@ -81,8 +81,24 @@ const resultRoutes = await readFile(resolve("apps/api/src/modules/results/routes
 if (!resultRoutes.includes("historical:")) throw new Error("Results must return historical provenance");
 
 const mobile = await readFile(resolve("apps/mobile/src/app/historical.tsx"), "utf8");
-for (const marker of ["sourceStatus", "originalOrderStatus", "Start authentic form", "/exams/history/"]) {
+for (const marker of [
+  "sourceStatus",
+  "originalOrderStatus",
+  "Start authentic form",
+  "/exams/history/",
+  "HistoricalFilterOptions",
+  "SelectFilter",
+  'filterKey="year"',
+  'filterKey="province"',
+  'filterKey="round"',
+  "filterOptions.years.map(String)",
+  "filterOptions.provinces",
+  "filterOptions.rounds"
+]) {
   if (!mobile.includes(marker)) throw new Error(`Historical mobile capability missing: ${marker}`);
+}
+if (mobile.includes("TextInput")) {
+  throw new Error("Historical Year/Province/Round filters must use select controls, not free-text inputs");
 }
 
 const adminPage = await readFile(resolve("apps/admin/app/historical/page.tsx"), "utf8");
@@ -90,4 +106,4 @@ for (const marker of ["Bulk Import", "sourceStatus", "originalOrderStatus", "ver
   if (!adminPage.includes(marker)) throw new Error(`Historical admin UI capability missing: ${marker}`);
 }
 
-console.log("Phase 6 structure verified: historical identity, provenance, source uncertainty, original ordering, duplicate preservation, admin import/publish controls, authentic start, and historical result provenance are present.");
+console.log("Phase 6 structure verified: historical identity, provenance, source uncertainty, original ordering, duplicate preservation, select-based archive filters with complete published options, admin import/publish controls, authentic start, and historical result provenance are present.");

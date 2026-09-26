@@ -21,30 +21,56 @@ export const historicalExamRoutes: FastifyPluginAsync = async (app) => {
     if (request.query.round) conditions.push(eq(schema.historicalForms.round, request.query.round));
     if (request.query.language) conditions.push(eq(schema.historicalForms.language, request.query.language));
 
-    const items = await db.select({
-      id: schema.historicalForms.id,
-      archiveCode: schema.historicalForms.archiveCode,
-      year: schema.historicalForms.year,
-      cycle: schema.historicalForms.cycle,
-      province: schema.historicalForms.province,
-      round: schema.historicalForms.round,
-      formCode: schema.historicalForms.formCode,
-      language: schema.historicalForms.language,
-      title: schema.historicalForms.title,
-      accessTier: schema.historicalForms.accessTier,
-      sourceStatus: schema.historicalForms.sourceStatus,
-      originalOrderStatus: schema.historicalForms.originalOrderStatus,
-      questionCount: schema.historicalForms.questionCount,
-      durationSeconds: schema.historicalForms.durationSeconds
-    }).from(schema.historicalForms)
-      .where(and(...conditions))
-      .orderBy(desc(schema.historicalForms.year), asc(schema.historicalForms.province), asc(schema.historicalForms.formCode));
+    const [items, optionRows] = await Promise.all([
+      db.select({
+        id: schema.historicalForms.id,
+        archiveCode: schema.historicalForms.archiveCode,
+        year: schema.historicalForms.year,
+        cycle: schema.historicalForms.cycle,
+        province: schema.historicalForms.province,
+        round: schema.historicalForms.round,
+        formCode: schema.historicalForms.formCode,
+        language: schema.historicalForms.language,
+        title: schema.historicalForms.title,
+        accessTier: schema.historicalForms.accessTier,
+        sourceStatus: schema.historicalForms.sourceStatus,
+        originalOrderStatus: schema.historicalForms.originalOrderStatus,
+        questionCount: schema.historicalForms.questionCount,
+        durationSeconds: schema.historicalForms.durationSeconds
+      }).from(schema.historicalForms)
+        .where(and(...conditions))
+        .orderBy(desc(schema.historicalForms.year), asc(schema.historicalForms.province), asc(schema.historicalForms.formCode)),
+      db.select({
+        year: schema.historicalForms.year,
+        province: schema.historicalForms.province,
+        round: schema.historicalForms.round
+      }).from(schema.historicalForms)
+        .where(eq(schema.historicalForms.verificationStatus, "published"))
+        .orderBy(desc(schema.historicalForms.year), asc(schema.historicalForms.province), asc(schema.historicalForms.round))
+    ]);
+
+    const years = [...new Set(optionRows.map((item) => item.year))].sort((a, b) => b - a);
+    const provinces = [...new Set(
+      optionRows
+        .map((item) => item.province?.trim())
+        .filter((value): value is string => Boolean(value))
+    )].sort((a, b) => a.localeCompare(b));
+    const rounds = [...new Set(
+      optionRows
+        .map((item) => item.round?.trim())
+        .filter((value): value is string => Boolean(value))
+    )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     return {
       items: items.map((item) => ({
         ...item,
         locked: entitlement.tier !== "premium" && item.accessTier === "premium"
-      }))
+      })),
+      filterOptions: {
+        years,
+        provinces,
+        rounds
+      }
     };
   });
 

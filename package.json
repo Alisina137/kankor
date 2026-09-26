@@ -31,6 +31,7 @@
     "verify:phase9": "node scripts/verify-phase9.mjs",
     "verify:rtl": "node scripts/verify-mobile-rtl.mjs",
     "verify:grade10-four-books": "node scripts/verify-grade10-four-books.mjs",
+    "verify:grade10-remaining-books": "node scripts/verify-grade10-remaining-books.mjs",
     "verify:grade11-five-books": "node scripts/verify-grade11-five-books.mjs",
     "verify:grade11-remaining-books": "node scripts/verify-grade11-remaining-books.mjs",
     "verify:grade11-tafseer-auth": "node scripts/verify-grade11-tafseer-auth.mjs",

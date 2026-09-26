@@ -13,8 +13,7 @@
     "check:expo": "npx expo install --check",
     "build:android:preview": "npx eas-cli build --platform android --profile preview",
     "build:android:production": "npx eas-cli build --platform android --profile production",
-    "eas:link": "npx eas-cli project:init --account alisina137",
-    "eas:update:configure": "npx eas-cli update:configure",
+    "eas:link": "node ../../scripts/link-eas-project.mjs",
     "update:preview": "npx eas-cli update --channel preview --environment preview",
     "update:production": "npx eas-cli update --channel production --environment production"
   },

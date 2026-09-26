@@ -271,6 +271,7 @@ function startCloudflareQuickTunnel(binaryPath, localUrl, label) {
 
   let recentOutput = "";
   let settled = false;
+  let quickTunnelCreated = false;
 
   const urlPromise = new Promise((resolvePromise, rejectPromise) => {
     const finish = (callback, value) => {
@@ -288,9 +289,19 @@ function startCloudflareQuickTunnel(binaryPath, localUrl, label) {
         process.stderr.write(output);
       }
 
-      const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
-      if (match) {
-        finish(resolvePromise, match[0].replace(/\/$/, ""));
+      if (/quick Tunnel has been created!/i.test(recentOutput)) {
+        quickTunnelCreated = true;
+      }
+
+      if (!quickTunnelCreated) return;
+
+      const matches = [...recentOutput.matchAll(/https:\/\/([a-z0-9-]+)\.trycloudflare\.com/gi)];
+      const generated = matches
+        .map((match) => ({ url: match[0], host: match[1].toLowerCase() }))
+        .find(({ host }) => !["api", "login"].includes(host));
+
+      if (generated) {
+        finish(resolvePromise, generated.url.replace(/\/$/, ""));
       }
     };
 

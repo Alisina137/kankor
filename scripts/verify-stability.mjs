@@ -128,6 +128,8 @@ const practice = await readFile(resolve("apps/mobile/src/app/(tabs)/practice.tsx
 for (const marker of [
   '/subjects?gradeId=',
   'setSubjectId(null)',
+  'const defaultGrade = result.items.find((item) => item.number === 10)',
+  'setGradeId((current) => current ?? defaultGrade.id)',
   'countLabel(grades.length, text.grade, text.grades)',
   'countLabel(subjects.length, text.subject, text.subjects)',
   'countLabel(books.length, text.book, text.books)',

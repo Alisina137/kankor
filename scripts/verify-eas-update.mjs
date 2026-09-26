@@ -18,14 +18,14 @@ if (app.expo?.runtimeVersion?.policy !== "appVersion") {
 const projectId = app.expo?.extra?.eas?.projectId;
 if (typeof projectId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId)) {
   throw new Error(
-    'EAS project is not linked yet. Run "npm run eas:link" and then "npm run eas:update:configure".'
+    'EAS project is not linked yet. Run "npm run eas:link".'
   );
 }
 
 const expectedUpdateUrl = `https://u.expo.dev/${projectId}`;
 if (app.expo?.updates?.url !== expectedUpdateUrl) {
   throw new Error(
-    `expo.updates.url must be ${expectedUpdateUrl}. Run "npm run eas:update:configure".`
+    `expo.updates.url must be ${expectedUpdateUrl}. Run "npm run eas:link" again.`
   );
 }
 
@@ -62,7 +62,7 @@ for (const marker of [
   }
 }
 
-for (const script of ["update:preview", "update:production", "eas:link", "eas:update:configure"]) {
+for (const script of ["update:preview", "update:production", "eas:link"]) {
   if (!mobilePackage.scripts?.[script]) {
     throw new Error(`Mobile EAS Update command missing: ${script}`);
   }

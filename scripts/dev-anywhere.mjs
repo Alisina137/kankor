@@ -255,11 +255,14 @@ async function waitForLocalApi(url, apiProcess) {
 }
 
 function startCloudflareQuickTunnel(binaryPath, localUrl, label) {
-  const commandInterpreter = process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
-  const command =
-    `"${binaryPath}" tunnel --no-autoupdate --protocol http2 --url "${localUrl}"`;
-
-  const child = spawn(commandInterpreter, ["/d", "/s", "/c", command], {
+  const child = spawn(binaryPath, [
+    "tunnel",
+    "--no-autoupdate",
+    "--protocol",
+    "http2",
+    "--url",
+    localUrl
+  ], {
     cwd: repositoryRoot,
     stdio: ["ignore", "pipe", "pipe"],
     shell: false,

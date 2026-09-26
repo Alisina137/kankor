@@ -56,6 +56,14 @@ for (const marker of [
   "saveProfile",
   "localeMeta",
   '"/subscription"',
+  '"/subscription/comparison"',
+  "planComparison",
+  "activePlanCard",
+  "comparisonCard",
+  "comparePlans",
+  "upgradePremium",
+  "managePremium",
+  "Promise.allSettled",
   "Constants.expoConfig?.version",
   "startEditing",
   "cancelEditing",
@@ -65,8 +73,23 @@ for (const marker of [
   if (!profile.includes(marker)) throw new Error(`Profile screen invariant missing: ${marker}`);
 }
 
+const billingRoutes = await source("apps/api/src/modules/billing/routes.ts");
+for (const marker of [
+  'app.get("/subscription/comparison"',
+  "getFreeEntitlements()",
+  "noFreePlanExamLimits",
+  "detailedExplanations",
+  "workedSolutions",
+  "completeAnalytics",
+  "mistakeNotebook",
+  "weaknessPractice",
+  "extendedHistory"
+]) {
+  if (!billingRoutes.includes(marker)) throw new Error(`Subscription comparison invariant missing: ${marker}`);
+}
+
 if (home.includes("homeBody") || profile.includes('label="Premium"')) {
   throw new Error("Legacy Home/Profile placeholder UI must not return");
 }
 
-console.log("Home/Profile verified: actionable dashboard, progress/recommendation/resume data, quick actions, subscription state, editable preparation preferences, app/account management, and persistent profile updates are present.");
+console.log("Home/Profile verified: actionable dashboard, progress/recommendation/resume data, active subscription card, live Free-vs-Premium comparison, editable preparation preferences, app/account management, and persistent profile updates are present.");

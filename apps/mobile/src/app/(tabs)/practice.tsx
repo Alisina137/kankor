@@ -164,7 +164,12 @@ export default function PracticeScreen() {
 
     void apiRequest<{ items: Grade[] }>("/grades")
       .then((result) => {
-        if (active) setGrades(result.items);
+        if (!active) return;
+        setGrades(result.items);
+        const defaultGrade = result.items.find((item) => item.number === 10);
+        if (defaultGrade) {
+          setGradeId((current) => current ?? defaultGrade.id);
+        }
       })
       .catch(() => {
         if (active) setError(text.error);

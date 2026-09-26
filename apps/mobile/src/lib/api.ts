@@ -12,19 +12,38 @@ function expoDevelopmentHost() {
   }
 }
 
-function resolveApiUrl() {
-  const configured = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
-
-  if (Platform.OS === "web") return configured;
-
-  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
-  if (!isLocalhost) return configured;
-
-  const expoHost = expoDevelopmentHost();
-  return expoHost ? `http://${expoHost}:4000` : configured;
+function configuredApiUrl() {
+  return (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
 }
 
-export const API_URL = resolveApiUrl();
+function apiCandidates() {
+  const configured = configuredApiUrl();
+
+  if (Platform.OS === "web") return [configured];
+
+  const candidates: string[] = [];
+  const expoHost = expoDevelopmentHost();
+
+  // On a physical device during Expo development, prefer the host Expo is
+  // currently connected to. This survives Wi-Fi/DHCP address changes without
+  // requiring the user to keep EXPO_PUBLIC_API_URL in sync manually.
+  if (__DEV__ && expoHost && expoHost !== "localhost" && expoHost !== "127.0.0.1") {
+    candidates.push(`http://${expoHost}:4000`);
+  }
+
+  candidates.push(configured);
+
+  // If localhost was configured, also derive the LAN URL from the Expo host.
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
+  if (isLocalhost && expoHost) {
+    candidates.push(`http://${expoHost}:4000`);
+  }
+
+  return [...new Set(candidates)];
+}
+
+export const API_URLS = apiCandidates();
+export const API_URL = API_URLS[0];
 
 export class ApiError extends Error {
   constructor(public code: string, public status: number) {
@@ -45,26 +64,41 @@ export async function apiRequest<T>(
 
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  let response: Response;
-  try {
-    response = await fetch(`${API_URL}/api/v1${path}`, { ...options, headers });
-  } catch {
-    throw new ApiError("network_error", 0);
+  let lastNetworkError: unknown = null;
+
+  for (const baseUrl of API_URLS) {
+    let response: Response;
+
+    try {
+      response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers });
+    } catch (error) {
+      lastNetworkError = error;
+      if (__DEV__) {
+        console.warn(`Kankor API unreachable at ${baseUrl}`);
+      }
+      continue;
+    }
+
+    if (response.status === 204) return undefined as T;
+
+    const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+    if (!response.ok) {
+      const code =
+        typeof body.error === "string"
+          ? body.error
+          : typeof body.message === "string"
+            ? body.message
+            : "request_failed";
+
+      throw new ApiError(code, response.status);
+    }
+
+    return body as T;
   }
 
-  if (response.status === 204) return undefined as T;
-
-  const body = await response.json().catch(() => ({})) as Record<string, unknown>;
-  if (!response.ok) {
-    const code =
-      typeof body.error === "string"
-        ? body.error
-        : typeof body.message === "string"
-          ? body.message
-          : "request_failed";
-
-    throw new ApiError(code, response.status);
+  if (__DEV__ && lastNetworkError) {
+    console.warn("All Kankor API candidates failed", API_URLS);
   }
 
-  return body as T;
+  throw new ApiError("network_error", 0);
 }

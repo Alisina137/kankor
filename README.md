@@ -22,7 +22,7 @@ For browser/same-network development, `npm run dev:lan -- --clear` remains avail
 
 For normal testing on a physical Android phone, the preferred workflow is now a **preview APK + EAS Update**:
 
-1. Link/configure the app once with `npm run eas:link` and `npm run eas:update:configure`.
+1. Link/configure the app once with `npm run eas:link`.
 2. Configure a stable public HTTPS `EXPO_PUBLIC_API_URL` in the EAS `preview` environment.
 3. Run `npm run verify:eas-update`.
 4. Build/install the preview APK once with `npm run build:android:preview`.

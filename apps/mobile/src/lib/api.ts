@@ -23,11 +23,14 @@ function apiCandidates() {
 
   const candidates: string[] = [];
   const expoHost = expoDevelopmentHost();
+  const expoHostIsTunnel = Boolean(
+    expoHost && (expoHost.endsWith(".exp.direct") || expoHost.endsWith(".ngrok.io") || expoHost.endsWith(".ngrok-free.app"))
+  );
 
   // On a physical device during Expo development, prefer the host Expo is
   // currently connected to. This survives Wi-Fi/DHCP address changes without
   // requiring the user to keep EXPO_PUBLIC_API_URL in sync manually.
-  if (__DEV__ && expoHost && expoHost !== "localhost" && expoHost !== "127.0.0.1") {
+  if (__DEV__ && expoHost && !expoHostIsTunnel && expoHost !== "localhost" && expoHost !== "127.0.0.1") {
     candidates.push(`http://${expoHost}:4000`);
   }
 
@@ -35,7 +38,7 @@ function apiCandidates() {
 
   // If localhost was configured, also derive the LAN URL from the Expo host.
   const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
-  if (isLocalhost && expoHost) {
+  if (isLocalhost && expoHost && !expoHostIsTunnel) {
     candidates.push(`http://${expoHost}:4000`);
   }
 
@@ -70,7 +73,13 @@ export async function apiRequest<T>(
     let response: Response;
 
     try {
-      response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6000);
+      try {
+        response = await fetch(`${baseUrl}/api/v1${path}`, { ...options, headers, signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
     } catch (error) {
       lastNetworkError = error;
       if (__DEV__) {

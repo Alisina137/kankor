@@ -60,6 +60,10 @@ function apiFallbackUrls() {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const mode = mobileBuildMode();
+  const projectId =
+    typeof config.extra?.eas?.projectId === "string"
+      ? config.extra.eas.projectId
+      : undefined;
 
   return {
     ...config,
@@ -67,6 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     slug: config.slug ?? "kankorprep-afghanistan",
     updates: {
       ...config.updates,
+      ...(projectId ? { url: `https://u.expo.dev/${projectId}` } : {}),
       enabled: true,
       checkAutomatically: "ON_LOAD",
       fallbackToCacheTimeout: mode.preview ? 5000 : (config.updates?.fallbackToCacheTimeout ?? 0)

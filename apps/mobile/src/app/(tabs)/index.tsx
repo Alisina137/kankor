@@ -154,7 +154,7 @@ const copy = {
 
 export default function HomeScreen() {
   const { user, token } = useAuth();
-  const { locale, direction } = useLocale();
+  const { locale, direction, text: sharedText } = useLocale();
   const text = copy[locale];
   const align = direction === "rtl" ? "right" : "left";
   const rowDirection = "row";
@@ -215,7 +215,8 @@ export default function HomeScreen() {
   const isPremium = subscription?.tier === "premium";
 
   const planLabel = useMemo(() => {
-    if (!subscription || subscription.tier === "free") return text.free;
+    if (!subscription) return "—";
+    if (subscription.tier === "free") return text.free;
     const plan = subscription.subscription;
     if (!plan) return text.premium;
     if (locale === "ps") return plan.planNamePs || plan.planNameFa || text.premium;
@@ -264,7 +265,7 @@ export default function HomeScreen() {
     {
       label: text.mistakeNotebook,
       icon: "alert-circle-outline" as const,
-      action: () => router.push(isPremium ? "/mistakes" : "/premium")
+      action: () => router.push("/mistakes")
     }
   ];
 
@@ -272,7 +273,7 @@ export default function HomeScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.appName, { textAlign: align, writingDirection: direction }]}>{locale === "en" ? "KankorPrep" : "KankorPrep Afghanistan"}</Text>
+          <Text style={[styles.appName, { textAlign: align, writingDirection: direction }]}>{sharedText.appName}</Text>
           <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.welcome}</Text>
           <Text style={[styles.subtitle, { textAlign: align, writingDirection: direction }]}>{text.subtitle}</Text>
         </View>
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
   iconCircle: { width: 46, height: 46, alignItems: "center", justifyContent: "center", borderRadius: 23, backgroundColor: "#FFFFFF" },
   iconCircleSoft: { width: 42, height: 42, alignItems: "center", justifyContent: "center", borderRadius: 21, backgroundColor: theme.colors.primarySoft },
   flex: { flex: 1 },
-  sectionTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "850" },
+  sectionTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
   body: { color: theme.colors.mutedText, lineHeight: 24 },
   bodySmall: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 21, marginTop: 3 },
   attemptTitle: { color: theme.colors.text, fontWeight: "800", lineHeight: 22 },

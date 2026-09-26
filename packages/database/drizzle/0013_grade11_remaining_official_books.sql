@@ -1,6 +1,6 @@
 -- Remaining Grade 11 official textbooks from user-provided Ministry of Education PDFs.
--- Adds Islamic Studies (Hanafi), Mathematics, Pashto for Dari speakers, and Physics.
--- The uploaded Chemistry PDF is a duplicate of the Grade 11 Chemistry book already imported in 0012.
+-- Adds four of the five remaining Grade 11 books: Islamic Studies (Hanafi), Mathematics, Pashto for Dari speakers, and Physics.
+-- Tafseer Sharif is added by migration 0014.
 
 INSERT INTO "subjects" ("code","name_fa","name_ps","active","sort_order","created_at","updated_at")
 VALUES
@@ -24,13 +24,13 @@ FROM "grades" g
 JOIN (
   VALUES
     ('islamic-studies','islamic-studies-grade-11-hanafi-fa-1398','تعلیم و تربیه اسلامی صنف یازدهم','اسلامي ښوونه او روزنه یوولسم ټولګی',1398,
-      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","madhhab":"hanafi","sourceFilename":"G11-Dr-Islamic_Study_Hanafi.pdf","sourceType":"official_textbook","pages":154}'::jsonb,10),
+      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","madhhab":"hanafi","sourceFilename":"G11-Dr-Islamic_Study_Hanafi(1).pdf","sourceType":"official_textbook","pages":154}'::jsonb,10),
     ('math','math-grade-11-fa-1398','ریاضی صنف یازدهم','ریاضي یوولسم ټولګی',1398,
-      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Math(1).pdf","sourceType":"official_textbook","pages":332}'::jsonb,20),
+      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Math(2).pdf","sourceType":"official_textbook","pages":332}'::jsonb,20),
     ('pashto','pashto-grade-11-dari-speakers-1398','پشتو صنف یازدهم (برای دری‌زبانان)','پښتو یوولسم ټولګی (د دري ژبو لپاره)',1398,
-      '{"publisher":"د پوهنې وزارت د اړیکو او عامه پوهاوي ریاست","curriculumDeveloper":"د تعلیمي نصاب د پراختیا او درسي کتابونو د تألیف لوی ریاست","language":"ps","sourceFilename":"G11-Dr-Pashto.pdf","sourceType":"official_textbook","pages":194}'::jsonb,30),
+      '{"publisher":"د پوهنې وزارت د اړیکو او عامه پوهاوي ریاست","curriculumDeveloper":"د تعلیمي نصاب د پراختیا او درسي کتابونو د تألیف لوی ریاست","language":"ps","sourceFilename":"G11-Dr-Pashto(1).pdf","sourceType":"official_textbook","pages":194}'::jsonb,30),
     ('physics','physics-grade-11-fa-1399','فزیک صنف یازدهم','فزیک یوولسم ټولګی',1399,
-      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Physic.pdf","sourceType":"official_textbook","pages":222}'::jsonb,40)
+      '{"publisher":"ریاست ارتباط و آگاهی عامه وزارت معارف","curriculumDeveloper":"ریاست عمومی انکشاف نصاب تعلیمی و تألیف کتب درسی","language":"fa","sourceFilename":"G11-Dr-Physic(1).pdf","sourceType":"official_textbook","pages":222}'::jsonb,40)
 ) AS v(subject_code,code,title_fa,title_ps,edition_year,source_metadata,sort_order) ON true
 JOIN "subjects" s ON s."code"=v.subject_code
 WHERE g."number"=11
@@ -141,8 +141,10 @@ FROM "books" b WHERE b."code"='pashto-grade-11-dari-speakers-1398'
 ON CONFLICT ("book_id","number") DO UPDATE SET
   "title_fa"=EXCLUDED."title_fa","title_ps"=EXCLUDED."title_ps","active"=true,"updated_at"=now();
 
+-- The shared topics schema requires title_fa. This Pashto-source book has source lesson titles in Pashto only,
+-- so preserve the exact source title in both title_fa (fallback/display compatibility) and title_ps rather than inventing a Dari translation.
 INSERT INTO "topics" ("chapter_id","code","title_fa","title_ps","active","sort_order","created_at","updated_at")
-SELECT c."id",v.code,NULL,v.title_ps,true,v.lesson_no,now(),now()
+SELECT c."id",v.code,v.title_ps,v.title_ps,true,v.lesson_no,now(),now()
 FROM "chapters" c JOIN "books" b ON b."id"=c."book_id"
 JOIN (VALUES
   (1,'pashto-g11-l01','لومړی لوست: حمد'),

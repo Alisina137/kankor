@@ -128,7 +128,8 @@ const practice = await readFile(resolve("apps/mobile/src/app/(tabs)/practice.tsx
 for (const marker of [
   '/subjects?gradeId=',
   'setSubjectId(null)',
-  'gradeId ? <ChoiceGroup label={text.subject}',
+  'label={text.subject}',
+  'onSelect={selectSubject}',
   'const [subjectsLoading, setSubjectsLoading] = useState(false)',
   'const [booksLoading, setBooksLoading] = useState(false)',
   'const [chaptersLoading, setChaptersLoading] = useState(false)',

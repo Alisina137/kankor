@@ -207,9 +207,22 @@ for (const script of [
   "verify:phase10",
   "verify:production-env",
   "release:check",
-  "release:check:production"
+  "release:check:production",
+  "dev:anywhere"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
+}
+
+const anywhereDev = await text("scripts/dev-anywhere.mjs");
+for (const marker of [
+  '@expo/ngrok',
+  'ngrok.connect',
+  'EXPO_PUBLIC_API_URL: apiTunnelUrl',
+  'EXPO_PUBLIC_API_URLS: ""',
+  '"start:tunnel"',
+  'Public Kankor API tunnel ready'
+]) {
+  if (!anywhereDev.includes(marker)) throw new Error(`Anywhere-development invariant missing: ${marker}`);
 }
 
 const releaseRunbook = await text("docs/RELEASE.md");

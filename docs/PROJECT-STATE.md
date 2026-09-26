@@ -226,6 +226,8 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - `dev:lan` probes every active laptop IPv4 interface after API startup and prints which LAN addresses answer `/health`, making firewall/interface problems visible before Expo testing.
 - `dev:lan` now detects and reuses an already-running Kankor API on the configured port instead of spawning a second watcher and failing with `EADDRINUSE`; if a different service owns the port, startup fails with a clear error.
 - `dev:anywhere` provides IP-independent development: it starts/reuses the local API, creates a temporary public HTTPS API tunnel, verifies it, injects the tunnel URL into Expo for that session, clears LAN fallbacks, and starts Expo with `--tunnel`.
+- Authenticated mobile requests now allow a realistic development timeout so normal Neon latency is not mislabeled as an unreachable API.
+- Session `lastUsedAt` is updated as best-effort telemetry after session validation instead of blocking every authenticated response with a second database round trip.
 - Session-provided tunnel URLs now take precedence over root `.env`, while production build guards remain unchanged.
 - Development API requests automatically send the ngrok skip-warning header for ngrok tunnel hosts so warning/interstitial responses do not replace API JSON.
 - Development CORS allows localhost/127.0.0.1 browser origins on any port for Expo Web, while production CORS remains restricted to configured exact origins.

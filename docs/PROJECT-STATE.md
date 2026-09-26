@@ -226,9 +226,17 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Mobile auth state exposes `updateProfile`; successful edits update both the cached user and active locale immediately.
 - Profile editing supports preferred language, target Kankor year, and preparation level without forcing the user through onboarding again.
 - `verify:home-profile` guards the dashboard and persistent editable-profile flow and is included in the integrated release gate.
+- Progress was redesigned to avoid sparse/empty presentation: new users receive a guided start state with Practice/Exam actions and previews of future analytics; users with results receive an overall-score card, recent trend, learning-journey metrics, next-step recommendation, weak-topic accuracy bars, subject-performance bars, and recent-result bars.
+- Progress now refreshes on tab focus and uses independent settled requests so one secondary analytics failure does not blank the entire page.
+- User profile photos are supported through migration `0016_user_profile_photo.sql`, storing only an object-storage key on the user record.
+- Profile photo upload uses Expo Image Picker with square editing and a 5 MB JPG/PNG/WebP limit, then uploads directly through a short-lived signed S3-compatible PUT URL.
+- The API verifies the uploaded object's user-owned key, MIME type, and final object size before attaching it to the account; previous images are deleted when replaced and users can remove their image later.
+- Profile photos are read through short-lived signed GET URLs, allowing the object-storage bucket to remain private.
+- Local development remains usable without photo storage configured; the Profile shows a gentle unavailable state. Production release checks require the S3-compatible profile-photo storage settings.
+- `assertDatabaseReady` and `db:verify` now require the `users.profile_photo_key` column so an unmigrated database fails before authentication requests reach runtime.
 
 ## Latest source baseline
-Phase 10 release-readiness source plus post-phase student UX refinement implemented on `main`: production guards/release verification remain intact, while Home and Profile now expose the already-built study/account capabilities instead of early-phase placeholder shells.
+Phase 10 release-readiness plus post-phase student UX refinement implemented on `main`: Home, Practice, Progress, Profile, subscription comparison, editable preferences, and secure profile-photo upload now expose the app's existing capabilities with useful empty/loading states.
 
 ## Next milestone
 Production launch preparation: resolve the external blockers in `docs/RELEASE.md`, run `npm run release:check:production`, complete the manual release-candidate smoke checklist, then create/store-test the signed production build.

@@ -8,8 +8,15 @@ if (!envText) {
 }
 
 function envValue(key) {
-  const match = envText.match(new RegExp(`^\\s*${key}\\s*=\\s*([^\\r\\n#]*)\\s*$`, "m"));
-  return match?.[1]?.trim().replace(/^["']|["']$/g, "") ?? "";
+  for (const line of envText.split(/\r?\n/)) {
+    const match = line.match(/^[ \t]*([A-Z0-9_]+)[ \t]*=[ \t]*(.*)$/i);
+    if (!match || match[1] !== key) continue;
+
+    const raw = match[2].split("#", 1)[0].trim();
+    return raw.replace(/^["']|["']$/g, "");
+  }
+
+  return "";
 }
 
 const apiHost = envValue("API_HOST") || "0.0.0.0";

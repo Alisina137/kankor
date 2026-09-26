@@ -23,13 +23,23 @@ export default function RegisterScreen() {
     if(password!==confirm) return setError(text.passwordMismatch);
     setBusy(true);
     try { await register(email,password); router.replace("/onboarding"); }
-    catch(e){ const code=e instanceof ApiError?e.code:""; setError(code==="email_already_registered"?text.emailExists:code==="network_error"?text.networkError:text.genericError); }
+    catch(e){
+      const code=e instanceof ApiError?e.code:"";
+      setError(
+        code==="email_already_registered"?text.emailExists
+          :code==="invalid_registration_data"?text.invalidRegistration
+            :code==="rate_limited"?text.rateLimited
+              :code==="network_error"?text.networkError
+                :code==="server_error"?text.serverError
+                  :text.genericError
+      );
+    }
     finally{ setBusy(false); }
   }
 
   return <Screen><View style={styles.stack}>
     <Text style={[styles.title,{textAlign:align,writingDirection:direction}]}>{text.createAccount}</Text>
-    <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" />
+    <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" autoCapitalize="none" autoCorrect={false} />
     <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="new-password" />
     <FormField label={text.confirmPassword} value={confirm} onChangeText={setConfirm} secureTextEntry secureToggle autoComplete="new-password" />
     {error?<Text style={[styles.error,{textAlign:align,writingDirection:direction}]}>{error}</Text>:null}

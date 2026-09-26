@@ -47,7 +47,6 @@
     "dev:anywhere": "node scripts/dev-anywhere.mjs",
     "dev:tailscale": "node scripts/dev-tailscale.mjs",
     "eas:link": "node scripts/link-eas-project.mjs",
-    "eas:update:configure": "npm --workspace @kankor/mobile run eas:update:configure",
     "update:preview": "npm --workspace @kankor/mobile run update:preview --",
     "update:production": "npm --workspace @kankor/mobile run update:production --",
     "verify:eas-update": "node scripts/verify-eas-update.mjs"

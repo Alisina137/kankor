@@ -101,6 +101,9 @@ if (!imagePickerPlugin) {
 if (mobileApp.expo?.ios?.config?.usesNonExemptEncryption !== false) {
   throw new Error("iOS SecureStore export-compliance configuration is missing");
 }
+if (mobileApp.expo?.web?.bundler !== "metro") {
+  throw new Error("Expo Router web builds must use the Metro bundler");
+}
 
 const mobilePackage = JSON.parse(await text("apps/mobile/package.json"));
 for (const [name, version] of Object.entries({
@@ -111,6 +114,8 @@ for (const [name, version] of Object.entries({
   "expo-status-bar": "~57.0.1",
   "expo-image-picker": "~57.0.20",
   "react-native": "0.86.3",
+  "react-dom": "19.2.3",
+  "react-native-web": "~0.21.0",
   "react-native-safe-area-context": "~5.7.0",
   "react-native-screens": "~4.26.0"
 })) {

@@ -7,6 +7,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "channel": "preview",
+      "environment": "preview",
+      "env": {
+        "KANKOR_PREVIEW_BUILD": "true"
       }
     },
     "production": {
@@ -16,7 +21,9 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "channel": "production",
+      "environment": "production"
     }
   }
 }

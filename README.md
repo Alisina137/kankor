@@ -27,7 +27,7 @@ For IP-independent development across home/company/hotspot networks, use:
 npm run dev:anywhere -- --clear
 ```
 
-This starts/reuses the local API, creates temporary Cloudflare Quick Tunnels for both the API and Expo/Metro, injects the public API URL into the app, and points Expo at the public Metro URL. No Cloudflare account or token is required. Both laptop and phone need internet access, but they do not need the same LAN or a fixed IP.
+This starts/reuses the local API, downloads and SHA-256 verifies a pinned official Cloudflare tunnel binary on first Windows x64 use, creates temporary Quick Tunnels for both the API and Expo/Metro, injects the public API URL into the app, and points Expo at the public Metro URL. No Cloudflare account or token is required. Both laptop and phone need internet access, but they do not need the same LAN or a fixed IP.
 
 ## Verification
 

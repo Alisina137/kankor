@@ -95,7 +95,7 @@ export async function apiRequest<T>(
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), __DEV__ ? 2500 : 6000);
+      const timeout = setTimeout(() => controller.abort(), __DEV__ ? 8000 : 6000);
       const requestHeaders = new Headers(headers);
 
       if (__DEV__) {
@@ -117,7 +117,7 @@ export async function apiRequest<T>(
     } catch (error) {
       lastNetworkError = error;
       if (__DEV__) {
-        console.info(`Kankor API unreachable at ${baseUrl}`);
+        console.info(`Kankor API request failed at ${baseUrl}`, error instanceof Error ? error.name : "network_error");
       }
       continue;
     }

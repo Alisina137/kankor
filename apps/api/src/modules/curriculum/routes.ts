@@ -12,10 +12,35 @@ export const curriculumRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
-  app.get("/subjects", async () => {
+  app.get<{ Querystring: { gradeId?: string } }>("/subjects", async (request) => {
     const db = createDatabase();
+    const gradeId = request.query.gradeId;
+
+    if (!gradeId) {
+      return {
+        items: await db.select().from(schema.subjects)
+          .where(eq(schema.subjects.active, true))
+          .orderBy(asc(schema.subjects.sortOrder), asc(schema.subjects.nameFa))
+      };
+    }
+
     return {
-      items: await db.select().from(schema.subjects)
+      items: await db.selectDistinct({
+        id: schema.subjects.id,
+        code: schema.subjects.code,
+        nameFa: schema.subjects.nameFa,
+        namePs: schema.subjects.namePs,
+        active: schema.subjects.active,
+        sortOrder: schema.subjects.sortOrder
+      }).from(schema.subjects)
+        .innerJoin(
+          schema.books,
+          and(
+            eq(schema.books.subjectId, schema.subjects.id),
+            eq(schema.books.gradeId, gradeId),
+            eq(schema.books.active, true)
+          )
+        )
         .where(eq(schema.subjects.active, true))
         .orderBy(asc(schema.subjects.sortOrder), asc(schema.subjects.nameFa))
     };

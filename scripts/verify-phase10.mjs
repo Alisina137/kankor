@@ -224,6 +224,7 @@ for (const marker of [
   '15 * 60_000',
   'Resuming cloudflared download',
   'startCloudflareQuickTunnel',
+  'spawn(binaryPath, [',
   '--protocol http2',
   'EXPO_PUBLIC_API_URL: apiTunnelUrl',
   'EXPO_PUBLIC_API_URLS: ""',

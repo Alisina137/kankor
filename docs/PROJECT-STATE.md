@@ -220,6 +220,8 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Home is now an actionable student dashboard: active-attempt resume, personalized weak-topic recommendation, progress snapshot, quick Practice/Full Kankor/Historical/Mistakes access, subscription badge, and recent result links.
 - Home refreshes when focused and reuses existing authoritative attempts/progress/billing APIs; it can also surface a locally persisted in-progress attempt while connectivity recovers.
 - Profile is now an account/preferences center with identity, current subscription, preparation settings, app version, logout, and a separated destructive account-deletion section.
+- Profile Subscription now shows the active plan as a prominent state card and a localized Free-vs-Premium comparison matrix covering daily question allowance, targeted-exam size, full Kankor access, historical archive access, explanations/worked solutions, analytics/history, Mistake Notebook, and weakness practice.
+- The comparison reads current Free-plan limits from authenticated `GET /api/v1/subscription/comparison`, so administrator-configured limits are reflected even for Premium users; active-plan and comparison requests fail independently so one temporary failure does not erase the other.
 - Auth exposes an authenticated `PATCH /api/v1/auth/profile` endpoint for post-onboarding preference edits with the same language/year/preparation validation used during onboarding.
 - Mobile auth state exposes `updateProfile`; successful edits update both the cached user and active locale immediately.
 - Profile editing supports preferred language, target Kankor year, and preparation level without forcing the user through onboarding again.

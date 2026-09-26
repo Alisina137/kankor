@@ -19,7 +19,15 @@ npm run db:verify
 npm run dev:lan -- --clear
 ```
 
-For a physical Android device, configure `EXPO_PUBLIC_API_URL` in the repository-root `.env` with the laptop LAN address.
+For normal same-network development, `npm run dev:lan -- --clear` uses the current Expo/LAN host automatically.
+
+For IP-independent development across home/company/hotspot networks, use:
+
+```powershell
+npm run dev:anywhere -- --clear
+```
+
+This starts/reuses the local API, exposes it through a temporary HTTPS tunnel, injects that URL into Expo, and starts Expo in tunnel mode. Both laptop and phone need internet access, but they do not need the same LAN or a fixed IP.
 
 ## Verification
 

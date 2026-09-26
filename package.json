@@ -50,6 +50,6 @@
     "node": ">=22.13.0"
   },
   "devDependencies": {
-    "@expo/ngrok": "^4.1.0"
+    "cloudflared": "0.7.3"
   }
 }

@@ -62,13 +62,40 @@ if (!exam.includes("answers: current?.answers ?? []")) {
 }
 
 const migration = await readFile(resolve("packages/database/scripts/migrate.mjs"), "utf8");
-if (!migration.includes('url.searchParams.set("sslmode", "verify-full")')) {
-  throw new Error("Migration SSL verification mode is not pinned");
+for (const marker of [
+  'url.searchParams.set("sslmode", "verify-full")',
+  "assertCompatibleDatabaseTargets",
+  "Authentication schema is ready"
+]) {
+  if (!migration.includes(marker)) throw new Error(`Migration stability invariant missing: ${marker}`);
+}
+
+const database = await readFile(resolve("packages/database/src/index.ts"), "utf8");
+for (const marker of [
+  "assertDatabaseReady",
+  "databaseErrorSummary",
+  "npm run db:migrate"
+]) {
+  if (!database.includes(marker)) throw new Error(`Database readiness invariant missing: ${marker}`);
+}
+
+const databaseVerifier = await readFile(resolve("packages/database/scripts/verify-runtime.mjs"), "utf8");
+for (const marker of [
+  "DATABASE_URL and DIRECT_DATABASE_URL point to different database targets",
+  "kankor_migrations",
+  "Runtime database and authentication schema are ready"
+]) {
+  if (!databaseVerifier.includes(marker)) throw new Error(`Runtime database verifier invariant missing: ${marker}`);
 }
 
 const server = await readFile(resolve("apps/api/src/server.ts"), "utf8");
-if (!server.includes('"Kankor API listening"') || !server.includes("Invalid API_PORT")) {
-  throw new Error("API startup diagnostics are incomplete");
+for (const marker of [
+  '"Kankor API listening"',
+  "Invalid API_PORT",
+  "await assertDatabaseReady()",
+  "databaseCause"
+]) {
+  if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, quiet/reliable API networking, precise auth errors, session preservation, final-answer submission persistence, secure migration SSL semantics, and API startup diagnostics are present.");
+console.log("Stability audit verified: root mobile env loading, quiet/reliable API networking, precise auth errors, session preservation, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");

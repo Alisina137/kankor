@@ -1,7 +1,8 @@
 import { theme } from "@kankor/config";
 import type { PropsWithChildren } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../providers/locale-provider";
 
 type ScreenProps = PropsWithChildren<{

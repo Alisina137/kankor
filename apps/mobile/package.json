@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start:lan": "expo start --lan",
+    "start:tunnel": "expo start --tunnel"
   },
   "dependencies": {
     "@kankor/config": "*",

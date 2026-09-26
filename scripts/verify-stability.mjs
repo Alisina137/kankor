@@ -88,6 +88,21 @@ for (const marker of [
   if (!databaseVerifier.includes(marker)) throw new Error(`Runtime database verifier invariant missing: ${marker}`);
 }
 
+const lanLauncher = await readFile(resolve("scripts/dev-lan.mjs"), "utf8");
+for (const marker of [
+  'runRequired(["run", "verify:dev-network"]',
+  'runRequired(["run", "db:verify"]',
+  'waitForApi(`http://127.0.0.1:${apiPort}/health`',
+  '"start:lan"'
+]) {
+  if (!lanLauncher.includes(marker)) throw new Error(`LAN development launcher invariant missing: ${marker}`);
+}
+
+const rootPackage = await readFile(resolve("package.json"), "utf8");
+if (!rootPackage.includes('"dev:lan": "node scripts/dev-lan.mjs"')) {
+  throw new Error("Integrated LAN development command is missing");
+}
+
 const server = await readFile(resolve("apps/api/src/server.ts"), "utf8");
 for (const marker of [
   '"Kankor API listening"',
@@ -98,4 +113,4 @@ for (const marker of [
   if (!server.includes(marker)) throw new Error(`API startup diagnostic missing: ${marker}`);
 }
 
-console.log("Stability audit verified: root mobile env loading, quiet/reliable API networking, precise auth errors, session preservation, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");
+console.log("Stability audit verified: root mobile env loading, integrated LAN startup, quiet/reliable API networking, precise auth errors, session preservation, final-answer submission persistence, migration target safety, runtime database verification, and fail-fast API database readiness are present.");

@@ -121,14 +121,29 @@ export default function PracticeScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void Promise.all([
-      apiRequest<{ items: Grade[] }>("/grades"),
-      apiRequest<{ items: Subject[] }>("/subjects")
-    ]).then(([gradeResult, subjectResult]) => {
-      setGrades(gradeResult.items);
-      setSubjects(subjectResult.items);
-    }).catch(() => setError(text.error)).finally(() => setLoading(false));
+    void apiRequest<{ items: Grade[] }>("/grades")
+      .then((result) => setGrades(result.items))
+      .catch(() => setError(text.error))
+      .finally(() => setLoading(false));
   }, [text.error]);
+
+  useEffect(() => {
+    setSubjectId(null);
+    setBookId(null);
+    setChapterId(null);
+    setTopicId(null);
+    setSubjects([]);
+    setBooks([]);
+    setChapters([]);
+    setTopics([]);
+
+    if (!gradeId) return;
+
+    setError("");
+    void apiRequest<{ items: Subject[] }>(`/subjects?gradeId=${encodeURIComponent(gradeId)}`)
+      .then((result) => setSubjects(result.items))
+      .catch(() => setError(text.error));
+  }, [gradeId, text.error]);
 
   useEffect(() => {
     setBookId(null); setChapterId(null); setTopicId(null); setChapters([]); setTopics([]);
@@ -276,7 +291,7 @@ export default function PracticeScreen() {
         {!loading ? (
           <>
             <ChoiceGroup label={text.grade} items={grades} selected={gradeId} onSelect={setGradeId} getLabel={(item) => String(item.number)} />
-            <ChoiceGroup label={text.subject} items={subjects} selected={subjectId} onSelect={setSubjectId} getLabel={(item) => displayName(item.nameFa, item.namePs)} />
+            {gradeId ? <ChoiceGroup label={text.subject} items={subjects} selected={subjectId} onSelect={setSubjectId} getLabel={(item) => displayName(item.nameFa, item.namePs)} /> : null}
             {gradeId && subjectId ? <ChoiceGroup label={text.book} items={books} selected={bookId} onSelect={setBookId} getLabel={(item) => displayName(item.titleFa, item.titlePs)} /> : null}
             {bookId ? <ChoiceGroup label={text.chapter} items={chapters} selected={chapterId} onSelect={setChapterId} getLabel={(item) => `${item.number}. ${displayName(item.titleFa, item.titlePs)}`} /> : null}
             {chapterId ? <ChoiceGroup label={text.topic} items={topics} selected={topicId} onSelect={setTopicId} getLabel={(item) => displayName(item.titleFa, item.titlePs)} /> : null}

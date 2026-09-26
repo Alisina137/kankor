@@ -28,7 +28,8 @@
     "verify:phase8": "node scripts/verify-phase8.mjs",
     "verify:phase9": "node scripts/verify-phase9.mjs",
     "verify:rtl": "node scripts/verify-mobile-rtl.mjs",
-    "verify:grade10-four-books": "node scripts/verify-grade10-four-books.mjs"
+    "verify:grade10-four-books": "node scripts/verify-grade10-four-books.mjs",
+    "verify:grade11-five-books": "node scripts/verify-grade11-five-books.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

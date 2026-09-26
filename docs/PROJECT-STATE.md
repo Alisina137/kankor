@@ -153,7 +153,7 @@ Phase 9 — Administration and Content Quality completed in source.
 - Full dependency install, database migration, TypeScript checks, builds, and runtime submit→result→review testing require local verification after pull.
 
 ## Known issues / external requirements
-- Run `npm run db:migrate` after pulling Phase 5.
+- After pulling database/schema changes, run `npm run db:migrate` and then `npm run db:verify` against the repository-root `.env` before starting the API.
 - Existing full-Kankor blueprints created before Phase 5 do not automatically receive invented scoring rules. Edit/recreate them with verified scoring multipliers before starting a new full Kankor exam.
 - Existing pre-Phase-5 full-Kankor exams without a scoring snapshot cannot be authoritatively scored; start a new exam after configuring the blueprint.
 - Targeted practice uses the documented internal marks-based scoring snapshot: correct = question marks, incorrect = 0, unanswered = 0.
@@ -171,12 +171,14 @@ Phase 9 — Administration and Content Quality completed in source.
 - Expo tunnel dependency is declared in the mobile workspace for reproducible tunnel development.
 - Attempt submission carries the final local answer snapshot so last-second/offline answers are revision-upserted before scoring.
 - PostgreSQL migration tooling pins sslmode=verify-full to preserve current certificate-verification semantics.
-- API startup validates API_PORT and logs the actual listening host/address.
+- API startup validates API_PORT, verifies the runtime auth database schema before listening, and logs the deepest database error cause when readiness fails.
+- Migration tooling refuses to proceed when `DATABASE_URL` and `DIRECT_DATABASE_URL` point to different Neon database targets, preventing migrations from silently landing on a different branch/database.
+- `npm run db:verify` checks the runtime database, authentication schema, and complete migration ledger before local API testing.
 - verify:stability and verify:dev-network guard the repaired paths.
 - Grade 10 and Grade 11 official textbook curriculum imports are present through migration 0014.
 
 ## Latest source baseline
-Post-Phase-9 stability audit prepared for `main`.
+Post-Phase-9 auth/database readiness hardening prepared for `main`.
 
 ## Next phase
 Phase 10 — Release Readiness.

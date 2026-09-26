@@ -10,7 +10,7 @@ A new APK is still required after native-runtime changes such as adding/removing
 
 ## One-time setup
 
-1. Install dependencies:
+1. Install dependencies. The repository pins `eas-cli` locally, so later EAS commands do not dynamically download the CLI:
 
 ```powershell
 npm install

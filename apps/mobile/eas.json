@@ -1,0 +1,22 @@
+{
+  "cli": {
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "KANKOR_RELEASE_BUILD": "true"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  }
+}

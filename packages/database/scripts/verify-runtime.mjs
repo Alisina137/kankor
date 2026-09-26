@@ -87,7 +87,26 @@ try {
     throw new Error(`Missing migrations: ${missing.join(", ")}. Run "npm run db:migrate".`);
   }
 
+  const grade11Books = await client.query(`
+    SELECT count(*)::int AS active_books
+    FROM public.books b
+    JOIN public.grades g ON g.id = b.grade_id
+    WHERE g.number = 11
+      AND g.active = true
+      AND b.active = true
+  `);
+  const grade11BookCount = grade11Books.rows[0]?.active_books ?? 0;
+
+  console.log(`Grade 11 active books: ${grade11BookCount}`);
+
+  if (grade11BookCount < 10) {
+    throw new Error(
+      `Grade 11 curriculum is incomplete: expected at least 10 active books, found ${grade11BookCount}. Run "npm run db:migrate".`
+    );
+  }
+
   console.log("✓ Runtime database and authentication schema are ready");
+  console.log("✓ Grade 11 curriculum books are present");
 } finally {
   await client.end();
 }

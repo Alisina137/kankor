@@ -230,6 +230,8 @@ for (const marker of [
   'EXPO_PUBLIC_API_URLS: ""',
   'EXPO_PACKAGER_PROXY_URL: metroTunnelUrl',
   'Public Kankor API tunnel ready',
+  'quick Tunnel has been created!',
+  '!["api", "login"].includes(host)',
   'Cloudflare Quick Tunnel for Expo/Metro'
 ]) {
   if (!anywhereDev.includes(marker)) throw new Error(`Anywhere-development invariant missing: ${marker}`);

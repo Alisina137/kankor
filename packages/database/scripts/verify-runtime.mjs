@@ -26,6 +26,16 @@ function normalizedDatabaseTarget(value) {
   };
 }
 
+function securePgConnectionString(value) {
+  const url = new URL(value);
+  const mode = url.searchParams.get("sslmode");
+  if (mode === "prefer" || mode === "require" || mode === "verify-ca") {
+    url.searchParams.set("sslmode", "verify-full");
+  }
+  return url.toString();
+}
+
+
 if (directConnectionString) {
   const runtime = normalizedDatabaseTarget(runtimeConnectionString);
   const direct = normalizedDatabaseTarget(directConnectionString);
@@ -43,7 +53,7 @@ const expectedMigrations = (await readdir(migrationsDir))
   .sort();
 
 const client = new pg.Client({
-  connectionString: runtimeConnectionString,
+  connectionString: securePgConnectionString(runtimeConnectionString),
   application_name: "kankorprep-runtime-verifier"
 });
 

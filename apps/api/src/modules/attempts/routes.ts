@@ -330,6 +330,89 @@ export const attemptRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(409).send({ error: "attempt_cannot_submit" });
       }
 
+      const finalAnswers = Array.isArray(request.body.answers) ? request.body.answers : [];
+      if (finalAnswers.length > 160) {
+        return reply.code(400).send({ error: "invalid_answers_batch" });
+      }
+
+      if (finalAnswers.length) {
+        const normalized = finalAnswers.map((raw) => {
+          const answer = raw && typeof raw === "object"
+            ? raw as Record<string, unknown>
+            : {};
+
+          const examQuestionId = typeof answer.examQuestionId === "string"
+            ? answer.examQuestionId
+            : "";
+
+          const selectedChoice = answer.selectedChoice == null
+            ? null
+            : String(answer.selectedChoice).toUpperCase();
+
+          return {
+            examQuestionId,
+            selectedChoice,
+            flagged: Boolean(answer.flagged),
+            timeSpentSeconds: Math.max(0, Math.floor(Number(answer.timeSpentSeconds ?? 0))),
+            clientRevision: Math.max(0, Math.floor(Number(answer.clientRevision ?? 0)))
+          };
+        });
+
+        if (normalized.some((answer) =>
+          !answer.examQuestionId
+          || (answer.selectedChoice !== null && !CHOICES.has(answer.selectedChoice))
+          || !Number.isFinite(answer.timeSpentSeconds)
+          || !Number.isFinite(answer.clientRevision)
+        )) {
+          return reply.code(400).send({ error: "invalid_answer" });
+        }
+
+        const questionIds = [...new Set(normalized.map((answer) => answer.examQuestionId))];
+        const validQuestions = await db.select({ id: schema.examQuestions.id })
+          .from(schema.examQuestions)
+          .where(and(
+            eq(schema.examQuestions.examId, attempt.examId),
+            inArray(schema.examQuestions.id, questionIds)
+          ));
+
+        if (validQuestions.length !== questionIds.length) {
+          return reply.code(400).send({ error: "question_not_in_attempt" });
+        }
+
+        for (const answer of normalized) {
+          await db.execute(sql`
+            INSERT INTO attempt_answers (
+              id,
+              attempt_id,
+              exam_question_id,
+              selected_choice,
+              flagged,
+              time_spent_seconds,
+              client_revision,
+              saved_at
+            )
+            VALUES (
+              gen_random_uuid(),
+              ${attempt.id},
+              ${answer.examQuestionId},
+              ${answer.selectedChoice},
+              ${answer.flagged},
+              ${answer.timeSpentSeconds},
+              ${answer.clientRevision},
+              now()
+            )
+            ON CONFLICT (attempt_id, exam_question_id)
+            DO UPDATE SET
+              selected_choice = EXCLUDED.selected_choice,
+              flagged = EXCLUDED.flagged,
+              time_spent_seconds = EXCLUDED.time_spent_seconds,
+              client_revision = EXCLUDED.client_revision,
+              saved_at = now()
+            WHERE EXCLUDED.client_revision >= attempt_answers.client_revision
+          `);
+        }
+      }
+
       const submissionKey =
         typeof request.body?.submissionKey === "string" && request.body.submissionKey.trim()
           ? request.body.submissionKey.trim()

@@ -8,7 +8,7 @@ import {
   useState,
   type PropsWithChildren
 } from "react";
-import { apiRequest } from "../lib/api";
+import { ApiError, apiRequest } from "../lib/api";
 import { clearStoredSession, getStoredSession, setStoredSession } from "../lib/session-storage";
 import { useLocale } from "./locale-provider";
 
@@ -30,6 +30,8 @@ interface AuthContextValue {
   user: StudentUser | null;
   token: string | null;
   loading: boolean;
+  startupError: string | null;
+  retrySession: () => Promise<void>;
   register: (email: string, password: string) => Promise<StudentUser>;
   login: (email: string, password: string) => Promise<StudentUser>;
   logout: () => Promise<void>;
@@ -49,9 +51,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<StudentUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [startupError, setStartupError] = useState<string | null>(null);
   const { setLocale } = useLocale();
 
   const applyPayload = useCallback(async (payload: AuthPayload) => {
+    setStartupError(null);
     setToken(payload.token);
     setUser(payload.user);
     setLocale(payload.user.preferredLanguage);
@@ -59,32 +63,46 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return payload.user;
   }, [setLocale]);
 
-  useEffect(() => {
-    let active = true;
+  const retrySession = useCallback(async () => {
+    setLoading(true);
+    setStartupError(null);
 
-    void (async () => {
-      const stored = await getStoredSession();
-      if (!stored) {
-        if (active) setLoading(false);
-        return;
-      }
+    const stored = await getStoredSession();
+    if (!stored) {
+      setToken(null);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const result = await apiRequest<{ user: StudentUser }>("/auth/me", {}, stored);
-        if (active) {
-          setToken(stored);
-          setUser(result.user);
-          setLocale(result.user.preferredLanguage);
-        }
-      } catch {
+    try {
+      const result = await apiRequest<{ user: StudentUser }>("/auth/me", {}, stored);
+      setToken(stored);
+      setUser(result.user);
+      setLocale(result.user.preferredLanguage);
+    } catch (error) {
+      const apiError = error instanceof ApiError ? error : null;
+      const sessionInvalid = apiError?.status === 401
+        || apiError?.code === "unauthorized"
+        || apiError?.code === "session_expired";
+
+      if (sessionInvalid) {
         await clearStoredSession();
-      } finally {
-        if (active) setLoading(false);
+        setToken(null);
+        setUser(null);
+      } else {
+        // Preserve the opaque token across temporary network/server outages.
+        setToken(stored);
+        setStartupError(apiError?.code ?? "network_error");
       }
-    })();
-
-    return () => { active = false; };
+    } finally {
+      setLoading(false);
+    }
   }, [setLocale]);
+
+  useEffect(() => {
+    void retrySession();
+  }, [retrySession]);
 
   const register = useCallback(async (email: string, password: string) => {
     const payload = await apiRequest<AuthPayload>("/auth/register", {
@@ -106,6 +124,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       if (token) await apiRequest<void>("/auth/logout", { method: "POST" }, token);
     } finally {
+      setStartupError(null);
       setToken(null);
       setUser(null);
       await clearStoredSession();
@@ -143,6 +162,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const deleteAccount = useCallback(async () => {
     if (!token) return;
     await apiRequest<void>("/auth/account", { method: "DELETE" }, token);
+    setStartupError(null);
     setToken(null);
     setUser(null);
     await clearStoredSession();
@@ -152,6 +172,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     user,
     token,
     loading,
+    startupError,
+    retrySession,
     register,
     login,
     logout,
@@ -163,6 +185,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     user,
     token,
     loading,
+    startupError,
+    retrySession,
     register,
     login,
     logout,

@@ -174,11 +174,12 @@ Phase 9 — Administration and Content Quality completed in source.
 - API startup validates API_PORT, verifies the runtime auth database schema before listening, and logs the deepest database error cause when readiness fails.
 - Migration tooling refuses to proceed when `DATABASE_URL` and `DIRECT_DATABASE_URL` point to different Neon database targets, preventing migrations from silently landing on a different branch/database.
 - `npm run db:verify` checks the runtime database, authentication schema, and complete migration ledger before local API testing.
+- `npm run dev:lan -- --clear` is the normal physical-device development launcher: it validates the LAN host, verifies the database, starts the API, waits for `/health`, and only then starts Expo LAN mode.
 - verify:stability and verify:dev-network guard the repaired paths.
 - Grade 10 and Grade 11 official textbook curriculum imports are present through migration 0014.
 
 ## Latest source baseline
-Post-Phase-9 auth/database readiness hardening prepared for `main`.
+Post-Phase-9 auth/database and integrated LAN startup hardening prepared for `main`.
 
 ## Next phase
 Phase 10 — Release Readiness.

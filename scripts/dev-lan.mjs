@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { networkInterfaces } from "node:os";
 
 const repositoryRoot = resolve(".");
 const npmExecPath = process.env.npm_execpath;
@@ -32,6 +33,41 @@ function runRequired(args, label) {
 function parseEnvValue(text, key) {
   const match = text.match(new RegExp(`^\\s*${key}\\s*=\\s*([^\\r\\n#]+)\\s*$`, "m"));
   return match?.[1]?.trim().replace(/^["']|["']$/g, "") ?? "";
+}
+
+function activeIpv4Addresses() {
+  const addresses = [];
+  for (const entries of Object.values(networkInterfaces())) {
+    for (const item of entries ?? []) {
+      if (item.family === "IPv4" && !item.internal) addresses.push(item.address);
+    }
+  }
+  return [...new Set(addresses)];
+}
+
+async function reportLanApiAddresses(port) {
+  const addresses = activeIpv4Addresses();
+  const reachable = [];
+
+  for (const address of addresses) {
+    const url = `http://${address}:${port}/health`;
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(1_500) });
+      if (response.ok) {
+        reachable.push(address);
+        console.log(`✓ LAN API reachable on laptop at http://${address}:${port}`);
+      }
+    } catch {
+      console.warn(`⚠ API did not answer on laptop interface http://${address}:${port}`);
+    }
+  }
+
+  if (!reachable.length) {
+    console.warn("⚠ API is healthy on localhost but no LAN interface answered.");
+    console.warn("  Check API_HOST=0.0.0.0 and Windows Firewall/network profile settings.");
+  } else {
+    console.log("  Your phone must be on a network that can reach one of the addresses above.");
+  }
 }
 
 async function waitForApi(url, apiProcess) {
@@ -114,6 +150,7 @@ try {
   });
 
   await waitForApi(`http://127.0.0.1:${apiPort}/health`, apiProcess);
+  await reportLanApiAddresses(apiPort);
 
   const expoArgs = process.argv.slice(2);
   console.log("\n→ Starting Expo LAN development server");

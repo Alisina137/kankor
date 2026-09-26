@@ -12,7 +12,7 @@ function expoDevelopmentHost() {
   }
 }
 
-function configuredApiUrls() {
+function configuredApiUrls(): string[] {
   const extra = Constants.expoConfig?.extra ?? {};
   const primary =
     typeof extra.apiUrl === "string" && extra.apiUrl.trim()
@@ -25,7 +25,7 @@ function configuredApiUrls() {
 
   const envFallbacks = (process.env.EXPO_PUBLIC_API_URLS ?? "")
     .split(",")
-    .map((value) => value.trim())
+    .map((value: string) => value.trim())
     .filter(Boolean);
 
   return [...new Set([primary, ...extraFallbacks, ...envFallbacks].map((value) => value.replace(/\/$/, "")))];

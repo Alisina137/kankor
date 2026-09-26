@@ -26,6 +26,12 @@ const copy = {
     chapter: "فصل",
     topic: "موضوع",
     empty: "هنوز محتوایی برای این بخش اضافه نشده است.",
+    loading: "در حال بارگیری...",
+    emptyGrades: "هنوز صنفی برای تمرین آماده نشده است.",
+    emptySubjects: "برای این صنف هنوز مضمونی آماده نشده است.",
+    emptyBooks: "برای این مضمون در این صنف هنوز کتابی آماده نشده است.",
+    emptyChapters: "برای این کتاب هنوز فصلی آماده نشده است.",
+    emptyTopics: "برای این فصل هنوز موضوعی آماده نشده است.",
     error: "محتوای درسی بارگیری نشد. دوباره تلاش کنید.",
     selected: "مسیر انتخاب‌شده",
     examSetup: "تنظیم امتحان",
@@ -52,6 +58,12 @@ const copy = {
     chapter: "څپرکی",
     topic: "موضوع",
     empty: "تر اوسه دې برخې ته محتوا نه ده اضافه شوې.",
+    loading: "بارېږي...",
+    emptyGrades: "تر اوسه د تمرین لپاره ټولګی نه دی چمتو شوی.",
+    emptySubjects: "د دې ټولګي لپاره تر اوسه مضمون نه دی چمتو شوی.",
+    emptyBooks: "د دې مضمون او ټولګي لپاره تر اوسه کتاب نه دی چمتو شوی.",
+    emptyChapters: "د دې کتاب لپاره تر اوسه څپرکی نه دی چمتو شوی.",
+    emptyTopics: "د دې څپرکي لپاره تر اوسه موضوع نه ده چمتو شوې.",
     error: "درسي محتوا پورته نه شوه. بیا هڅه وکړئ.",
     selected: "ټاکل شوې لاره",
     examSetup: "د ازموینې تنظیم",
@@ -78,6 +90,12 @@ const copy = {
     chapter: "Chapter",
     topic: "Topic",
     empty: "No content has been added here yet.",
+    loading: "Loading...",
+    emptyGrades: "No grade is ready for practice yet.",
+    emptySubjects: "No subjects are ready for this grade yet.",
+    emptyBooks: "No books are ready for this subject and grade yet.",
+    emptyChapters: "No chapters are ready for this book yet.",
+    emptyTopics: "No topics are ready for this chapter yet.",
     error: "Curriculum could not be loaded. Try again.",
     selected: "Selected path",
     examSetup: "Exam setup",
@@ -116,18 +134,38 @@ export default function PracticeScreen() {
   const [topicId, setTopicId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState(10);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [gradesLoading, setGradesLoading] = useState(true);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [booksLoading, setBooksLoading] = useState(false);
+  const [chaptersLoading, setChaptersLoading] = useState(false);
+  const [topicsLoading, setTopicsLoading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
+    setGradesLoading(true);
+    setError("");
+
     void apiRequest<{ items: Grade[] }>("/grades")
-      .then((result) => setGrades(result.items))
-      .catch(() => setError(text.error))
-      .finally(() => setLoading(false));
+      .then((result) => {
+        if (active) setGrades(result.items);
+      })
+      .catch(() => {
+        if (active) setError(text.error);
+      })
+      .finally(() => {
+        if (active) setGradesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [text.error]);
 
   useEffect(() => {
+    let active = true;
+
     setSubjectId(null);
     setBookId(null);
     setChapterId(null);
@@ -136,38 +174,160 @@ export default function PracticeScreen() {
     setBooks([]);
     setChapters([]);
     setTopics([]);
+    setBooksLoading(false);
+    setChaptersLoading(false);
+    setTopicsLoading(false);
 
-    if (!gradeId) return;
+    if (!gradeId) {
+      setSubjectsLoading(false);
+      return () => {
+        active = false;
+      };
+    }
 
+    setSubjectsLoading(true);
     setError("");
+
     void apiRequest<{ items: Subject[] }>(`/subjects?gradeId=${encodeURIComponent(gradeId)}`)
-      .then((result) => setSubjects(result.items))
-      .catch(() => setError(text.error));
+      .then((result) => {
+        if (active) setSubjects(result.items);
+      })
+      .catch(() => {
+        if (active) setError(text.error);
+      })
+      .finally(() => {
+        if (active) setSubjectsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [gradeId, text.error]);
 
   useEffect(() => {
-    setBookId(null); setChapterId(null); setTopicId(null); setChapters([]); setTopics([]);
-    if (!gradeId || !subjectId) { setBooks([]); return; }
+    let active = true;
+
+    setBookId(null);
+    setChapterId(null);
+    setTopicId(null);
+    setBooks([]);
+    setChapters([]);
+    setTopics([]);
+    setChaptersLoading(false);
+    setTopicsLoading(false);
+
+    if (!gradeId || !subjectId) {
+      setBooksLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setBooksLoading(true);
+    setError("");
+
     void apiRequest<{ items: Book[] }>(`/books?gradeId=${encodeURIComponent(gradeId)}&subjectId=${encodeURIComponent(subjectId)}`)
-      .then((result) => setBooks(result.items))
-      .catch(() => setError(text.error));
+      .then((result) => {
+        if (active) setBooks(result.items);
+      })
+      .catch(() => {
+        if (active) setError(text.error);
+      })
+      .finally(() => {
+        if (active) setBooksLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [gradeId, subjectId, text.error]);
 
   useEffect(() => {
-    setChapterId(null); setTopicId(null); setTopics([]);
-    if (!bookId) { setChapters([]); return; }
+    let active = true;
+
+    setChapterId(null);
+    setTopicId(null);
+    setChapters([]);
+    setTopics([]);
+    setTopicsLoading(false);
+
+    if (!bookId) {
+      setChaptersLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setChaptersLoading(true);
+    setError("");
+
     void apiRequest<{ items: Chapter[] }>(`/chapters?bookId=${encodeURIComponent(bookId)}`)
-      .then((result) => setChapters(result.items))
-      .catch(() => setError(text.error));
+      .then((result) => {
+        if (active) setChapters(result.items);
+      })
+      .catch(() => {
+        if (active) setError(text.error);
+      })
+      .finally(() => {
+        if (active) setChaptersLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [bookId, text.error]);
 
   useEffect(() => {
+    let active = true;
+
     setTopicId(null);
-    if (!chapterId) { setTopics([]); return; }
+    setTopics([]);
+
+    if (!chapterId) {
+      setTopicsLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setTopicsLoading(true);
+    setError("");
+
     void apiRequest<{ items: Topic[] }>(`/topics?chapterId=${encodeURIComponent(chapterId)}`)
-      .then((result) => setTopics(result.items))
-      .catch(() => setError(text.error));
+      .then((result) => {
+        if (active) setTopics(result.items);
+      })
+      .catch(() => {
+        if (active) setError(text.error);
+      })
+      .finally(() => {
+        if (active) setTopicsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [chapterId, text.error]);
+
+  function selectGrade(id: string) {
+    if (id !== gradeId) setSubjectsLoading(true);
+    setGradeId(id);
+  }
+
+  function selectSubject(id: string) {
+    if (id !== subjectId) setBooksLoading(true);
+    setSubjectId(id);
+  }
+
+  function selectBook(id: string) {
+    if (id !== bookId) setChaptersLoading(true);
+    setBookId(id);
+  }
+
+  function selectChapter(id: string) {
+    if (id !== chapterId) setTopicsLoading(true);
+    setChapterId(id);
+  }
 
   const displayName = (fa: string, ps: string | null) => locale === "ps" ? (ps || fa) : fa;
   const selectedBook = books.find((item) => item.id === bookId) ?? null;
@@ -197,18 +357,27 @@ export default function PracticeScreen() {
     items,
     selected,
     onSelect,
-    getLabel
+    getLabel,
+    loading = false,
+    emptyMessage = text.empty
   }: {
     label: string;
     items: T[];
     selected: string | null;
     onSelect: (id: string) => void;
     getLabel: (item: T) => string;
+    loading?: boolean;
+    emptyMessage?: string;
   }) {
     return (
       <View style={styles.section}>
         <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{label}</Text>
-        {items.length ? (
+        {loading ? (
+          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
+          </View>
+        ) : items.length ? (
           <View style={[styles.chips, { flexDirection: rowDirection }]}>
             {items.map((item) => (
               <Pressable
@@ -222,7 +391,7 @@ export default function PracticeScreen() {
               </Pressable>
             ))}
           </View>
-        ) : <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.empty}</Text>}
+        ) : <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{emptyMessage}</Text>}
       </View>
     );
   }
@@ -285,17 +454,60 @@ export default function PracticeScreen() {
           <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.body}</Text>
         </View>
 
-        {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
         {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
-        {!loading ? (
-          <>
-            <ChoiceGroup label={text.grade} items={grades} selected={gradeId} onSelect={setGradeId} getLabel={(item) => String(item.number)} />
-            {gradeId ? <ChoiceGroup label={text.subject} items={subjects} selected={subjectId} onSelect={setSubjectId} getLabel={(item) => displayName(item.nameFa, item.namePs)} /> : null}
-            {gradeId && subjectId ? <ChoiceGroup label={text.book} items={books} selected={bookId} onSelect={setBookId} getLabel={(item) => displayName(item.titleFa, item.titlePs)} /> : null}
-            {bookId ? <ChoiceGroup label={text.chapter} items={chapters} selected={chapterId} onSelect={setChapterId} getLabel={(item) => `${item.number}. ${displayName(item.titleFa, item.titlePs)}`} /> : null}
-            {chapterId ? <ChoiceGroup label={text.topic} items={topics} selected={topicId} onSelect={setTopicId} getLabel={(item) => displayName(item.titleFa, item.titlePs)} /> : null}
-          </>
+        <ChoiceGroup
+          label={text.grade}
+          items={grades}
+          selected={gradeId}
+          onSelect={selectGrade}
+          getLabel={(item) => String(item.number)}
+          loading={gradesLoading}
+          emptyMessage={text.emptyGrades}
+        />
+        {gradeId ? (
+          <ChoiceGroup
+            label={text.subject}
+            items={subjects}
+            selected={subjectId}
+            onSelect={selectSubject}
+            getLabel={(item) => displayName(item.nameFa, item.namePs)}
+            loading={subjectsLoading}
+            emptyMessage={text.emptySubjects}
+          />
+        ) : null}
+        {gradeId && subjectId ? (
+          <ChoiceGroup
+            label={text.book}
+            items={books}
+            selected={bookId}
+            onSelect={selectBook}
+            getLabel={(item) => displayName(item.titleFa, item.titlePs)}
+            loading={booksLoading}
+            emptyMessage={text.emptyBooks}
+          />
+        ) : null}
+        {bookId ? (
+          <ChoiceGroup
+            label={text.chapter}
+            items={chapters}
+            selected={chapterId}
+            onSelect={selectChapter}
+            getLabel={(item) => `${item.number}. ${displayName(item.titleFa, item.titlePs)}`}
+            loading={chaptersLoading}
+            emptyMessage={text.emptyChapters}
+          />
+        ) : null}
+        {chapterId ? (
+          <ChoiceGroup
+            label={text.topic}
+            items={topics}
+            selected={topicId}
+            onSelect={setTopicId}
+            getLabel={(item) => displayName(item.titleFa, item.titlePs)}
+            loading={topicsLoading}
+            emptyMessage={text.emptyTopics}
+          />
         ) : null}
 
         {selectedBook ? (
@@ -369,7 +581,9 @@ const styles = StyleSheet.create({
   chipActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
   chipText: { color: theme.colors.text, fontWeight: "600" },
   chipTextActive: { color: theme.colors.primary, fontWeight: "700" },
-  empty: { color: theme.colors.mutedText, fontSize: theme.typography.small },
+  loadingRow: { alignItems: "center", gap: theme.spacing.sm, minHeight: 36 },
+  loadingText: { color: theme.colors.mutedText, fontSize: theme.typography.small },
+  empty: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 22 },
   error: { color: theme.colors.danger },
   sourceCard: { padding: theme.spacing.md, gap: 8, backgroundColor: theme.colors.primarySoft, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radius.lg },
   sourceHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.sm },

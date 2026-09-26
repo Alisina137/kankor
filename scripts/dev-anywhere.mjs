@@ -1,13 +1,11 @@
-import { createRequire } from "node:module";
 import { spawn, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-
-const require = createRequire(import.meta.url);
-const ngrok = require("@expo/ngrok");
+import { Tunnel } from "cloudflared";
 
 const repositoryRoot = resolve(".");
 const npmExecPath = process.env.npm_execpath;
+const metroPort = 8081;
 
 if (!npmExecPath) {
   throw new Error(
@@ -56,10 +54,7 @@ function spawnNpm(args, env = process.env) {
 
 async function probeKankorApi(url) {
   try {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(2_000),
-      headers: { "ngrok-skip-browser-warning": "true" }
-    });
+    const response = await fetch(url, { signal: AbortSignal.timeout(4_000) });
     const body = await response.json().catch(() => null);
 
     if (response.ok && body?.service === "kankor-api") {
@@ -92,9 +87,48 @@ async function waitForLocalApi(url, apiProcess) {
   throw new Error(`API did not become ready at ${url} within 20 seconds.`);
 }
 
-async function waitForTunnel(url) {
-  const deadline = Date.now() + 20_000;
-  const healthUrl = `${url.replace(/\/$/, "")}/health`;
+function waitForTunnelUrl(tunnel, label, timeoutMs = 30_000) {
+  return new Promise((resolvePromise, rejectPromise) => {
+    let settled = false;
+
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      callback(value);
+    };
+
+    const timer = setTimeout(() => {
+      finish(rejectPromise, new Error(`${label} tunnel did not return a public URL within ${timeoutMs / 1000} seconds.`));
+    }, timeoutMs);
+
+    tunnel.once("url", (url) => {
+      if (typeof url !== "string" || !url.startsWith("https://")) {
+        finish(rejectPromise, new Error(`${label} tunnel returned an invalid URL: ${String(url)}`));
+        return;
+      }
+
+      finish(resolvePromise, url.replace(/\/$/, ""));
+    });
+
+    tunnel.once("error", (error) => {
+      finish(rejectPromise, error instanceof Error ? error : new Error(String(error)));
+    });
+
+    tunnel.once("exit", (code, signal) => {
+      if (!settled) {
+        finish(
+          rejectPromise,
+          new Error(`${label} tunnel exited before becoming ready (code ${code ?? "unknown"}, signal ${signal ?? "none"}).`)
+        );
+      }
+    });
+  });
+}
+
+async function waitForPublicApi(url) {
+  const deadline = Date.now() + 30_000;
+  const healthUrl = `${url}/health`;
 
   while (Date.now() < deadline) {
     const probe = await probeKankorApi(healthUrl);
@@ -102,6 +136,7 @@ async function waitForTunnel(url) {
       console.log(`✓ Public Kankor API tunnel ready at ${url}`);
       return;
     }
+
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 700));
   }
 
@@ -123,35 +158,31 @@ function stopProcess(child) {
 
 let apiProcess;
 let mobileProcess;
-let apiTunnelUrl = "";
+let apiTunnel;
+let metroTunnel;
 let shuttingDown = false;
 
-async function stopTunnel() {
-  if (!apiTunnelUrl) return;
+function stopTunnel(tunnel) {
+  if (!tunnel) return;
   try {
-    await ngrok.disconnect(apiTunnelUrl);
+    tunnel.stop();
   } catch {
-    // Tunnel may already be gone.
+    // Tunnel may already be stopped.
   }
-  try {
-    await ngrok.kill();
-  } catch {
-    // ngrok may already be stopped by Expo/process shutdown.
-  }
-  apiTunnelUrl = "";
 }
 
-async function shutdown(exitCode = 0) {
+function shutdown(exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
   stopProcess(mobileProcess);
   stopProcess(apiProcess);
-  await stopTunnel();
+  stopTunnel(metroTunnel);
+  stopTunnel(apiTunnel);
   process.exit(exitCode);
 }
 
-process.on("SIGINT", () => void shutdown(0));
-process.on("SIGTERM", () => void shutdown(0));
+process.on("SIGINT", () => shutdown(0));
+process.on("SIGTERM", () => shutdown(0));
 
 try {
   runRequired(["run", "db:verify"], "Checking runtime database");
@@ -180,53 +211,54 @@ try {
 
     apiProcess.on("error", (error) => {
       console.error("Failed to start API:", error);
-      void shutdown(1);
+      shutdown(1);
     });
 
     await waitForLocalApi(localHealthUrl, apiProcess);
   }
 
-  console.log("\n→ Creating public HTTPS tunnel for Kankor API");
-  apiTunnelUrl = await ngrok.connect({
-    proto: "http",
-    addr: apiPort
-  });
+  console.log("\n→ Creating Cloudflare Quick Tunnel for Kankor API");
+  apiTunnel = Tunnel.quick(`http://127.0.0.1:${apiPort}`);
+  const apiTunnelUrl = await waitForTunnelUrl(apiTunnel, "API");
+  await waitForPublicApi(apiTunnelUrl);
 
-  if (!apiTunnelUrl || !apiTunnelUrl.startsWith("https://")) {
-    throw new Error(`Expected an HTTPS API tunnel URL, received: ${apiTunnelUrl || "(empty)"}`);
-  }
-
-  await waitForTunnel(apiTunnelUrl);
+  console.log("\n→ Creating Cloudflare Quick Tunnel for Expo/Metro");
+  metroTunnel = Tunnel.quick(`http://127.0.0.1:${metroPort}`);
+  const metroTunnelUrl = await waitForTunnelUrl(metroTunnel, "Expo/Metro");
 
   console.log("\n✓ IP-independent development is ready");
-  console.log(`  API tunnel: ${apiTunnelUrl}`);
-  console.log("  Expo will also run in tunnel mode.");
-  console.log("  The phone does not need to share the laptop's Wi-Fi or LAN IP.");
+  console.log(`  API:   ${apiTunnelUrl}`);
+  console.log(`  Metro: ${metroTunnelUrl}`);
+  console.log("  No fixed LAN IP is used.");
+  console.log("  The phone and laptop only need internet access.");
 
   const expoArgs = process.argv.slice(2);
   const mobileEnv = {
     ...process.env,
     EXPO_PUBLIC_API_URL: apiTunnelUrl,
-    EXPO_PUBLIC_API_URLS: ""
+    EXPO_PUBLIC_API_URLS: "",
+    EXPO_PACKAGER_PROXY_URL: metroTunnelUrl
   };
 
-  console.log("\n→ Starting Expo tunnel");
+  console.log("\n→ Starting Expo through the public Metro proxy URL");
   mobileProcess = spawnNpm([
     "--workspace",
     "@kankor/mobile",
     "run",
-    "start:tunnel",
+    "start",
     "--",
+    "--port",
+    String(metroPort),
     ...expoArgs
   ], mobileEnv);
 
   mobileProcess.on("error", (error) => {
-    console.error("Failed to start Expo tunnel:", error);
-    void shutdown(1);
+    console.error("Failed to start Expo:", error);
+    shutdown(1);
   });
 
   mobileProcess.on("exit", (code) => {
-    void shutdown(code ?? 0);
+    shutdown(code ?? 0);
   });
 
   if (apiProcess) {
@@ -235,7 +267,7 @@ try {
         console.error(
           `\nKankor API stopped unexpectedly (exit code ${code ?? "unknown"}). Stopping Expo.`
         );
-        void shutdown(code ?? 1);
+        shutdown(code ?? 1);
       }
     });
   }
@@ -243,6 +275,7 @@ try {
   console.error("\nIP-independent development startup failed.");
   console.error(error instanceof Error ? error.message : error);
   stopProcess(apiProcess);
-  await stopTunnel();
+  stopTunnel(metroTunnel);
+  stopTunnel(apiTunnel);
   process.exit(1);
 }

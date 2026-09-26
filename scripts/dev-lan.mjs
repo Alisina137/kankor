@@ -3,11 +3,21 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const repositoryRoot = resolve(".");
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmExecPath = process.env.npm_execpath;
+
+if (!npmExecPath) {
+  throw new Error(
+    'npm_execpath is unavailable. Start this launcher with "npm run dev:lan -- --clear".'
+  );
+}
+
+function npmArgs(args) {
+  return [npmExecPath, ...args];
+}
 
 function runRequired(args, label) {
   console.log(`\n→ ${label}`);
-  const result = spawnSync(npmCommand, args, {
+  const result = spawnSync(process.execPath, npmArgs(args), {
     cwd: repositoryRoot,
     stdio: "inherit",
     shell: false
@@ -52,13 +62,21 @@ function stopProcess(child) {
   if (!child?.pid || child.exitCode !== null) return;
 
   if (process.platform === "win32") {
-    spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+    spawnSync("taskkill.exe", ["/pid", String(child.pid), "/T", "/F"], {
       stdio: "ignore",
       shell: false
     });
   } else {
     child.kill("SIGTERM");
   }
+}
+
+function spawnNpm(args) {
+  return spawn(process.execPath, npmArgs(args), {
+    cwd: repositoryRoot,
+    stdio: "inherit",
+    shell: false
+  });
 }
 
 let apiProcess;
@@ -88,11 +106,7 @@ try {
   }
 
   console.log("\n→ Starting Kankor API");
-  apiProcess = spawn(npmCommand, ["run", "dev:api"], {
-    cwd: repositoryRoot,
-    stdio: "inherit",
-    shell: false
-  });
+  apiProcess = spawnNpm(["run", "dev:api"]);
 
   apiProcess.on("error", (error) => {
     console.error("Failed to start API:", error);
@@ -103,15 +117,14 @@ try {
 
   const expoArgs = process.argv.slice(2);
   console.log("\n→ Starting Expo LAN development server");
-  mobileProcess = spawn(
-    npmCommand,
-    ["--workspace", "@kankor/mobile", "run", "start:lan", "--", ...expoArgs],
-    {
-      cwd: repositoryRoot,
-      stdio: "inherit",
-      shell: false
-    }
-  );
+  mobileProcess = spawnNpm([
+    "--workspace",
+    "@kankor/mobile",
+    "run",
+    "start:lan",
+    "--",
+    ...expoArgs
+  ]);
 
   mobileProcess.on("error", (error) => {
     console.error("Failed to start Expo:", error);
@@ -125,7 +138,9 @@ try {
 
   apiProcess.on("exit", (code) => {
     if (!shuttingDown && mobileProcess?.exitCode === null) {
-      console.error(`\nKankor API stopped unexpectedly (exit code ${code ?? "unknown"}). Stopping Expo.`);
+      console.error(
+        `\nKankor API stopped unexpectedly (exit code ${code ?? "unknown"}). Stopping Expo.`
+      );
       stopProcess(mobileProcess);
       process.exit(code ?? 1);
     }

@@ -12,20 +12,29 @@ function expoDevelopmentHost() {
   }
 }
 
-function configuredApiUrl() {
-  const fromExpoConfig = Constants.expoConfig?.extra?.apiUrl;
-  const value =
-    typeof fromExpoConfig === "string" && fromExpoConfig.trim()
-      ? fromExpoConfig
+function configuredApiUrls() {
+  const extra = Constants.expoConfig?.extra ?? {};
+  const primary =
+    typeof extra.apiUrl === "string" && extra.apiUrl.trim()
+      ? extra.apiUrl.trim()
       : process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
 
-  return value.replace(/\/$/, "");
+  const extraFallbacks = Array.isArray(extra.apiUrls)
+    ? extra.apiUrls.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    : [];
+
+  const envFallbacks = (process.env.EXPO_PUBLIC_API_URLS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return [...new Set([primary, ...extraFallbacks, ...envFallbacks].map((value) => value.replace(/\/$/, "")))];
 }
 
 function apiCandidates() {
-  const configured = configuredApiUrl();
+  const configured = configuredApiUrls();
 
-  if (Platform.OS === "web") return [configured];
+  if (Platform.OS === "web") return configured;
 
   const candidates: string[] = [];
   const expoHost = expoDevelopmentHost();
@@ -40,12 +49,16 @@ function apiCandidates() {
     candidates.push(`http://${expoHost}:4000`);
   }
 
-  candidates.push(configured);
+  candidates.push(...configured);
 
-  // If localhost was configured, also derive the LAN URL from the Expo host.
-  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
-  if (isLocalhost && expoHost && !expoHostIsTunnel) {
-    candidates.push(`http://${expoHost}:4000`);
+  // If any configured URL is localhost, the current Expo host remains the
+  // physical-device LAN candidate. Keeping localhost in .env is therefore safe
+  // across home/company Wi-Fi changes.
+  const hasLocalhost = configured.some((value) =>
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value)
+  );
+  if (hasLocalhost && expoHost && !expoHostIsTunnel) {
+    candidates.unshift(`http://${expoHost}:4000`);
   }
 
   return [...new Set(candidates)];

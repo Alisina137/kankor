@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "start:lan": "expo start --lan",
     "start:tunnel": "expo start --tunnel",
-    "check:expo": "npx expo install --check"
+    "check:expo": "npx expo install --check",
+    "build:android:preview": "npx eas-cli build --platform android --profile preview",
+    "build:android:production": "npx eas-cli build --platform android --profile production"
   },
   "dependencies": {
     "@kankor/config": "*",

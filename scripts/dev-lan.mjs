@@ -70,6 +70,21 @@ async function reportLanApiAddresses(port) {
   }
 }
 
+async function probeLocalApi(url) {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(1_500) });
+    const body = await response.json().catch(() => null);
+
+    if (response.ok && body?.service === "kankor-api") {
+      return { kind: "kankor", body };
+    }
+
+    return { kind: "occupied", status: response.status };
+  } catch {
+    return { kind: "free" };
+  }
+}
+
 async function waitForApi(url, apiProcess) {
   const deadline = Date.now() + 20_000;
 
@@ -78,14 +93,10 @@ async function waitForApi(url, apiProcess) {
       throw new Error(`API exited before becoming ready (exit code ${apiProcess.exitCode}).`);
     }
 
-    try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(1_500) });
-      if (response.ok) {
-        console.log(`✓ API ready at ${url}`);
-        return;
-      }
-    } catch {
-      // API is still starting.
+    const probe = await probeLocalApi(url);
+    if (probe.kind === "kankor") {
+      console.log(`✓ API ready at ${url}`);
+      return;
     }
 
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 500));
@@ -141,15 +152,29 @@ try {
     throw new Error(`Invalid API_PORT in .env: ${apiPort}`);
   }
 
-  console.log("\n→ Starting Kankor API");
-  apiProcess = spawnNpm(["run", "dev:api"]);
+  const localHealthUrl = `http://127.0.0.1:${apiPort}/health`;
+  const existingApi = await probeLocalApi(localHealthUrl);
 
-  apiProcess.on("error", (error) => {
-    console.error("Failed to start API:", error);
-    shutdown(1);
-  });
+  if (existingApi.kind === "kankor") {
+    console.log(`\n✓ Existing Kankor API detected at ${localHealthUrl}; reusing it.`);
+  } else {
+    if (existingApi.kind === "occupied") {
+      throw new Error(
+        `Port ${apiPort} is already in use by a non-Kankor service. Stop that process or change API_PORT.`
+      );
+    }
 
-  await waitForApi(`http://127.0.0.1:${apiPort}/health`, apiProcess);
+    console.log("\n→ Starting Kankor API");
+    apiProcess = spawnNpm(["run", "dev:api"]);
+
+    apiProcess.on("error", (error) => {
+      console.error("Failed to start API:", error);
+      shutdown(1);
+    });
+
+    await waitForApi(localHealthUrl, apiProcess);
+  }
+
   await reportLanApiAddresses(apiPort);
 
   const expoArgs = process.argv.slice(2);
@@ -173,15 +198,17 @@ try {
     process.exit(code ?? 0);
   });
 
-  apiProcess.on("exit", (code) => {
-    if (!shuttingDown && mobileProcess?.exitCode === null) {
-      console.error(
-        `\nKankor API stopped unexpectedly (exit code ${code ?? "unknown"}). Stopping Expo.`
-      );
-      stopProcess(mobileProcess);
-      process.exit(code ?? 1);
-    }
-  });
+  if (apiProcess) {
+    apiProcess.on("exit", (code) => {
+      if (!shuttingDown && mobileProcess?.exitCode === null) {
+        console.error(
+          `\nKankor API stopped unexpectedly (exit code ${code ?? "unknown"}). Stopping Expo.`
+        );
+        stopProcess(mobileProcess);
+        process.exit(code ?? 1);
+      }
+    });
+  }
 } catch (error) {
   console.error("\nLAN development startup failed.");
   console.error(error instanceof Error ? error.message : error);

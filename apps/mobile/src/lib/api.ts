@@ -13,7 +13,13 @@ function expoDevelopmentHost() {
 }
 
 function configuredApiUrl() {
-  return (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+  const fromExpoConfig = Constants.expoConfig?.extra?.apiUrl;
+  const value =
+    typeof fromExpoConfig === "string" && fromExpoConfig.trim()
+      ? fromExpoConfig
+      : process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
+
+  return value.replace(/\/$/, "");
 }
 
 function apiCandidates() {
@@ -83,7 +89,7 @@ export async function apiRequest<T>(
     } catch (error) {
       lastNetworkError = error;
       if (__DEV__) {
-        console.warn(`Kankor API unreachable at ${baseUrl}`);
+        console.info(`Kankor API unreachable at ${baseUrl}`);
       }
       continue;
     }
@@ -92,12 +98,15 @@ export async function apiRequest<T>(
 
     const body = await response.json().catch(() => ({})) as Record<string, unknown>;
     if (!response.ok) {
-      const code =
+      let code =
         typeof body.error === "string"
           ? body.error
           : typeof body.message === "string"
             ? body.message
             : "request_failed";
+
+      if (response.status === 429) code = "rate_limited";
+      else if (response.status >= 500) code = "server_error";
 
       throw new ApiError(code, response.status);
     }
@@ -106,7 +115,7 @@ export async function apiRequest<T>(
   }
 
   if (__DEV__ && lastNetworkError) {
-    console.warn("All Kankor API candidates failed", API_URLS);
+    console.info("All Kankor API candidates failed", API_URLS);
   }
 
   throw new ApiError("network_error", 0);

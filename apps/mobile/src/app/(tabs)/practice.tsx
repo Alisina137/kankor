@@ -21,10 +21,15 @@ const copy = {
     title: "تمرین بر اساس نصاب",
     body: "مسیر درسی خود را انتخاب کنید و یک امتحان هدفمند بسازید.",
     grade: "صنف",
+    grades: "صنف‌ها",
     subject: "مضمون",
+    subjects: "مضامین",
     book: "کتاب",
+    books: "کتاب‌ها",
     chapter: "فصل",
+    chapters: "فصل‌ها",
     topic: "موضوع",
+    topics: "موضوعات",
     empty: "هنوز محتوایی برای این بخش اضافه نشده است.",
     loading: "در حال بارگیری...",
     emptyGrades: "هنوز صنفی برای تمرین آماده نشده است.",
@@ -53,10 +58,15 @@ const copy = {
     title: "د نصاب له مخې تمرین",
     body: "خپل درسي مسیر وټاکئ او هدفمنده ازموینه جوړه کړئ.",
     grade: "ټولګی",
+    grades: "ټولګي",
     subject: "مضمون",
+    subjects: "مضمونونه",
     book: "کتاب",
+    books: "کتابونه",
     chapter: "څپرکی",
+    chapters: "څپرکي",
     topic: "موضوع",
+    topics: "موضوعات",
     empty: "تر اوسه دې برخې ته محتوا نه ده اضافه شوې.",
     loading: "بارېږي...",
     emptyGrades: "تر اوسه د تمرین لپاره ټولګی نه دی چمتو شوی.",
@@ -84,11 +94,16 @@ const copy = {
   en: {
     title: "Practice by curriculum",
     body: "Choose a curriculum path and build a targeted exam.",
-    grade: "Grade",
+    grade: "Class",
+    grades: "Classes",
     subject: "Subject",
+    subjects: "Subjects",
     book: "Book",
+    books: "Books",
     chapter: "Chapter",
+    chapters: "Chapters",
     topic: "Topic",
+    topics: "Topics",
     empty: "No content has been added here yet.",
     loading: "Loading...",
     emptyGrades: "No grade is ready for practice yet.",
@@ -371,6 +386,7 @@ export default function PracticeScreen() {
   }
 
   const displayName = (fa: string, ps: string | null) => locale === "ps" ? (ps || fa) : fa;
+  const countLabel = (count: number, singular: string, plural: string) => count > 1 ? plural : singular;
   const selectedBook = books.find((item) => item.id === bookId) ?? null;
   const selectedSubject = subjects.find((item) => item.id === subjectId) ?? null;
   const availableQuestionCounts = topicId ? questionCounts.filter((count) => count <= 10) : questionCounts;
@@ -498,7 +514,7 @@ export default function PracticeScreen() {
         {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
 
         <ChoiceGroup
-          label={text.grade}
+          label={countLabel(grades.length, text.grade, text.grades)}
           items={grades}
           selected={gradeId}
           onSelect={selectGrade}
@@ -508,7 +524,7 @@ export default function PracticeScreen() {
         />
         {gradeId ? (
           <ChoiceGroup
-            label={text.subject}
+            label={countLabel(subjects.length, text.subject, text.subjects)}
             items={subjects}
             selected={subjectId}
             onSelect={selectSubject}
@@ -519,7 +535,7 @@ export default function PracticeScreen() {
         ) : null}
         {gradeId && subjectId ? (
           <ChoiceGroup
-            label={text.book}
+            label={countLabel(books.length, text.book, text.books)}
             items={books}
             selected={bookId}
             onSelect={selectBook}
@@ -536,7 +552,7 @@ export default function PracticeScreen() {
         ) : null}
         {bookId && !chaptersLoading && chapters.length > 1 ? (
           <ChoiceGroup
-            label={text.chapter}
+            label={countLabel(chapters.length, text.chapter, text.chapters)}
             items={chapters}
             selected={chapterId}
             onSelect={selectChapter}
@@ -549,7 +565,7 @@ export default function PracticeScreen() {
         ) : null}
         {chapterId ? (
           <ChoiceGroup
-            label={text.topic}
+            label={countLabel(topics.length, text.topic, text.topics)}
             items={topics}
             selected={topicId}
             onSelect={setTopicId}
@@ -571,7 +587,7 @@ export default function PracticeScreen() {
               {displayName(selectedBook.titleFa, selectedBook.titlePs)}
             </Text>
             <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
-              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chaptersLoading ? text.loading : `${chapters.length} ${text.chapter}`}
+              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chaptersLoading ? text.loading : `${chapters.length} ${countLabel(chapters.length, text.chapter, text.chapters)}`}
             </Text>
           </View>
         ) : null}

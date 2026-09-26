@@ -41,7 +41,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Database remains Neon-compatible PostgreSQL with deterministic SQL migrations.
 
 ## Current implementation phase
-Phase 9 — Administration and Content Quality completed in source.
+Phase 10 — Release Readiness completed in source. Production launch remains gated by the external requirements documented below and in `docs/RELEASE.md`.
 
 ## Completed phase outcomes
 ### Phase 1
@@ -144,13 +144,33 @@ Phase 9 — Administration and Content Quality completed in source.
 - Student-facing question-report submission remains V1.1 as specified; Phase 9 implements the internal editorial/reporting system without silently expanding MVP scope.
 - Phase 9 structural verifier.
 
+### Phase 10
+- API production startup validates database presence, exact HTTPS admin origins, disabled recovery-token exposure, cleared bootstrap admin emails, and explicit trust-proxy configuration.
+- API responses add defensive content-type/frame/referrer/cache headers.
+- API health is split into `/health` liveness and `/ready` database-aware readiness; readiness returns 503 when the database is unavailable.
+- Historical phase verifiers are forward-compatible with later API phase numbers so the integrated release gate can validate all completed phases.
+- Mobile release configuration rejects missing, localhost, or non-HTTPS API endpoints for production builds while retaining LAN HTTP support in development.
+- Expo SDK 57 dependency ranges are aligned for release validation; `check:expo` runs Expo's compatibility check.
+- Mobile release metadata includes explicit semantic version, Android versionCode, iOS buildNumber, SecureStore native configuration, and iOS encryption declaration.
+- EAS preview and production profiles are defined: preview builds an APK and production builds an Android App Bundle with release configuration enforcement.
+- Mobile navigation has a localized screen-level error boundary with retry behavior so render failures do not leave a blank screen.
+- Admin production builds reject missing, localhost, or non-HTTPS API URLs and emit defensive response headers without the Next.js powered-by header.
+- `.env.production.example` documents production settings; `verify:production-env` rejects placeholder/insecure URLs, Neon target mismatches, weak webhook secrets, exposed recovery tokens, and lingering bootstrap admin emails.
+- `.gitignore` excludes production env files, EAS state, APKs, and AABs.
+- `release:check` runs all completed phase verifiers, RTL/stability checks, workspace type checks, Expo dependency validation, API build, and admin build.
+- `release:check:production` additionally validates production configuration, requires deterministic npm lock state, and verifies the configured production database.
+- `docs/RELEASE.md` defines deployment checks, EAS commands, manual smoke coverage, rollback considerations, and external production blockers.
+- Phase 10 structural verifier.
+
 ## Verification status
 - Phase 2 account flow was locally verified by the user.
 - Phase 3 admin access was locally verified by the user.
 - Phase 4 source was repaired after the user's TypeScript report; the attempt router was restored on main.
 - Phase 5 critical scoring, result, review, and configuration files were reviewed after writes.
 - `scripts/verify-phase5.mjs` validates scoring snapshots, server scoring, immutable result entities, multidimensional analysis, result/review endpoints, mobile results, explanations, and worked solutions.
-- Full dependency install, database migration, TypeScript checks, builds, and runtime submit→result→review testing require local verification after pull.
+- Phase 10 source invariants are guarded by `scripts/verify-phase10.mjs`.
+- The integrated source gate is `npm run release:check`; the production gate is `npm run release:check:production`.
+- Full dependency installation, Expo dependency reconciliation, TypeScript/build execution, production database verification, EAS builds, and release-candidate smoke testing require local/provider execution after pull.
 
 ## Known issues / external requirements
 - After pulling database/schema changes, run `npm run db:migrate` and then `npm run db:verify` against the repository-root `.env` before starting the API.
@@ -161,8 +181,11 @@ Phase 9 — Administration and Content Quality completed in source.
 - Historical archive infrastructure is complete, but no real historical Kankor papers have been imported yet because authoritative source forms have not been supplied.
 - No final Premium price is hard-coded. Administrators must create/activate plans after willingness-to-pay validation.
 - Development checkout uses the simulated provider only. Production payment availability, app-store policy, provider credentials, webhook signature method, and legal/privacy obligations must be rechecked before commercial launch.
+- Production password-reset delivery is not implemented: reset tokens are securely created, but no production email/SMS provider currently delivers them. Raw recovery tokens remain development-only by design.
+- The repository did not contain a committed `package-lock.json` at Phase 10 implementation time. Generate/review/commit it with `npm install` before the production release gate.
+- Expo/EAS project ownership, signing credentials, final app icon/splash/store artwork, store listing content, privacy/support URLs, and store declarations must be supplied by the product owner/provider before store submission.
 
-### Post-Phase-9 stability audit
+### Post-Phase-9 stability and Phase 10 release audit
 - Expo mobile configuration reads EXPO_PUBLIC_API_URL from the repository-root .env, so a second mobile env file is not required.
 - Expected API connectivity failures no longer use console.warn/LogBox warnings.
 - Mobile API requests classify network, rate-limit, and server failures and use bounded request timeouts.
@@ -188,9 +211,14 @@ Phase 9 — Administration and Content Quality completed in source.
 - Practice titles are count-aware: each layer uses its singular label for exactly one item and its plural label for multiple items (Class/Classes, Subject/Subjects, Book/Books, Chapter/Chapters, Topic/Topics), localized in Dari, Pashto, and English.
 - Historical Archive Year, Province, and Round filters use select-style controls instead of free text. Their option lists are derived from all published historical forms, remain stable while filters are applied, include an All option, and expose every currently available value.
 - Runtime database verification checks that Grade 10 contains at least 11 active official books and Grade 11 contains at least 10 active official books.
+- Production API/admin/mobile builds now fail fast on insecure or missing public configuration instead of silently shipping localhost endpoints.
+- API release health exposes separate liveness and database-aware readiness endpoints.
+- Mobile route render failures show a localized retry screen.
+- Release-sensitive production env/build artifacts are excluded from Git.
+- Source and production release gates are available through `release:check` and `release:check:production`.
 
 ## Latest source baseline
-Post-Phase-9 auth/database, Windows-safe LAN startup, and complete Grade 10/11 Practice curriculum hardening prepared for `main`.
+Phase 10 release-readiness source implemented on `main`, including production guards, release verification, build profiles, readiness/error handling, and release runbook.
 
-## Next phase
-Phase 10 — Release Readiness.
+## Next milestone
+Production launch preparation: resolve the external blockers in `docs/RELEASE.md`, run `npm run release:check:production`, complete the manual release-candidate smoke checklist, then create/store-test the signed production build.

@@ -1,13 +1,23 @@
-import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-const require = createRequire(import.meta.url);
-const { Tunnel } = require("cloudflared");
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 const repositoryRoot = resolve(".");
 const npmExecPath = process.env.npm_execpath;
 const metroPort = 8081;
+
+const CLOUDFLARED_VERSION = "2026.9.3";
+const CLOUDFLARED_WINDOWS_X64_SHA256 =
+  "f096265ec2fcbe9bb6e2d64268db167ced3fcbb83d894bdb9e2fcdb26f2ea7e2";
+const CLOUDFLARED_WINDOWS_X64_URL =
+  `https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-windows-amd64.exe`;
+
+const devCacheDir = join(repositoryRoot, ".cache", "kankor-dev");
+const cloudflaredPath = join(
+  devCacheDir,
+  `cloudflared-${CLOUDFLARED_VERSION}-windows-amd64.exe`
+);
 
 if (!npmExecPath) {
   throw new Error(
@@ -54,6 +64,71 @@ function spawnNpm(args, env = process.env) {
   });
 }
 
+function sha256(buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+async function fileSha256(path) {
+  return sha256(await readFile(path));
+}
+
+async function ensureOfficialCloudflared() {
+  if (process.platform !== "win32" || process.arch !== "x64") {
+    throw new Error(
+      `dev:anywhere currently manages cloudflared automatically on Windows x64 only. Detected ${process.platform}/${process.arch}.`
+    );
+  }
+
+  await mkdir(devCacheDir, { recursive: true });
+
+  try {
+    await stat(cloudflaredPath);
+    const existingDigest = await fileSha256(cloudflaredPath);
+    if (existingDigest === CLOUDFLARED_WINDOWS_X64_SHA256) {
+      console.log(
+        `✓ Verified cached Cloudflare binary ${CLOUDFLARED_VERSION} (SHA-256)`
+      );
+      return cloudflaredPath;
+    }
+
+    console.warn("Cached cloudflared binary failed checksum verification; downloading a clean copy.");
+    await unlink(cloudflaredPath).catch(() => undefined);
+  } catch {
+    // First run: binary is not cached yet.
+  }
+
+  console.log(
+    `\n→ Downloading official Cloudflare cloudflared ${CLOUDFLARED_VERSION} for Windows x64`
+  );
+
+  const response = await fetch(CLOUDFLARED_WINDOWS_X64_URL, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(120_000)
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download cloudflared: HTTP ${response.status} ${response.statusText}`
+    );
+  }
+
+  const binary = Buffer.from(await response.arrayBuffer());
+  if (binary.length < 2 || binary[0] !== 0x4d || binary[1] !== 0x5a) {
+    throw new Error("Downloaded cloudflared asset is not a valid Windows PE executable.");
+  }
+
+  const digest = sha256(binary);
+  if (digest !== CLOUDFLARED_WINDOWS_X64_SHA256) {
+    throw new Error(
+      `cloudflared SHA-256 mismatch. Expected ${CLOUDFLARED_WINDOWS_X64_SHA256}, received ${digest}.`
+    );
+  }
+
+  await writeFile(cloudflaredPath, binary);
+  console.log("✓ Official cloudflared binary downloaded and SHA-256 verified");
+  return cloudflaredPath;
+}
+
 async function probeKankorApi(url) {
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(4_000) });
@@ -89,10 +164,22 @@ async function waitForLocalApi(url, apiProcess) {
   throw new Error(`API did not become ready at ${url} within 20 seconds.`);
 }
 
-function waitForTunnelUrl(tunnel, label, timeoutMs = 30_000) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    let settled = false;
+function startCloudflareQuickTunnel(binaryPath, localUrl, label) {
+  const commandInterpreter = process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
+  const command =
+    `"${binaryPath}" tunnel --no-autoupdate --protocol http2 --url "${localUrl}"`;
 
+  const child = spawn(commandInterpreter, ["/d", "/s", "/c", command], {
+    cwd: repositoryRoot,
+    stdio: ["ignore", "pipe", "pipe"],
+    shell: false,
+    windowsHide: true
+  });
+
+  let recentOutput = "";
+  let settled = false;
+
+  const urlPromise = new Promise((resolvePromise, rejectPromise) => {
     const finish = (callback, value) => {
       if (settled) return;
       settled = true;
@@ -100,32 +187,60 @@ function waitForTunnelUrl(tunnel, label, timeoutMs = 30_000) {
       callback(value);
     };
 
-    const timer = setTimeout(() => {
-      finish(rejectPromise, new Error(`${label} tunnel did not return a public URL within ${timeoutMs / 1000} seconds.`));
-    }, timeoutMs);
+    const inspectOutput = (chunk) => {
+      const output = chunk.toString();
+      recentOutput = (recentOutput + output).slice(-6000);
 
-    tunnel.once("url", (url) => {
-      if (typeof url !== "string" || !url.startsWith("https://")) {
-        finish(rejectPromise, new Error(`${label} tunnel returned an invalid URL: ${String(url)}`));
-        return;
+      if (process.env.KANKOR_TUNNEL_DEBUG === "true") {
+        process.stderr.write(output);
       }
 
-      finish(resolvePromise, url.replace(/\/$/, ""));
+      const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+      if (match) {
+        finish(resolvePromise, match[0].replace(/\/$/, ""));
+      }
+    };
+
+    child.stdout?.on("data", inspectOutput);
+    child.stderr?.on("data", inspectOutput);
+
+    child.once("error", (error) => {
+      finish(
+        rejectPromise,
+        new Error(
+          `${label} tunnel process failed to start: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
     });
 
-    tunnel.once("error", (error) => {
-      finish(rejectPromise, error instanceof Error ? error : new Error(String(error)));
-    });
-
-    tunnel.once("exit", (code, signal) => {
+    child.once("exit", (code, signal) => {
       if (!settled) {
+        const details = recentOutput.trim()
+          ? `\ncloudflared output:\n${recentOutput.trim()}`
+          : "";
         finish(
           rejectPromise,
-          new Error(`${label} tunnel exited before becoming ready (code ${code ?? "unknown"}, signal ${signal ?? "none"}).`)
+          new Error(
+            `${label} tunnel exited before returning a public URL (code ${code ?? "unknown"}, signal ${signal ?? "none"}).${details}`
+          )
         );
       }
     });
+
+    const timer = setTimeout(() => {
+      const details = recentOutput.trim()
+        ? `\ncloudflared output:\n${recentOutput.trim()}`
+        : "";
+      finish(
+        rejectPromise,
+        new Error(
+          `${label} tunnel did not return a public URL within 35 seconds.${details}`
+        )
+      );
+    }, 35_000);
   });
+
+  return { child, urlPromise };
 }
 
 async function waitForPublicApi(url) {
@@ -160,26 +275,17 @@ function stopProcess(child) {
 
 let apiProcess;
 let mobileProcess;
-let apiTunnel;
-let metroTunnel;
+let apiTunnelProcess;
+let metroTunnelProcess;
 let shuttingDown = false;
-
-function stopTunnel(tunnel) {
-  if (!tunnel) return;
-  try {
-    tunnel.stop();
-  } catch {
-    // Tunnel may already be stopped.
-  }
-}
 
 function shutdown(exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
   stopProcess(mobileProcess);
   stopProcess(apiProcess);
-  stopTunnel(metroTunnel);
-  stopTunnel(apiTunnel);
+  stopProcess(metroTunnelProcess);
+  stopProcess(apiTunnelProcess);
   process.exit(exitCode);
 }
 
@@ -219,14 +325,26 @@ try {
     await waitForLocalApi(localHealthUrl, apiProcess);
   }
 
+  const binaryPath = await ensureOfficialCloudflared();
+
   console.log("\n→ Creating Cloudflare Quick Tunnel for Kankor API");
-  apiTunnel = Tunnel.quick(`http://127.0.0.1:${apiPort}`);
-  const apiTunnelUrl = await waitForTunnelUrl(apiTunnel, "API");
+  const apiTunnel = startCloudflareQuickTunnel(
+    binaryPath,
+    `http://127.0.0.1:${apiPort}`,
+    "API"
+  );
+  apiTunnelProcess = apiTunnel.child;
+  const apiTunnelUrl = await apiTunnel.urlPromise;
   await waitForPublicApi(apiTunnelUrl);
 
   console.log("\n→ Creating Cloudflare Quick Tunnel for Expo/Metro");
-  metroTunnel = Tunnel.quick(`http://127.0.0.1:${metroPort}`);
-  const metroTunnelUrl = await waitForTunnelUrl(metroTunnel, "Expo/Metro");
+  const metroTunnel = startCloudflareQuickTunnel(
+    binaryPath,
+    `http://127.0.0.1:${metroPort}`,
+    "Expo/Metro"
+  );
+  metroTunnelProcess = metroTunnel.child;
+  const metroTunnelUrl = await metroTunnel.urlPromise;
 
   console.log("\n✓ IP-independent development is ready");
   console.log(`  API:   ${apiTunnelUrl}`);
@@ -277,7 +395,7 @@ try {
   console.error("\nIP-independent development startup failed.");
   console.error(error instanceof Error ? error.message : error);
   stopProcess(apiProcess);
-  stopTunnel(metroTunnel);
-  stopTunnel(apiTunnel);
+  stopProcess(metroTunnelProcess);
+  stopProcess(apiTunnelProcess);
   process.exit(1);
 }

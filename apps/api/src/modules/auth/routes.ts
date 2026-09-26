@@ -4,6 +4,13 @@ import { createDatabase, schema } from "@kankor/database";
 import { createRawToken, createSession, bearerToken, getSessionUser, hashToken, revokeSession } from "./session.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import {
+  createProfilePhotoDownloadUrl,
+  createProfilePhotoUpload,
+  deleteProfilePhotoObject,
+  profilePhotoStorageConfigured,
+  verifyProfilePhotoUpload
+} from "./profile-photo-storage.js";
+import {
   normalizeEmail,
   validEmail,
   validLanguage,
@@ -21,6 +28,7 @@ function publicUser(user: {
   preferredLanguage: string;
   targetExamYear: number | null;
   preparationLevel: string | null;
+  profilePhotoKey?: string | null;
   onboardingCompletedAt: Date | null;
 }) {
   return {
@@ -29,6 +37,7 @@ function publicUser(user: {
     preferredLanguage: user.preferredLanguage,
     targetExamYear: user.targetExamYear,
     preparationLevel: user.preparationLevel,
+    hasProfilePhoto: Boolean(user.profilePhotoKey),
     onboardingCompleted: Boolean(user.onboardingCompletedAt)
   };
 }
@@ -78,6 +87,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         preferredLanguage: schema.users.preferredLanguage,
         targetExamYear: schema.users.targetExamYear,
         preparationLevel: schema.users.preparationLevel,
+        profilePhotoKey: schema.users.profilePhotoKey,
         onboardingCompletedAt: schema.users.onboardingCompletedAt
       });
 
@@ -167,6 +177,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         preferredLanguage: schema.users.preferredLanguage,
         targetExamYear: schema.users.targetExamYear,
         preparationLevel: schema.users.preparationLevel,
+        profilePhotoKey: schema.users.profilePhotoKey,
         onboardingCompletedAt: schema.users.onboardingCompletedAt
       });
 
@@ -217,9 +228,119 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         preferredLanguage: schema.users.preferredLanguage,
         targetExamYear: schema.users.targetExamYear,
         preparationLevel: schema.users.preparationLevel,
+        profilePhotoKey: schema.users.profilePhotoKey,
         onboardingCompletedAt: schema.users.onboardingCompletedAt
       });
 
+    return reply.send({ user: publicUser(updated[0]) });
+  });
+
+  app.get("/profile-photo", async (request, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    if (!profilePhotoStorageConfigured()) {
+      return reply.send({ configured: false, url: null });
+    }
+
+    if (!auth.user.profilePhotoKey) {
+      return reply.send({ configured: true, url: null });
+    }
+
+    try {
+      return reply.send({
+        configured: true,
+        url: await createProfilePhotoDownloadUrl(auth.user.profilePhotoKey)
+      });
+    } catch {
+      return reply.code(502).send({ error: "profile_photo_read_failed" });
+    }
+  });
+
+  app.post("/profile-photo/upload", async (request: AuthRequest, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    const contentType = typeof request.body?.contentType === "string"
+      ? request.body.contentType.trim().toLowerCase()
+      : "";
+    const fileSize = Number(request.body?.fileSize ?? 0);
+
+    try {
+      return reply.send(await createProfilePhotoUpload(auth.user.userId, contentType, fileSize));
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "profile_photo_upload_failed";
+      if (code === "profile_photo_storage_not_configured") return reply.code(503).send({ error: code });
+      if (code === "unsupported_profile_photo_type" || code === "invalid_profile_photo_size") {
+        return reply.code(400).send({ error: code });
+      }
+      throw error;
+    }
+  });
+
+  app.post("/profile-photo/confirm", async (request: AuthRequest, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    const key = typeof request.body?.key === "string" ? request.body.key.trim() : "";
+    if (!key) return reply.code(400).send({ error: "invalid_profile_photo_key" });
+
+    try {
+      await verifyProfilePhotoUpload(auth.user.userId, key);
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "profile_photo_upload_failed";
+      if (code === "profile_photo_storage_not_configured") return reply.code(503).send({ error: code });
+      if (code === "invalid_profile_photo_key" || code === "unsupported_profile_photo_type" || code === "invalid_profile_photo_size") {
+        return reply.code(400).send({ error: code });
+      }
+      return reply.code(400).send({ error: "profile_photo_not_found" });
+    }
+
+    const db = createDatabase();
+    const previousKey = auth.user.profilePhotoKey ?? null;
+    const updated = await db.update(schema.users)
+      .set({ profilePhotoKey: key, updatedAt: new Date() })
+      .where(eq(schema.users.id, auth.user.userId))
+      .returning({
+        id: schema.users.id,
+        email: schema.users.email,
+        preferredLanguage: schema.users.preferredLanguage,
+        targetExamYear: schema.users.targetExamYear,
+        preparationLevel: schema.users.preparationLevel,
+        profilePhotoKey: schema.users.profilePhotoKey,
+        onboardingCompletedAt: schema.users.onboardingCompletedAt
+      });
+
+    if (previousKey && previousKey !== key) {
+      await deleteProfilePhotoObject(previousKey).catch(() => undefined);
+    }
+
+    return reply.send({
+      user: publicUser(updated[0]),
+      url: await createProfilePhotoDownloadUrl(key)
+    });
+  });
+
+  app.delete("/profile-photo", async (request, reply) => {
+    const auth = await requireUser(request, reply);
+    if (!auth) return;
+
+    const previousKey = auth.user.profilePhotoKey ?? null;
+    const db = createDatabase();
+    const updated = await db.update(schema.users)
+      .set({ profilePhotoKey: null, updatedAt: new Date() })
+      .where(eq(schema.users.id, auth.user.userId))
+      .returning({
+        id: schema.users.id,
+        email: schema.users.email,
+        preferredLanguage: schema.users.preferredLanguage,
+        targetExamYear: schema.users.targetExamYear,
+        preparationLevel: schema.users.preparationLevel,
+        profilePhotoKey: schema.users.profilePhotoKey,
+        onboardingCompletedAt: schema.users.onboardingCompletedAt
+      });
+
+    await deleteProfilePhotoObject(previousKey).catch(() => undefined);
     return reply.send({ user: publicUser(updated[0]) });
   });
 

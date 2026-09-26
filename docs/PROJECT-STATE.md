@@ -153,6 +153,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Expo SDK 57 dependency ranges are aligned for release validation; `check:expo` runs Expo's compatibility check.
 - Mobile release metadata includes explicit semantic version, Android versionCode, iOS buildNumber, SecureStore native configuration, and iOS encryption declaration.
 - Expo Web development is explicitly supported with React DOM 19.2.3, React Native Web 0.21.x, and Metro web bundling so Expo Router can render the mobile workspace in a browser.
+- Web dependencies are pinned to React Native Web 0.21.1 plus `@expo/metro-runtime` 57.x because a floating 0.21.x install produced a missing vendored NativeEventEmitter path during Metro web bundling.
 - EAS preview and production profiles are defined: preview builds an APK and production builds an Android App Bundle with release configuration enforcement.
 - Mobile navigation has a localized screen-level error boundary with retry behavior so render failures do not leave a blank screen.
 - Admin production builds reject missing, localhost, or non-HTTPS API URLs and emit defensive response headers without the Next.js powered-by header.

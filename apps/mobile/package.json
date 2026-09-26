@@ -12,7 +12,11 @@
     "start:lan": "expo start --lan",
     "check:expo": "npx expo install --check",
     "build:android:preview": "npx eas-cli build --platform android --profile preview",
-    "build:android:production": "npx eas-cli build --platform android --profile production"
+    "build:android:production": "npx eas-cli build --platform android --profile production",
+    "eas:link": "npx eas-cli project:init --account alisina137",
+    "eas:update:configure": "npx eas-cli update:configure",
+    "update:preview": "npx eas-cli update --channel preview --environment preview",
+    "update:production": "npx eas-cli update --channel production --environment production"
   },
   "dependencies": {
     "@kankor/config": "*",
@@ -31,7 +35,8 @@
     "expo-image-picker": "~57.0.20",
     "react-dom": "19.2.3",
     "react-native-web": "0.21.1",
-    "@expo/metro-runtime": "~57.0.0"
+    "@expo/metro-runtime": "~57.0.0",
+    "expo-updates": "~57.0.23"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",

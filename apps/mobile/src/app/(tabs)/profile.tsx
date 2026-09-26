@@ -162,7 +162,8 @@ export default function ProfileScreen() {
   }, [user?.email]);
 
   const planLabel = useMemo(() => {
-    if (!subscription || subscription.tier === "free") return text.free;
+    if (!subscription) return "—";
+    if (subscription.tier === "free") return text.free;
     const plan = subscription.subscription;
     if (!plan) return text.premium;
     if (locale === "ps") return plan.planNamePs || plan.planNameFa || text.premium;
@@ -393,8 +394,8 @@ const styles = StyleSheet.create({
   card: { gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
   dangerCard: { borderColor: theme.colors.danger },
   cardTitleRow: { alignItems: "center", justifyContent: "space-between", gap: theme.spacing.sm },
-  sectionTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "850" },
-  dangerTitle: { color: theme.colors.danger, fontSize: theme.typography.heading, fontWeight: "850" },
+  sectionTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
+  dangerTitle: { color: theme.colors.danger, fontSize: theme.typography.heading, fontWeight: "800" },
   editButton: { minHeight: 38, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
   editButtonText: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "800" },
   rows: { gap: theme.spacing.sm },
@@ -408,13 +409,13 @@ const styles = StyleSheet.create({
   chips: { flexWrap: "wrap", gap: theme.spacing.sm },
   chip: { minHeight: 42, minWidth: 58, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.pill, backgroundColor: theme.colors.background },
   chipActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
-  chipText: { color: theme.colors.text, fontWeight: "650" },
-  chipTextActive: { color: theme.colors.primary, fontWeight: "850" },
+  chipText: { color: theme.colors.text, fontWeight: "600" },
+  chipTextActive: { color: theme.colors.primary, fontWeight: "800" },
   levels: { gap: theme.spacing.sm },
   levelOption: { minHeight: 46, justifyContent: "center", paddingHorizontal: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.background },
   levelActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
-  levelText: { color: theme.colors.text, fontWeight: "650" },
-  levelTextActive: { color: theme.colors.primary, fontWeight: "850" },
+  levelText: { color: theme.colors.text, fontWeight: "600" },
+  levelTextActive: { color: theme.colors.primary, fontWeight: "800" },
   editorActions: { gap: theme.spacing.sm },
   meta: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 21 },
   warning: { color: theme.colors.warning, fontSize: theme.typography.small, lineHeight: 21 },

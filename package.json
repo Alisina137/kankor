@@ -53,5 +53,8 @@
   },
   "engines": {
     "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "eas-cli": "24.8.0"
   }
 }

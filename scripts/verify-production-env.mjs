@@ -145,6 +145,24 @@ if (billingSecret.length < 32) {
   throw new Error("BILLING_WEBHOOK_SECRET must be at least 32 characters.");
 }
 
+for (const name of [
+  "PROFILE_PHOTO_S3_BUCKET",
+  "PROFILE_PHOTO_S3_REGION",
+  "PROFILE_PHOTO_S3_ACCESS_KEY_ID",
+  "PROFILE_PHOTO_S3_SECRET_ACCESS_KEY"
+]) {
+  const value = required(env, name);
+  rejectPlaceholder(name, value);
+}
+
+const photoEndpoint = String(env.PROFILE_PHOTO_S3_ENDPOINT ?? "").trim();
+if (photoEndpoint) publicHttpsUrl("PROFILE_PHOTO_S3_ENDPOINT", photoEndpoint);
+
+const photoForcePathStyle = String(env.PROFILE_PHOTO_S3_FORCE_PATH_STYLE ?? "false").trim().toLowerCase();
+if (!["true", "false"].includes(photoForcePathStyle)) {
+  throw new Error("PROFILE_PHOTO_S3_FORCE_PATH_STYLE must be true or false.");
+}
+
 console.log("✓ Production environment configuration is release-safe");
 console.log(`✓ Database target: ${runtimeTarget.database} @ ${runtimeTarget.host}`);
 console.log(`✓ Admin origins: ${origins.length}`);

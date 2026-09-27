@@ -128,7 +128,7 @@ for (const [name, version] of Object.entries({
   "expo-updates": "~57.0.23",
   "react-native": "0.86.3",
   "react-dom": "19.2.3",
-  "react-native-web": "0.21.1",
+  "react-native-web": "^0.21.2",
   "@expo/metro-runtime": "~57.0.0",
   "react-native-safe-area-context": "~5.7.0",
   "react-native-screens": "~4.26.0"
@@ -136,6 +136,12 @@ for (const [name, version] of Object.entries({
   if (mobilePackage.dependencies?.[name] !== version) {
     throw new Error(`Expo SDK 57 dependency mismatch for ${name}: expected ${version}`);
   }
+}
+if (mobilePackage.devDependencies?.["@types/react"] !== "~19.2.4") {
+  throw new Error("Expo SDK 57 dependency mismatch for @types/react: expected ~19.2.4");
+}
+if (mobilePackage.devDependencies?.typescript !== "~6.0.3") {
+  throw new Error("Expo SDK 57 dependency mismatch for typescript: expected ~6.0.3");
 }
 if (!mobilePackage.scripts?.["check:expo"]) throw new Error("Expo dependency validation script is missing");
 for (const [script, expected] of Object.entries({

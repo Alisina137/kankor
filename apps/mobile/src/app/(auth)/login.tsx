@@ -1,22 +1,38 @@
+import { theme } from "@kankor/config";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { theme } from "@kankor/config";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppButton } from "../../components/app-button";
+import { AppText as Text } from "../../components/app-text";
+import { AuthFormShell } from "../../components/auth-form-shell";
 import { FormField } from "../../components/form-field";
-import { Screen } from "../../components/screen";
 import { ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
+const copy = {
+  fa: {
+    body: "به حساب خود برگردید و آمادگی کانکور را از همان‌جایی که بودید ادامه دهید.",
+    noAccount: "حساب ندارید؟"
+  },
+  ps: {
+    body: "خپل حساب ته بېرته ننوځئ او د کانکور چمتووالی له هماغه ځایه ادامه ورکړئ.",
+    noAccount: "حساب نه لرئ؟"
+  },
+  en: {
+    body: "Return to your account and continue your Kankor preparation where you left off.",
+    noAccount: "New to KankorPrep?"
+  }
+} as const;
+
 export default function LoginScreen() {
   const { login } = useAuth();
-  const { direction, text } = useLocale();
+  const { locale, text } = useLocale();
+  const local = copy[locale];
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const align = direction === "rtl" ? "right" : "left";
 
   async function submit() {
     setError("");
@@ -45,17 +61,78 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
-      <View style={styles.stack}>
-        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.signIn}</Text>
-        <FormField label={text.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoComplete="email" autoCapitalize="none" autoCorrect={false} />
-        <FormField label={text.password} value={password} onChangeText={setPassword} secureTextEntry secureToggle autoComplete="current-password" />
-        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
-        <AppButton label={text.signIn} loading={busy} onPress={submit} />
-        <Pressable onPress={() => router.push("/(auth)/recovery")}><Text style={styles.link}>{text.forgotPassword}</Text></Pressable>
-        <Pressable onPress={() => router.push("/(auth)/register")}><Text style={styles.link}>{text.noAccount} {text.createAccount}</Text></Pressable>
-      </View>
-    </Screen>
+    <AuthFormShell
+      title={text.signIn}
+      body={local.body}
+      illustration="account"
+      footer={(
+        <Pressable onPress={() => router.push("/(auth)/register")} style={styles.switchLink}>
+          <Text style={styles.switchMuted}>{local.noAccount}</Text>
+          <Text style={styles.switchStrong}> {text.createAccount}</Text>
+        </Pressable>
+      )}
+    >
+      <FormField
+        label={text.email}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoComplete="email"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <FormField
+        label={text.password}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        secureToggle
+        autoComplete="current-password"
+      />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <AppButton label={text.signIn} loading={busy} onPress={submit} />
+
+      <Pressable
+        onPress={() => router.push("/(auth)/recovery")}
+        style={styles.forgotButton}
+      >
+        <Text style={styles.forgotText}>{text.forgotPassword}</Text>
+      </Pressable>
+    </AuthFormShell>
   );
 }
-const styles=StyleSheet.create({stack:{gap:theme.spacing.md,paddingTop:theme.spacing.xl},title:{fontSize:theme.typography.title,fontWeight:"800",color:theme.colors.text,marginBottom:theme.spacing.md},error:{color:theme.colors.danger},link:{color:theme.colors.primary,textAlign:"center",padding:theme.spacing.sm}});
+
+const styles = StyleSheet.create({
+  error: {
+    color: theme.colors.danger,
+    fontSize: theme.typography.small,
+    lineHeight: 20
+  },
+  forgotButton: {
+    minHeight: 38,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  forgotText: {
+    color: theme.colors.primary,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  switchLink: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  switchMuted: {
+    color: theme.colors.mutedText,
+    textAlign: "center"
+  },
+  switchStrong: {
+    color: theme.colors.primary,
+    fontWeight: "900",
+    textAlign: "center"
+  }
+});

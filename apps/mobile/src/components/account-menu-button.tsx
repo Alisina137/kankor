@@ -132,11 +132,12 @@ export function AccountMenuButton() {
               styles.menu,
               {
                 top: Math.max(insets.top + 48, 56),
-                right: theme.spacing.md
+                right: theme.spacing.md,
+                direction
               }
             ]}
           >
-            <View style={styles.identity}>
+            <View style={[styles.identity, { direction }]}>
               <View style={styles.menuAvatar}>
                 {photoUrl ? (
                   <Image source={{ uri: photoUrl }} style={styles.avatarImage} resizeMode="cover" />
@@ -219,7 +220,7 @@ function MenuItem({
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+      style={({ pressed }) => [styles.menuItem, { direction }, pressed && styles.menuItemPressed]}
     >
       <Ionicons
         name={icon}

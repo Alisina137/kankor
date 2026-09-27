@@ -5,11 +5,7 @@ const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"
 for (const marker of [
   'const align = direction === "rtl" ? "right" : "left"',
   'textAlign: align',
-  'writingDirection: direction',
-  "StyleSheet.flatten(style)",
-  'alignSelf: "flex-start"',
-  'width: "100%"',
-  'maxWidth: "100%"'
+  'writingDirection: direction'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
 }
@@ -54,15 +50,20 @@ for (const file of localeAwareTextFiles) {
 
 const home = await readFile(resolve("apps/mobile/src/app/(tabs)/index.tsx"), "utf8");
 for (const marker of [
-  'headerCopy: { width: "100%", alignItems: "stretch"',
-  'appName: { width: "100%"',
-  'title: { width: "100%"',
-  'subtitle: { width: "100%"',
-  'card: { width: "100%", alignItems: "stretch"',
-  'sectionTitle: { width: "100%"',
-  'body: { width: "100%"'
+  "function HomeEdgeText(",
+  'direction: "ltr"',
+  'homeTextAnchorRight',
+  'alignItems: "flex-end"',
+  'homeTextAnchorLeft',
+  'alignItems: "flex-start"',
+  'maxWidth: "100%"',
+  "<HomeEdgeText style={styles.appName}",
+  "<HomeEdgeText style={styles.title}",
+  "<HomeEdgeText style={styles.subtitle}",
+  "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.recommendation}</HomeEdgeText>",
+  "<HomeEdgeText style={styles.body} direction={direction}>{text.firstAction}</HomeEdgeText>"
 ]) {
-  if (!home.includes(marker)) throw new Error(`Home RTL physical-width invariant missing: ${marker}`);
+  if (!home.includes(marker)) throw new Error(`Home RTL edge-anchor invariant missing: ${marker}`);
 }
 
 const screen = await readFile(resolve("apps/mobile/src/components/screen.tsx"), "utf8");

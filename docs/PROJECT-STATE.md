@@ -155,11 +155,11 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Expo Web development is explicitly supported with React DOM 19.2.3, React Native Web 0.21.x, and Metro web bundling so Expo Router can render the mobile workspace in a browser.
 - Web dependencies are pinned to React Native Web 0.21.1 plus `@expo/metro-runtime` 57.x because a floating 0.21.x install produced a missing vendored NativeEventEmitter path during Metro web bundling.
 - EAS preview and production profiles are defined: preview builds an APK and production builds an Android App Bundle with release configuration enforcement.
-- EAS Update is configured as the primary physical-device iteration model: preview APKs use the `preview` channel/environment, production builds use `production`, `expo-updates` is pinned for SDK 57, and runtime compatibility uses the `appVersion` policy.
-- EAS CLI is pinned locally at version 24.8.0; build, update, and project-link commands use the installed project CLI instead of dynamically fetching `eas-cli` through `npx`/npm exec.
-- Preview and production OTA publishing now run through guarded launchers. Preview forces `KANKOR_PREVIEW_BUILD=true` and the `preview` EAS environment; production forces `KANKOR_RELEASE_BUILD=true` and the `production` environment, preventing OTA bundles from silently inheriting local laptop API settings.
-- Preview EAS environment management also uses a repository helper instead of requiring a globally installed `eas` command. It can list preview variables or set a validated public HTTPS `EXPO_PUBLIC_API_URL` together with `KANKOR_PREVIEW_BUILD=true`, rejecting localhost/private network addresses.
-- Preview APK configuration rejects localhost/non-HTTPS APIs and waits up to five seconds on launch for a compatible OTA update, so normal JS/UI changes can be published without rebuilding the APK.
+- EAS Update is the primary physical-device iteration model: install one preview APK, then publish compatible JS/assets to the `preview` channel; production uses the separate `production` channel. `expo-updates` is pinned for SDK 57 and runtime compatibility uses the `fingerprint` policy.
+- EAS CLI is pinned locally at version 24.8.0; build and update npm scripts use that installed CLI.
+- Preview and production OTA publishing use direct official EAS Update commands with explicit `preview` and `production` channels.
+- The installed app uses Expo's standard ON_LOAD update behavior with the embedded/cached update as the startup fallback.
+- Normal JS/TS/UI/translation/business-logic changes can be published through EAS Update without rebuilding the APK; native-runtime changes require a new APK/AAB.
 - Mobile navigation has a localized screen-level error boundary with retry behavior so render failures do not leave a blank screen.
 - Admin production builds reject missing, localhost, or non-HTTPS API URLs and emit defensive response headers without the Next.js powered-by header.
 - `.env.production.example` documents production settings; `verify:production-env` rejects placeholder/insecure URLs, Neon target mismatches, weak webhook secrets, exposed recovery tokens, and lingering bootstrap admin emails.
@@ -192,7 +192,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - The repository did not contain a committed `package-lock.json` at Phase 10 implementation time. Generate/review/commit it with `npm install` before the production release gate.
 - Expo/EAS project ownership, signing credentials, final app icon/splash/store artwork, store listing content, privacy/support URLs, and store declarations must be supplied by the product owner/provider before store submission.
 - The Kankor EAS project must be linked once so `extra.eas.projectId` and `updates.url` are known; `verify:eas-update` blocks OTA readiness until that account-specific linkage exists.
-- Preview APK/OTA updates require a stable public HTTPS API URL configured as `EXPO_PUBLIC_API_URL` in the EAS `preview` environment. The Fastify API is still local in this repository and must be deployed to a stable host before the installed preview APK can be fully independent of the laptop.
+- EAS Update configuration is independent from API hosting. API deployment/connectivity remains a separate application-runtime concern.
 
 ### Post-Phase-9 stability and Phase 10 release audit
 - Expo mobile configuration reads EXPO_PUBLIC_API_URL from the repository-root .env, so a second mobile env file is not required.

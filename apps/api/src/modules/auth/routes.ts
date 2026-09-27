@@ -142,11 +142,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
   });
 
-  app.post("/logout", async (request, reply) => {
+  const logoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const token = bearerToken(request.headers.authorization);
     if (token) await revokeSession(token);
     return reply.code(204).send();
-  });
+  };
+
+  app.post("/logout", logoutHandler);
+  app.delete("/logout", logoutHandler);
 
   app.patch("/onboarding", async (request: AuthRequest, reply) => {
     const auth = await requireUser(request, reply);

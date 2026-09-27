@@ -200,6 +200,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Expected API connectivity failures no longer use console.warn/LogBox warnings.
 - Mobile API requests classify network, rate-limit, and server failures and use bounded request timeouts.
 - Registration/login/recovery/reset expose precise localized errors and normalize email addresses before sending.
+- Mobile logout now sends an explicit JSON request body to avoid Expo Go/Fastify 415 media-type errors, and local sign-out still completes if remote session revocation temporarily fails so logout cannot surface an unhandled red-screen error.
 - Temporary startup connectivity failures no longer erase a valid saved session; the user gets an explicit retry state.
 - Physical-device iteration now prefers an installed preview APK plus EAS Update; local tunnel tooling is optional rather than required for normal UI/JavaScript changes.
 - Attempt submission carries the final local answer snapshot so last-second/offline answers are revision-upserted before scoring.

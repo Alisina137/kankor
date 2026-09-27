@@ -46,12 +46,10 @@
     "verify:home-profile": "node scripts/verify-home-profile.mjs",
     "dev:anywhere": "node scripts/dev-anywhere.mjs",
     "dev:tailscale": "node scripts/dev-tailscale.mjs",
-    "eas:link": "node scripts/link-eas-project.mjs",
-    "update:preview": "node scripts/eas-update-preview.mjs",
-    "update:production": "node scripts/eas-update-production.mjs",
+    "update:preview": "npm --workspace @kankor/mobile run update:preview --",
+    "update:production": "npm --workspace @kankor/mobile run update:production --",
     "verify:eas-update": "node scripts/verify-eas-update.mjs",
-    "eas:preview:env:list": "node scripts/eas-preview-env.mjs list",
-    "eas:preview:env:set-api": "node scripts/eas-preview-env.mjs set-api"
+    "eas:update:configure": "npm --workspace @kankor/mobile run eas:update:configure"
   },
   "engines": {
     "node": ">=22.13.0"

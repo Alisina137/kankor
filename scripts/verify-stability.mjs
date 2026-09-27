@@ -3,11 +3,16 @@ import { resolve } from "node:path";
 
 const mobileConfig = await readFile(resolve("apps/mobile/app.config.ts"), "utf8");
 for (const marker of [
-  'resolve(__dirname, "../../.env")',
-  'override: true',
-  'apiUrl: process.env.EXPO_PUBLIC_API_URL'
+  'loadEnv({ path: resolve(__dirname, "../../.env") })',
+  'const configured = process.env.EXPO_PUBLIC_API_URL?.trim()',
+  'apiUrl: apiUrlForBuild()'
 ]) {
   if (!mobileConfig.includes(marker)) throw new Error(`Mobile root-env invariant missing: ${marker}`);
+}
+if (mobileConfig.includes("override: true")) {
+  throw new Error(
+    "Mobile root .env must not force override=true; EAS/build environment variables must be allowed to take precedence."
+  );
 }
 
 const api = await readFile(resolve("apps/mobile/src/lib/api.ts"), "utf8");

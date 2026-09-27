@@ -3,6 +3,7 @@ import { theme } from "@kankor/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccountMenuButton } from "../../components/account-menu-button";
 import { ApiError, apiRequest } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
@@ -188,6 +189,7 @@ export default function ReviewScreen() {
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
         </Pressable>
         <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
+        <AccountMenuButton />
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, { flexDirection: rowDirection }]}>

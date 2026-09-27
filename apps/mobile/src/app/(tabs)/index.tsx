@@ -1,8 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "../../components/screen";
 import { ApiError, apiRequest } from "../../lib/api";
 import { getActivePersistedExam } from "../../lib/exam-storage";
@@ -86,7 +87,11 @@ const copy = {
     recent: "فعالیت اخیر",
     noRecent: "پس از تکمیل امتحان، نتایج اخیر شما اینجا نمایش داده می‌شود.",
     viewAll: "همه نتایج",
-    loadingError: "بخشی از اطلاعات خانه بارگیری نشد. می‌توانید دوباره وارد این صفحه شوید."
+    loadingError: "بخشی از اطلاعات خانه بارگیری نشد. می‌توانید دوباره وارد این صفحه شوید.",
+    welcomeBack: "خوش آمدید!",
+    welcomeBackBody: "خوشحالیم دوباره شما را می‌بینیم.",
+    welcomeNew: "خوش آمدید!",
+    welcomeNewBody: "آمادگی کانکور شما از همین‌جا شروع می‌شود."
   },
   ps: {
     welcome: "دوام ته چمتو یاست؟",
@@ -117,7 +122,11 @@ const copy = {
     recent: "وروستی فعالیت",
     noRecent: "د ازموینې له بشپړولو وروسته به وروستۍ پایلې دلته ښکاره شي.",
     viewAll: "ټولې پایلې",
-    loadingError: "د کور پاڼې ځینې معلومات پورته نه شول. پاڼه بیا پرانیستلی شئ."
+    loadingError: "د کور پاڼې ځینې معلومات پورته نه شول. پاڼه بیا پرانیستلی شئ.",
+    welcomeBack: "بېرته ښه راغلاست!",
+    welcomeBackBody: "خوښ یو چې بیا مو وینو.",
+    welcomeNew: "ښه راغلاست!",
+    welcomeNewBody: "ستاسو د کانکور چمتووالی له همدې ځایه پیلېږي."
   },
   en: {
     welcome: "Ready to continue?",
@@ -148,7 +157,11 @@ const copy = {
     recent: "Recent activity",
     noRecent: "Your latest results will appear here after you complete an exam.",
     viewAll: "View all results",
-    loadingError: "Some Home information could not be loaded. You can reopen this page to retry."
+    loadingError: "Some Home information could not be loaded. You can reopen this page to retry.",
+    welcomeBack: "Welcome back!",
+    welcomeBackBody: "Good to see you again.",
+    welcomeNew: "Welcome!",
+    welcomeNewBody: "Your Kankor preparation journey starts here."
   }
 } as const;
 
@@ -167,6 +180,24 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [startingTopic, setStartingTopic] = useState(false);
   const [error, setError] = useState("");
+  const [welcomeMessage, setWelcomeMessage] = useState<"back" | "new" | null>(null);
+  const params = useLocalSearchParams<{ welcome?: string | string[] }>();
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const value = Array.isArray(params.welcome) ? params.welcome[0] : params.welcome;
+    if (value !== "back" && value !== "new") return;
+
+    setWelcomeMessage(value);
+    router.setParams({ welcome: "" });
+  }, [params.welcome]);
+
+  useEffect(() => {
+    if (!welcomeMessage) return;
+
+    const timeout = setTimeout(() => setWelcomeMessage(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [welcomeMessage]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -270,7 +301,8 @@ export default function HomeScreen() {
   ];
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <View style={styles.root}>
+      <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
           <Text style={[styles.appName, { textAlign: align, writingDirection: direction }]}>{sharedText.appName}</Text>
@@ -414,11 +446,63 @@ export default function HomeScreen() {
           <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.noRecent}</Text>
         )}
       </View>
-    </Screen>
+      </Screen>
+
+      {welcomeMessage ? (
+        <View
+          pointerEvents="none"
+          accessibilityLiveRegion="polite"
+          style={[styles.welcomeToast, { top: insets.top + theme.spacing.sm }]}
+        >
+          <View style={styles.welcomeToastIcon}>
+            <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+          </View>
+          <View style={styles.welcomeToastCopy}>
+            <Text style={[styles.welcomeToastTitle, { textAlign: align, writingDirection: direction }]}>
+              {welcomeMessage === "back" ? text.welcomeBack : text.welcomeNew}
+            </Text>
+            <Text style={[styles.welcomeToastBody, { textAlign: align, writingDirection: direction }]}>
+              {welcomeMessage === "back" ? text.welcomeBackBody : text.welcomeNewBody}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
+  welcomeToast: {
+    position: "absolute",
+    left: theme.spacing.md,
+    right: theme.spacing.md,
+    zIndex: 20,
+    elevation: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.surface,
+    shadowColor: "#000000",
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 }
+  },
+  welcomeToastIcon: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: theme.colors.primarySoft
+  },
+  welcomeToastCopy: { flex: 1, gap: 2 },
+  welcomeToastTitle: { color: theme.colors.text, fontWeight: "900", fontSize: theme.typography.body },
+  welcomeToastBody: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 20 },
   content: { paddingBottom: 130, gap: theme.spacing.md },
   header: { gap: theme.spacing.md },
   headerCopy: { gap: 5 },

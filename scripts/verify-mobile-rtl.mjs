@@ -72,7 +72,6 @@ const directionalScreens = [
   "apps/mobile/src/app/exam/[attemptId].tsx",
   "apps/mobile/src/app/historical.tsx",
   "apps/mobile/src/app/mistakes.tsx",
-  "apps/mobile/src/app/onboarding.tsx",
   "apps/mobile/src/app/premium.tsx",
   "apps/mobile/src/app/result/[attemptId].tsx",
   "apps/mobile/src/app/review/[attemptId].tsx"
@@ -91,6 +90,7 @@ for (const file of directionalScreens) {
 for (const file of [
   "apps/mobile/src/app/historical.tsx",
   "apps/mobile/src/app/mistakes.tsx",
+  "apps/mobile/src/app/onboarding.tsx",
   "apps/mobile/src/app/premium.tsx",
   "apps/mobile/src/app/review/[attemptId].tsx"
 ]) {

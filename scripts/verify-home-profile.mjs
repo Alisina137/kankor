@@ -85,6 +85,41 @@ for (const marker of [
   if (!onboarding.includes(marker)) throw new Error(`Onboarding welcome invariant missing: ${marker}`);
 }
 
+const accountMenu = await source("apps/mobile/src/components/account-menu-button.tsx");
+for (const marker of [
+  '"/auth/profile-photo"',
+  '"/(tabs)/profile"',
+  '"/premium"',
+  '"/(tabs)/progress"',
+  'log-out-outline',
+  'await logout()',
+  'router.replace("/(auth)/welcome")',
+  "Modal"
+]) {
+  if (!accountMenu.includes(marker)) throw new Error(`Account menu invariant missing: ${marker}`);
+}
+
+const screen = await source("apps/mobile/src/components/screen.tsx");
+for (const marker of [
+  "AccountMenuButton",
+  "showAccountMenu",
+  'rootSegment !== "(auth)"',
+  'rootSegment !== "onboarding"',
+  'rootSegment !== "exam"'
+]) {
+  if (!screen.includes(marker)) throw new Error(`Shared account header invariant missing: ${marker}`);
+}
+
+const resultScreen = await source("apps/mobile/src/app/result/[attemptId].tsx");
+if (!resultScreen.includes("AccountMenuButton")) {
+  throw new Error("Result screen account menu is missing");
+}
+
+const reviewScreen = await source("apps/mobile/src/app/review/[attemptId].tsx");
+if (!reviewScreen.includes("AccountMenuButton")) {
+  throw new Error("Review screen account menu is missing");
+}
+
 const profile = await source("apps/mobile/src/app/(tabs)/profile.tsx");
 for (const marker of [
   "updateProfile",

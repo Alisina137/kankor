@@ -1,8 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View, type StyleProp, type TextStyle } from "react-native";
 import { AppText as Text } from "../../components/app-text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "../../components/screen";
@@ -166,6 +166,37 @@ const copy = {
     welcomeNewBody: "Your Kankor preparation journey starts here."
   }
 } as const;
+
+function HomeEdgeText({
+  children,
+  style,
+  direction
+}: {
+  children: ReactNode;
+  style?: StyleProp<TextStyle>;
+  direction: "rtl" | "ltr";
+}) {
+  const align = direction === "rtl" ? "right" : "left";
+
+  return (
+    <View
+      style={[
+        styles.homeTextAnchor,
+        direction === "rtl" ? styles.homeTextAnchorRight : styles.homeTextAnchorLeft
+      ]}
+    >
+      <Text
+        style={[
+          styles.homeTextValue,
+          style,
+          { textAlign: align, writingDirection: direction }
+        ]}
+      >
+        {children}
+      </Text>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const { user, token } = useAuth();
@@ -350,9 +381,9 @@ export default function HomeScreen() {
       <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.appName, { textAlign: align, writingDirection: direction }]}>{sharedText.appName}</Text>
-          <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.welcome}</Text>
-          <Text style={[styles.subtitle, { textAlign: align, writingDirection: direction }]}>{text.subtitle}</Text>
+          <HomeEdgeText style={styles.appName} direction={direction}>{sharedText.appName}</HomeEdgeText>
+          <HomeEdgeText style={styles.title} direction={direction}>{text.welcome}</HomeEdgeText>
+          <HomeEdgeText style={styles.subtitle} direction={direction}>{text.subtitle}</HomeEdgeText>
         </View>
         <View style={[styles.badges, { flexDirection: rowDirection }]}>
           <View style={styles.targetBadge}>
@@ -403,7 +434,7 @@ export default function HomeScreen() {
       ) : null}
 
       <View style={styles.card}>
-        <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.recommendation}</Text>
+        <HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.recommendation}</HomeEdgeText>
         {weakestTopic ? (
           <>
             <View style={[styles.recommendationRow, { flexDirection: rowDirection }]}>
@@ -411,13 +442,13 @@ export default function HomeScreen() {
                 <Ionicons name="trending-up-outline" size={22} color={theme.colors.primary} />
               </View>
               <View style={styles.flex}>
-                <Text style={[styles.itemTitle, { textAlign: align, writingDirection: direction }]}>
+                <HomeEdgeText style={styles.itemTitle} direction={direction}>
                   {localize(weakestTopic.topicFa, weakestTopic.topicPs)}
-                </Text>
-                <Text style={[styles.meta, { textAlign: align, writingDirection: direction }]}>
+                </HomeEdgeText>
+                <HomeEdgeText style={styles.meta} direction={direction}>
                   {localize(weakestTopic.subjectFa, weakestTopic.subjectPs)} · {weakestTopic.accuracyPercentage.toFixed(1)}%
-                </Text>
-                <Text style={[styles.bodySmall, { textAlign: align, writingDirection: direction }]}>{text.weakArea}</Text>
+                </HomeEdgeText>
+                <HomeEdgeText style={styles.bodySmall} direction={direction}>{text.weakArea}</HomeEdgeText>
               </View>
             </View>
             <Pressable disabled={startingTopic} style={[styles.fullPrimary, startingTopic && styles.disabled]} onPress={() => void practiceWeakTopic()}>
@@ -428,7 +459,7 @@ export default function HomeScreen() {
           </>
         ) : (
           <>
-            <Text style={[styles.body, { textAlign: align, writingDirection: direction }]}>{text.firstAction}</Text>
+            <HomeEdgeText style={styles.body} direction={direction}>{text.firstAction}</HomeEdgeText>
             <Pressable style={styles.fullPrimary} onPress={() => router.push("/(tabs)/practice")}>
               <Text style={styles.fullPrimaryText}>{text.browsePractice}</Text>
             </Pressable>
@@ -555,12 +586,25 @@ const styles = StyleSheet.create({
   welcomeToastCopy: { flex: 1, gap: 2 },
   welcomeToastTitle: { color: theme.colors.text, fontWeight: "900", fontSize: theme.typography.body },
   welcomeToastBody: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 20 },
+  homeTextAnchor: {
+    width: "100%",
+    direction: "ltr"
+  },
+  homeTextAnchorRight: {
+    alignItems: "flex-end"
+  },
+  homeTextAnchorLeft: {
+    alignItems: "flex-start"
+  },
+  homeTextValue: {
+    maxWidth: "100%"
+  },
   content: { paddingBottom: 130, gap: theme.spacing.md },
   header: { gap: theme.spacing.md },
-  headerCopy: { width: "100%", alignItems: "stretch", gap: 5 },
-  appName: { width: "100%", color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "800" },
-  title: { width: "100%", color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "900" },
-  subtitle: { width: "100%", color: theme.colors.mutedText, lineHeight: 23 },
+  headerCopy: { gap: 5 },
+  appName: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "800" },
+  title: { color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "900" },
+  subtitle: { color: theme.colors.mutedText, lineHeight: 23 },
   badges: { flexWrap: "wrap", gap: theme.spacing.sm },
   targetBadge: { minHeight: 42, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primarySoft },
   badgeLabel: { color: theme.colors.primary, fontSize: theme.typography.small, fontWeight: "700" },
@@ -572,14 +616,14 @@ const styles = StyleSheet.create({
   loading: { minHeight: 80, alignItems: "center", justifyContent: "center" },
   error: { color: theme.colors.danger, lineHeight: 22 },
   heroCard: { gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radius.lg, backgroundColor: theme.colors.primarySoft },
-  card: { width: "100%", alignItems: "stretch", gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
+  card: { gap: theme.spacing.md, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, backgroundColor: theme.colors.surface },
   section: { gap: theme.spacing.sm },
   cardHeader: { alignItems: "center", gap: theme.spacing.sm },
   iconCircle: { width: 46, height: 46, alignItems: "center", justifyContent: "center", borderRadius: 23, backgroundColor: "#FFFFFF" },
   iconCircleSoft: { width: 42, height: 42, alignItems: "center", justifyContent: "center", borderRadius: 21, backgroundColor: theme.colors.primarySoft },
   flex: { flex: 1 },
-  sectionTitle: { width: "100%", color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
-  body: { width: "100%", color: theme.colors.mutedText, lineHeight: 24 },
+  sectionTitle: { color: theme.colors.text, fontSize: theme.typography.heading, fontWeight: "800" },
+  body: { color: theme.colors.mutedText, lineHeight: 24 },
   bodySmall: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 21, marginTop: 3 },
   attemptTitle: { color: theme.colors.text, fontWeight: "800", lineHeight: 22 },
   progressTrack: { height: 8, overflow: "hidden", borderRadius: theme.radius.pill, backgroundColor: "#FFFFFF" },

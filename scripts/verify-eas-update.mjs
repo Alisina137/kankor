@@ -62,7 +62,7 @@ if (staticUpdateUrl !== expectedUpdateUrl && !derivesUpdateUrl) {
 }
 
 for (const marker of [
-  'policy: "fingerprint"',
+  'policy: "appVersion"',
   'checkAutomatically: "ON_LOAD"',
   'fallbackToCacheTimeout: 0'
 ]) {
@@ -72,16 +72,6 @@ for (const marker of [
 }
 if (appConfig.includes("KANKOR_PREVIEW_BUILD") || appConfig.includes("mode.preview")) {
   throw new Error("Preview OTA behavior must not depend on the removed custom preview-build mode.");
-}
-
-const fingerprintConfig = await text("apps/mobile/fingerprint.config.js");
-for (const marker of [
-  'DEFAULT_SOURCE_SKIPS',
-  'SourceSkips.ExpoConfigExtraSection'
-]) {
-  if (!fingerprintConfig.includes(marker)) {
-    throw new Error(`Fingerprint config invariant missing: ${marker}`);
-  }
 }
 
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
@@ -108,5 +98,5 @@ console.log(`✓ Existing EAS project ID: ${projectId}`);
 console.log(`✓ Update URL: ${expectedUpdateUrl}`);
 console.log("✓ Preview channel: preview");
 console.log("✓ Production channel: production");
-console.log("✓ Runtime strategy: fingerprint");
+console.log("✓ Runtime strategy: appVersion");
 console.log("✓ Installed builds use Expo's standard ON_LOAD update behavior.");

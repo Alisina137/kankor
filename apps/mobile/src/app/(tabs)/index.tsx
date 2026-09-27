@@ -512,7 +512,7 @@ export default function HomeScreen() {
               {welcomeMessage === "back" ? text.welcomeBackBody : text.welcomeNewBody}
             </Text>
           </View>
-        </View>
+        </Animated.View>
       ) : null}
     </View>
   );

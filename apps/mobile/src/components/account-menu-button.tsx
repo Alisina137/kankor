@@ -8,10 +8,10 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppText as Text } from "./app-text";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import { useLocale } from "../providers/locale-provider";

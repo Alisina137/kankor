@@ -67,7 +67,13 @@ for (const marker of [
   "activeAttempt.summary.answered",
   "overview?.averagePercentage",
   'router.push("/historical")',
-  'router.push("/mistakes")'
+  'router.push("/mistakes")',
+  "welcomeMessage",
+  "Animated.sequence",
+  "Animated.delay(2200)",
+  "welcomeOpacity",
+  "welcomeOffset",
+  "<Animated.View"
 ]) {
   if (!home.includes(marker)) throw new Error(`Home dashboard invariant missing: ${marker}`);
 }

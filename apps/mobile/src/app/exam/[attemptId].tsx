@@ -3,15 +3,8 @@ import { theme } from "@kankor/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  AppState,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+  ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText as Text } from "../../components/app-text";
 import { AppButton } from "../../components/app-button";
 import { apiRequest, ApiError } from "../../lib/api";
 import {

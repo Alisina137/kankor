@@ -1,8 +1,10 @@
 import { theme } from "@kankor/config";
+import { useSegments } from "expo-router";
 import type { PropsWithChildren } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AccountMenuButton } from "./account-menu-button";
 import { useLocale } from "../providers/locale-provider";
 
 type ScreenProps = PropsWithChildren<{
@@ -12,9 +14,16 @@ type ScreenProps = PropsWithChildren<{
 
 export function Screen({ children, scroll = false, contentContainerStyle }: ScreenProps) {
   const { direction } = useLocale();
+  const segments = useSegments();
+  const showAccountMenu = segments.some((segment) => segment === "(tabs)");
 
   return (
     <SafeAreaView style={[styles.safe, { direction }]}>
+      {showAccountMenu ? (
+        <View style={styles.accountBar}>
+          <AccountMenuButton />
+        </View>
+      ) : null}
       {scroll ? (
         <ScrollView
           style={[styles.scroll, { direction }]}
@@ -38,6 +47,16 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: theme.colors.background
+  },
+  accountBar: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    direction: "ltr"
   },
   scroll: {
     flex: 1

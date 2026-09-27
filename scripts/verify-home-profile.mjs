@@ -44,6 +44,9 @@ const authProvider = await source("apps/mobile/src/providers/auth-provider.tsx")
 for (const marker of [
   "updateProfile:",
   'apiRequest<{ user: StudentUser }>("/auth/profile"',
+  'apiRequest<void>("/auth/logout"',
+  'body: JSON.stringify({})',
+  'console.info("Remote logout failed; clearing local session anyway"',
   "setUser(result.user)",
   "setLocale(result.user.preferredLanguage)"
 ]) {

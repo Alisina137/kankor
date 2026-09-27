@@ -129,8 +129,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       if (token) {
         await apiRequest<void>("/auth/logout", {
-          method: "POST",
-          body: JSON.stringify({})
+          method: "DELETE"
         }, token);
       }
     } catch (error) {

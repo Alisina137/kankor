@@ -152,7 +152,7 @@ Normal compatible production OTA update:
 npm run update:production -- --message "Describe the production update"
 ```
 
-Preview and production use separate EAS Update channels. Runtime compatibility uses the fingerprint policy. The production profile still sets `KANKOR_RELEASE_BUILD=true`, which activates the mobile production URL guard.
+Preview and production use separate EAS Update channels. Runtime compatibility uses the `appVersion` policy: keep the version unchanged for JS/TS OTA updates and bump `expo.version` before native-runtime changes and replacement builds. The production profile still sets `KANKOR_RELEASE_BUILD=true`, which activates the mobile production URL guard.
 
 ## 8. Manual smoke checklist
 

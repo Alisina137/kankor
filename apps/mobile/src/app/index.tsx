@@ -1,6 +1,7 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { AppText as Text } from "../components/app-text";
 import { theme } from "@kankor/config";
 import { AppButton } from "../components/app-button";
 import { hasSeenIntro } from "../lib/first-run-storage";

@@ -51,22 +51,30 @@ function apiFallbackUrls() {
     .filter(Boolean);
 }
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
-  ...config,
-  name: config.name ?? "KankorPrep Afghanistan",
-  slug: config.slug ?? "kankorprep-afghanistan",
-  runtimeVersion: {
-    policy: "fingerprint"
-  },
-  updates: {
-    ...config.updates,
-    enabled: true,
-    checkAutomatically: "ON_LOAD",
-    fallbackToCacheTimeout: 0
-  },
-  extra: {
-    ...config.extra,
-    apiUrl: apiUrlForBuild(),
-    apiUrls: apiFallbackUrls()
-  }
-});
+export default ({ config }: ConfigContext): ExpoConfig => {
+  const projectId =
+    typeof config.extra?.eas?.projectId === "string"
+      ? config.extra.eas.projectId
+      : undefined;
+
+  return {
+    ...config,
+    name: config.name ?? "KankorPrep Afghanistan",
+    slug: config.slug ?? "kankorprep-afghanistan",
+    runtimeVersion: {
+      policy: "fingerprint"
+    },
+    updates: {
+      ...config.updates,
+      ...(projectId ? { url: `https://u.expo.dev/${projectId}` } : {}),
+      enabled: true,
+      checkAutomatically: "ON_LOAD",
+      fallbackToCacheTimeout: 0
+    },
+    extra: {
+      ...config.extra,
+      apiUrl: apiUrlForBuild(),
+      apiUrls: apiFallbackUrls()
+    }
+  };
+};

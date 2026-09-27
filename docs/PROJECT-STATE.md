@@ -280,3 +280,5 @@ Production launch preparation: resolve the external blockers in `docs/RELEASE.md
 
 - Expo physical-device development automatically prefers the current Expo host for the API, avoiding manual LAN-IP changes when DHCP changes the laptop address.
 - Expo Go over `dev:anywhere` now treats `.trycloudflare.com` Metro hosts as tunnel hosts, so it does not incorrectly derive `http://<metro-tunnel>:4000`; it uses the separately injected HTTPS API tunnel URL instead.
+
+- Home Quick Access now uses a physical horizontal card row: the section title is anchored to the physical right edge, each Persian/Dari label stays RTL/right-aligned on the right, and its icon is fixed on the left on the same line.

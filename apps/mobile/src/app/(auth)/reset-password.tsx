@@ -1,27 +1,41 @@
+import { theme } from "@kankor/config";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { theme } from "@kankor/config";
+import { StyleSheet } from "react-native";
 import { AppButton } from "../../components/app-button";
+import { AppText as Text } from "../../components/app-text";
+import { AuthFormShell } from "../../components/auth-form-shell";
 import { FormField } from "../../components/form-field";
-import { Screen } from "../../components/screen";
 import { ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
+const copy = {
+  fa: {
+    body: "کُد بازیابی را وارد کنید و یک رمز عبور جدید و امن برای حساب خود بسازید."
+  },
+  ps: {
+    body: "د بېرته ترلاسه کولو کوډ ولیکئ او د خپل حساب لپاره نوی خوندي پټنوم جوړ کړئ."
+  },
+  en: {
+    body: "Enter your recovery code and choose a new secure password for your account."
+  }
+} as const;
+
 export default function ResetPasswordScreen() {
   const { resetPassword } = useAuth();
-  const { direction, text } = useLocale();
+  const { locale, text } = useLocale();
+  const local = copy[locale];
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const align = direction === "rtl" ? "right" : "left";
 
   async function submit() {
     setError("");
     if (!token.trim()) return setError(text.required);
     if (password.length < 8) return setError(text.passwordLength);
+
     setBusy(true);
     try {
       await resetPassword(token, password);
@@ -41,20 +55,31 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <Screen>
-      <View style={styles.stack}>
-        <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.resetTitle}</Text>
-        <FormField label={text.resetToken} value={token} onChangeText={setToken} />
-        <FormField label={text.newPassword} value={password} onChangeText={setPassword} secureTextEntry secureToggle />
-        {error ? <Text style={[styles.error, { textAlign: align, writingDirection: direction }]}>{error}</Text> : null}
-        <AppButton label={text.resetPassword} loading={busy} onPress={submit} />
-      </View>
-    </Screen>
+    <AuthFormShell
+      title={text.resetTitle}
+      body={local.body}
+      illustration="security"
+    >
+      <FormField label={text.resetToken} value={token} onChangeText={setToken} />
+      <FormField
+        label={text.newPassword}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        secureToggle
+      />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <AppButton label={text.resetPassword} loading={busy} onPress={submit} />
+    </AuthFormShell>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: theme.spacing.md, paddingTop: theme.spacing.xl },
-  title: { fontSize: theme.typography.title, fontWeight: "800", color: theme.colors.text },
-  error: { color: theme.colors.danger }
+  error: {
+    color: theme.colors.danger,
+    fontSize: theme.typography.small,
+    lineHeight: 20
+  }
 });

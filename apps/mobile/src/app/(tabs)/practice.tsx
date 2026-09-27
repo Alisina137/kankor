@@ -1,7 +1,8 @@
 import { theme } from "@kankor/config";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { AppText as Text } from "../../components/app-text";
 import { Screen } from "../../components/screen";
 import { apiRequest, ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";

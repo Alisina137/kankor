@@ -6,16 +6,17 @@ type AppTextProps = ComponentProps<typeof ReactNativeText>;
 
 export function AppText({ style, ...props }: AppTextProps) {
   const { direction } = useLocale();
+  const align = direction === "rtl" ? "right" : "left";
 
   return (
     <ReactNativeText
       {...props}
       style={[
-        style,
         {
-          textAlign: "right",
+          textAlign: align,
           writingDirection: direction
-        }
+        },
+        style
       ]}
     />
   );

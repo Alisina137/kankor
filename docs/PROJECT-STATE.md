@@ -20,6 +20,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 ## Architecture decisions
 - Monorepo with `apps/mobile`, `apps/admin`, `apps/api`, shared packages.
 - RTL localization treats Dari and Pashto as first-class languages; English remains secondary.
+- Mobile text now uses a shared locale-aware `AppText` default in shared controls: Dari and Pashto render right-aligned with RTL writing direction, English remains LTR, form inputs retain locale-aware direction, and bottom-tab labels follow the active locale.
 - Authentication uses first-party email/password accounts for MVP.
 - Passwords use Node scrypt hashing.
 - Sessions use random opaque bearer tokens; only SHA-256 token hashes are stored server-side.

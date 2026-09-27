@@ -1,7 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
+import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import { AppText as Text } from "./app-text";
 import { useLocale } from "../providers/locale-provider";
 
 type FormFieldProps = TextInputProps & {
@@ -24,7 +25,7 @@ export function FormField({
 
   return (
     <View style={[styles.field, { direction }]}>
-      <Text style={[styles.label, { textAlign: align }]}>{label}</Text>
+      <Text style={styles.label}>{label}</Text>
 
       <View style={[styles.inputShell, { direction }, error && styles.inputError]}>
         <TextInput
@@ -52,7 +53,7 @@ export function FormField({
         ) : null}
       </View>
 
-      {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }

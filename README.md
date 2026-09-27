@@ -34,7 +34,7 @@ Install that preview APK once. Afterward, normal JS/TS/React Native/UI changes a
 npm run update:preview -- --message "Describe the update"
 ```
 
-The preview build listens only to the `preview` channel. Production builds listen only to the `production` channel. Runtime compatibility is derived with Expo's `fingerprint` policy.
+The preview build listens only to the `preview` channel. Production builds listen only to the `production` channel. Runtime compatibility uses Expo's `appVersion` policy. Keep the app version unchanged for normal JS/TS OTA updates; bump it before any native-runtime change and replacement APK/AAB.
 
 A new APK/AAB is still required when native dependencies, Expo/React Native versions, permissions, config plugins, Android native configuration, or other native-runtime inputs change.
 

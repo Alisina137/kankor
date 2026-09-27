@@ -49,13 +49,18 @@ if (
 }
 
 const expectedUpdateUrl = `https://u.expo.dev/${projectId}`;
-if (app.expo?.updates?.url !== expectedUpdateUrl) {
+const appConfig = await text("apps/mobile/app.config.ts");
+const staticUpdateUrl = app.expo?.updates?.url;
+const derivesUpdateUrl =
+  appConfig.includes('typeof config.extra?.eas?.projectId === "string"') &&
+  appConfig.includes('url: `https://u.expo.dev/${projectId}`');
+
+if (staticUpdateUrl !== expectedUpdateUrl && !derivesUpdateUrl) {
   throw new Error(
-    `expo.updates.url must point to the existing EAS project: ${expectedUpdateUrl}. Run "npm run eas:update:configure".`
+    `The effective expo.updates.url must point to the existing EAS project: ${expectedUpdateUrl}.`
   );
 }
 
-const appConfig = await text("apps/mobile/app.config.ts");
 for (const marker of [
   'policy: "fingerprint"',
   'checkAutomatically: "ON_LOAD"',

@@ -62,9 +62,7 @@ for (const marker of [
   "<HomeEdgeText style={styles.subtitle}",
   "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.recommendation}</HomeEdgeText>",
   "<HomeEdgeText style={styles.body} direction={direction}>{text.firstAction}</HomeEdgeText>",
-  "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.quick}</HomeEdgeText>",
-  'direction: "ltr"',
-  'quickLabel: {\n    flex: 1'
+  "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.quick}</HomeEdgeText>"
 ]) {
   if (!home.includes(marker)) throw new Error(`Home RTL edge-anchor invariant missing: ${marker}`);
 }

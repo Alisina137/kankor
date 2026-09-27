@@ -1,5 +1,6 @@
 import { theme } from "@kankor/config";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { AppText as Text } from "./app-text";
 import { useLocale } from "../providers/locale-provider";
 
 export function AppButton({

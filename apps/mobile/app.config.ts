@@ -62,7 +62,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: config.name ?? "KankorPrep Afghanistan",
     slug: config.slug ?? "kankorprep-afghanistan",
     runtimeVersion: {
-      policy: "fingerprint"
+      policy: "appVersion"
     },
     updates: {
       ...config.updates,

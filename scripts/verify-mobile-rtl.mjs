@@ -1,6 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+const localeProvider = await readFile(resolve("apps/mobile/src/providers/locale-provider.tsx"), "utf8");
+if (localeProvider.includes("export const FORCE_LTR_DIAGNOSTIC = true")) {
+  throw new Error("Temporary FORCE_LTR_DIAGNOSTIC is active. This is intentional for visual testing only; revert it before RTL verification/release.");
+}
+
 const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"), "utf8");
 for (const marker of [
   'const align = direction === "rtl" ? "right" : "left"',

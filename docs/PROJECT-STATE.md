@@ -247,6 +247,7 @@ Phase 10 — Release Readiness completed in source. Production launch remains ga
 - Legacy ngrok warning handling remains harmless in the mobile client, but `dev:anywhere` no longer depends on ngrok or an ngrok account.
 - Development CORS allows localhost/127.0.0.1 browser origins on any port for Expo Web, while production CORS remains restricted to configured exact origins.
 - Home is now an actionable student dashboard: active-attempt resume, personalized weak-topic recommendation, progress snapshot, quick Practice/Full Kankor/Historical/Mistakes access, subscription badge, and recent result links.
+- Home shows a localized, non-blocking three-second welcome toast only after a successful returning-user sign-in or the first redirect after onboarding; ordinary Home visits do not retrigger it.
 - Home refreshes when focused and reuses existing authoritative attempts/progress/billing APIs; it can also surface a locally persisted in-progress attempt while connectivity recovers.
 - Profile is now an account/preferences center with identity, current subscription, preparation settings, app version, logout, and a separated destructive account-deletion section.
 - Profile Subscription now shows the active plan as a prominent state card and a localized Free-vs-Premium comparison matrix covering daily question allowance, targeted-exam size, full Kankor access, historical archive access, explanations/worked solutions, analytics/history, Mistake Notebook, and weakness practice.

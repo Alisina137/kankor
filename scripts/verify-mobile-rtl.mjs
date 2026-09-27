@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"), "utf8");
 for (const marker of [
-  'textAlign: align',
+  'textAlign: "right"',
   'writingDirection: direction'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
@@ -57,8 +57,8 @@ for (const marker of [
 }
 
 const field = await readFile(resolve("apps/mobile/src/components/form-field.tsx"), "utf8");
-if (!field.includes("writingDirection: direction") || !field.includes("textAlign: align")) {
-  throw new Error("Form fields must use locale-aware text alignment and writing direction");
+if (!field.includes("writingDirection: direction") || !field.includes('const align = "right" as const')) {
+  throw new Error("Form fields must stay visually right-aligned while preserving locale writing direction");
 }
 
 const button = await readFile(resolve("apps/mobile/src/components/app-button.tsx"), "utf8");

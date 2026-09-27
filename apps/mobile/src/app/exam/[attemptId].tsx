@@ -364,12 +364,12 @@ export default function ExamSessionScreen() {
   }, [remainingSeconds, payload?.attempt.status]);
 
   if (loading && !payload) {
-    return <View style={styles.center}><ActivityIndicator color={theme.colors.primary} /><Text>{text.loading}</Text></View>;
+    return <View style={[styles.center, { direction }]}><ActivityIndicator color={theme.colors.primary} /><Text>{text.loading}</Text></View>;
   }
 
   if (fatalError && !payload) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { direction }]}>
         <Text style={styles.error}>{fatalError}</Text>
         <AppButton label={text.retry} onPress={() => void hydrate()} />
       </View>
@@ -378,7 +378,7 @@ export default function ExamSessionScreen() {
 
   if (submitted) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { direction }]}>
         <Ionicons name="checkmark-circle-outline" size={54} color={theme.colors.success} />
         <Text style={styles.submitted}>{text.submitted}</Text>
         <AppButton label={text.backExams} onPress={() => router.replace("/(tabs)/exams")} />
@@ -389,7 +389,7 @@ export default function ExamSessionScreen() {
   if (!payload || !currentQuestion) return null;
 
   return (
-    <View style={styles.page}>
+    <View style={[styles.page, { direction }]}>
       <View style={[styles.topbar, { flexDirection: rowDirection }]}>
         <View style={styles.titleBlock}>
           <Text style={[styles.examTitle, { textAlign: align, writingDirection: direction }]} numberOfLines={1}>{payload.attempt.title}</Text>
@@ -406,7 +406,7 @@ export default function ExamSessionScreen() {
       {offline ? <Text style={styles.offline}>{text.offline}</Text> : <Text style={styles.synced}>{text.synced}</Text>}
       {remainingSeconds === 0 ? <Text style={styles.expired}>{text.expired}</Text> : null}
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { direction }]}>
         <Text style={[styles.questionText, { textAlign: align, writingDirection: direction }]}>{currentQuestion.content}</Text>
 
         <View style={styles.choices}>

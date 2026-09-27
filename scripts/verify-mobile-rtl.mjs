@@ -5,7 +5,9 @@ const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"
 for (const marker of [
   'const align = direction === "rtl" ? "right" : "left"',
   'textAlign: align',
-  'writingDirection: direction'
+  'writingDirection: direction',
+  "StyleSheet.flatten(style)",
+  'alignSelf: "stretch"'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
 }

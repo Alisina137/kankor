@@ -10,8 +10,6 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-// TEMPORARY DIAGNOSTIC: force the complete mobile UI to LTR to compare rendering.
-export const FORCE_LTR_DIAGNOSTIC = true;
 
 export function LocaleProvider({ children }: PropsWithChildren) {
   const [locale, setLocale] = useState<SupportedLocale>("fa");
@@ -19,7 +17,7 @@ export function LocaleProvider({ children }: PropsWithChildren) {
   const value = useMemo(() => ({
     locale,
     setLocale,
-    direction: FORCE_LTR_DIAGNOSTIC ? "ltr" : getDirection(locale),
+    direction: getDirection(locale),
     text: getMessages(locale)
   }), [locale]);
 

@@ -1,12 +1,13 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "../../components/screen";
 import { ApiError, apiRequest } from "../../lib/api";
 import { getActivePersistedExam } from "../../lib/exam-storage";
+import { consumePendingWelcomeMessage } from "../../lib/welcome-message-storage";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
@@ -183,16 +184,19 @@ export default function HomeScreen() {
   const [welcomeMessage, setWelcomeMessage] = useState<"back" | "new" | null>(null);
   const welcomeOpacity = useRef(new Animated.Value(0)).current;
   const welcomeOffset = useRef(new Animated.Value(-10)).current;
-  const params = useLocalSearchParams<{ welcome?: string | string[] }>();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const value = Array.isArray(params.welcome) ? params.welcome[0] : params.welcome;
-    if (value !== "back" && value !== "new") return;
+  useFocusEffect(useCallback(() => {
+    let active = true;
 
-    setWelcomeMessage(value);
-    router.setParams({ welcome: "" });
-  }, [params.welcome]);
+    void consumePendingWelcomeMessage().then((value) => {
+      if (active && value) setWelcomeMessage(value);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []));
 
   useEffect(() => {
     if (!welcomeMessage) return;

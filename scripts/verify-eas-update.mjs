@@ -69,6 +69,16 @@ if (appConfig.includes("KANKOR_PREVIEW_BUILD") || appConfig.includes("mode.previ
   throw new Error("Preview OTA behavior must not depend on the removed custom preview-build mode.");
 }
 
+const fingerprintConfig = await text("apps/mobile/fingerprint.config.js");
+for (const marker of [
+  'DEFAULT_SOURCE_SKIPS',
+  'SourceSkips.ExpoConfigExtraSection'
+]) {
+  if (!fingerprintConfig.includes(marker)) {
+    throw new Error(`Fingerprint config invariant missing: ${marker}`);
+  }
+}
+
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
 if (eas.cli?.version !== "24.8.0") {
   throw new Error("EAS CLI version must remain pinned to 24.8.0.");

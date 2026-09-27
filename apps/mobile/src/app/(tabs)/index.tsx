@@ -1,8 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Screen } from "../../components/screen";
 import { ApiError, apiRequest } from "../../lib/api";
@@ -181,6 +181,8 @@ export default function HomeScreen() {
   const [startingTopic, setStartingTopic] = useState(false);
   const [error, setError] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState<"back" | "new" | null>(null);
+  const welcomeOpacity = useRef(new Animated.Value(0)).current;
+  const welcomeOffset = useRef(new Animated.Value(-10)).current;
   const params = useLocalSearchParams<{ welcome?: string | string[] }>();
   const insets = useSafeAreaInsets();
 
@@ -195,9 +197,47 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!welcomeMessage) return;
 
-    const timeout = setTimeout(() => setWelcomeMessage(null), 3000);
-    return () => clearTimeout(timeout);
-  }, [welcomeMessage]);
+    welcomeOpacity.setValue(0);
+    welcomeOffset.setValue(-10);
+
+    const animation = Animated.sequence([
+      Animated.parallel([
+        Animated.timing(welcomeOpacity, {
+          toValue: 1,
+          duration: 260,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true
+        }),
+        Animated.timing(welcomeOffset, {
+          toValue: 0,
+          duration: 320,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true
+        })
+      ]),
+      Animated.delay(2200),
+      Animated.parallel([
+        Animated.timing(welcomeOpacity, {
+          toValue: 0,
+          duration: 360,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true
+        }),
+        Animated.timing(welcomeOffset, {
+          toValue: -8,
+          duration: 360,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true
+        })
+      ])
+    ]);
+
+    animation.start(({ finished }) => {
+      if (finished) setWelcomeMessage(null);
+    });
+
+    return () => animation.stop();
+  }, [welcomeMessage, welcomeOffset, welcomeOpacity]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -354,7 +394,7 @@ export default function HomeScreen() {
               <Text style={styles.compactPrimaryText}>{text.continue}</Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       ) : null}
 
       <View style={styles.card}>
@@ -449,10 +489,17 @@ export default function HomeScreen() {
       </Screen>
 
       {welcomeMessage ? (
-        <View
+        <Animated.View
           pointerEvents="none"
           accessibilityLiveRegion="polite"
-          style={[styles.welcomeToast, { top: insets.top + theme.spacing.sm }]}
+          style={[
+            styles.welcomeToast,
+            {
+              top: insets.top + theme.spacing.sm,
+              opacity: welcomeOpacity,
+              transform: [{ translateY: welcomeOffset }]
+            }
+          ]}
         >
           <View style={styles.welcomeToastIcon}>
             <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />

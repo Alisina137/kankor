@@ -17,7 +17,8 @@ if (mobileConfig.includes("override: true")) {
 
 const api = await readFile(resolve("apps/mobile/src/lib/api.ts"), "utf8");
 for (const marker of [
-  "Constants.expoConfig?.extra?.apiUrl",
+  "Constants.expoConfig?.extra ?? {}",
+  "extra.apiUrl",
   '"rate_limited"',
   '"server_error"',
   "AbortController",

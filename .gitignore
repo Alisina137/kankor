@@ -13,3 +13,4 @@ coverage/
 .eas/
 *.apk
 *.aab
+expo-env.d.ts

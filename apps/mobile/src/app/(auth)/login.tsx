@@ -24,7 +24,11 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const user = await login(email, password);
-      router.replace(user.onboardingCompleted ? "/(tabs)" : "/onboarding");
+      router.replace(
+        user.onboardingCompleted
+          ? { pathname: "/(tabs)", params: { welcome: "back" } }
+          : "/onboarding"
+      );
     } catch (e) {
       const code = e instanceof ApiError ? e.code : "";
       setError(

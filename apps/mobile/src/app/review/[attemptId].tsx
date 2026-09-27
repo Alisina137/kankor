@@ -184,7 +184,7 @@ export default function ReviewScreen() {
   }
 
   return (
-    <View style={styles.page}>
+    <View style={[styles.page, { direction }]}>
       <View style={[styles.header, { flexDirection: rowDirection }]}>
         <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name={direction === "rtl" ? "arrow-forward" : "arrow-back"} size={22} color={theme.colors.text} />
@@ -193,7 +193,7 @@ export default function ReviewScreen() {
         <AccountMenuButton />
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, { flexDirection: rowDirection }]}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ direction }} contentContainerStyle={[styles.filters, { direction, flexDirection: rowDirection }]}>
         {filterKeys.map((key) => (
           <Pressable
             key={key}
@@ -208,7 +208,7 @@ export default function ReviewScreen() {
       {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text>{text.loading}</Text></View> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { direction }]}>
         {!loading && !items.length ? <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.noItems}</Text> : null}
 
         {items.map((item) => {

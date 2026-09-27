@@ -99,7 +99,7 @@ for (const marker of [
   '"/(tabs)/progress"',
   'log-out-outline',
   'await logout()',
-  'router.replace("/(auth)/welcome")',
+  'router.replace("/(auth)/login")',
   "Modal"
 ]) {
   if (!accountMenu.includes(marker)) throw new Error(`Account menu invariant missing: ${marker}`);

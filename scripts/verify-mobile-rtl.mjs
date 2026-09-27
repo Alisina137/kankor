@@ -7,7 +7,7 @@ for (const marker of [
   'textAlign: align',
   'writingDirection: direction',
   "StyleSheet.flatten(style)",
-  'alignSelf: direction === "rtl" ? "flex-end" : "flex-start"',
+  'width: "100%"',
   'maxWidth: "100%"'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
@@ -49,6 +49,19 @@ for (const file of localeAwareTextFiles) {
   if (/import\s*{[\s\S]*?\bText\b[\s\S]*?}\s*from "react-native";/m.test(content)) {
     throw new Error(`raw React Native Text import detected: ${file}`);
   }
+}
+
+const home = await readFile(resolve("apps/mobile/src/app/(tabs)/index.tsx"), "utf8");
+for (const marker of [
+  'headerCopy: { width: "100%", alignItems: "stretch"',
+  'appName: { width: "100%"',
+  'title: { width: "100%"',
+  'subtitle: { width: "100%"',
+  'card: { width: "100%", alignItems: "stretch"',
+  'sectionTitle: { width: "100%"',
+  'body: { width: "100%"'
+]) {
+  if (!home.includes(marker)) throw new Error(`Home RTL physical-width invariant missing: ${marker}`);
 }
 
 const screen = await readFile(resolve("apps/mobile/src/components/screen.tsx"), "utf8");

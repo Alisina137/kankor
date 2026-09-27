@@ -92,7 +92,7 @@ export function AccountMenuButton() {
   async function signOut() {
     setOpen(false);
     await logout();
-    router.replace("/(auth)/welcome");
+    router.replace("/(auth)/login");
   }
 
   if (!user) return null;

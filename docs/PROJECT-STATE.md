@@ -269,3 +269,6 @@ Phase 10 release-readiness plus post-phase student UX refinement implemented on 
 ## Next milestone
 Production launch preparation: resolve the external blockers in `docs/RELEASE.md`, run `npm run release:check:production`, complete the manual release-candidate smoke checklist, then create/store-test the signed production build.
 - Mobile TypeScript config no longer uses deprecated `baseUrl`; `@/*` maps directly to `./src/*`, and generated `expo-env.d.ts` is ignored instead of tracked.
+
+- Expo physical-device development automatically prefers the current Expo host for the API, avoiding manual LAN-IP changes when DHCP changes the laptop address.
+- Expo Go over `dev:anywhere` now treats `.trycloudflare.com` Metro hosts as tunnel hosts, so it does not incorrectly derive `http://<metro-tunnel>:4000`; it uses the separately injected HTTPS API tunnel URL instead.

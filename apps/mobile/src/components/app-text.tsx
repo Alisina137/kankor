@@ -23,6 +23,7 @@ export function AppText({ style, ...props }: AppTextProps) {
         },
         isDirectionalContent
           ? {
+              alignSelf: "flex-start",
               width: "100%",
               maxWidth: "100%"
             }

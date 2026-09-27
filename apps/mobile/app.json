@@ -33,7 +33,7 @@
     },
     "owner": "alisina137",
     "runtimeVersion": {
-      "policy": "fingerprint"
+      "policy": "appVersion"
     },
     "updates": {
       "enabled": true,

@@ -115,26 +115,29 @@ The admin response also sets:
 
 Build/deploy the admin with the real production `NEXT_PUBLIC_API_URL` embedded at build time.
 
-## 7. Mobile preview and production builds
+## 7. Mobile preview, EAS Update, and production builds
 
 The mobile production profile rejects a missing, localhost, or non-HTTPS `EXPO_PUBLIC_API_URL`.
 
-Before the first EAS build, the product owner must link the project to their Expo/EAS account and configure credentials/secrets:
+Before the first EAS Update-enabled build, sign in to the existing Expo/EAS project and configure EAS Update:
 
 ```powershell
-cd C:\projects\kankor\apps\mobile
-eas login
-eas init
+npm run eas:update:configure
+npm run verify:eas-update
 ```
 
-Do not commit Expo credentials or production secrets.
+If Expo asks which project to use, select the existing `@alisina137/kankorprep-afghanistan` project. Do not create a duplicate project. Do not commit Expo credentials or production secrets.
 
-Return to the repository root.
-
-Preview APK:
+Preview APK — build/install once after native update configuration changes:
 
 ```powershell
 npm run build:android:preview
+```
+
+Normal compatible preview OTA update:
+
+```powershell
+npm run update:preview -- --message "Describe the update"
 ```
 
 Production Android App Bundle:
@@ -143,7 +146,13 @@ Production Android App Bundle:
 npm run build:android:production
 ```
 
-The production profile sets `KANKOR_RELEASE_BUILD=true`, which activates the mobile production URL guard.
+Normal compatible production OTA update:
+
+```powershell
+npm run update:production -- --message "Describe the production update"
+```
+
+Preview and production use separate EAS Update channels. Runtime compatibility uses the fingerprint policy. The production profile still sets `KANKOR_RELEASE_BUILD=true`, which activates the mobile production URL guard.
 
 ## 8. Manual smoke checklist
 

@@ -1,7 +1,7 @@
 import { theme } from "@kankor/config";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
 import { apiRequest, ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
@@ -15,6 +15,53 @@ type Topic = { id: string; chapterId: string; titleFa: string; titlePs: string |
 
 const questionCounts = [5, 10, 20, 30];
 const timerOptions = [null, 900, 1800, 3600] as const;
+
+
+function SkeletonPulse({ children }: { children: ReactNode }) {
+  const opacity = useRef(new Animated.Value(0.45)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.9,
+          duration: 700,
+          useNativeDriver: true
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.45,
+          duration: 700,
+          useNativeDriver: true
+        })
+      ])
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
+}
+
+function SkeletonChipGroup({
+  count = 4,
+  wide = false
+}: {
+  count?: number;
+  wide?: boolean;
+}) {
+  const widths = wide ? [168, 132, 188, 116] : [72, 104, 88, 120];
+
+  return (
+    <SkeletonPulse>
+      <View style={styles.chips} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {widths.slice(0, count).map((width, index) => (
+          <View key={`${width}-${index}`} style={[styles.skeletonChip, { width }]} />
+        ))}
+      </View>
+    </SkeletonPulse>
+  );
+}
 
 const copy = {
   fa: {
@@ -437,10 +484,7 @@ export default function PracticeScreen() {
       <View style={styles.section}>
         <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{label}</Text>
         {loading ? (
-          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
-          </View>
+          <SkeletonChipGroup count={4} />
         ) : items.length ? (
           <View style={[styles.chips, { flexDirection: rowDirection }]}>
             {items.map((item) => (
@@ -552,9 +596,9 @@ export default function PracticeScreen() {
           />
         ) : null}
         {bookId && chaptersLoading ? (
-          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
+          <View style={styles.section}>
+            <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.chapters}</Text>
+            <SkeletonChipGroup count={3} wide />
           </View>
         ) : null}
         {bookId && !chaptersLoading && chapters.length > 1 ? (
@@ -571,9 +615,9 @@ export default function PracticeScreen() {
           <Text style={[styles.empty, { textAlign: align, writingDirection: direction }]}>{text.emptyChapters}</Text>
         ) : null}
         {chapterId && topicsLoading ? (
-          <View style={[styles.loadingRow, { flexDirection: rowDirection }]}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { textAlign: align, writingDirection: direction }]}>{text.loading}</Text>
+          <View style={styles.section}>
+            <Text style={[styles.label, { textAlign: align, writingDirection: direction }]}>{text.topics}</Text>
+            <SkeletonChipGroup count={4} wide />
           </View>
         ) : null}
         {chapterId && !topicsLoading && topics.length > 1 ? (
@@ -601,9 +645,15 @@ export default function PracticeScreen() {
             <Text style={[styles.sourceTitle, { textAlign: align, writingDirection: direction }]}>
               {displayName(selectedBook.titleFa, selectedBook.titlePs)}
             </Text>
-            <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
-              {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {chaptersLoading ? text.loading : `${chapters.length} ${countLabel(chapters.length, text.chapter, text.chapters)}`}
-            </Text>
+            {chaptersLoading ? (
+              <SkeletonPulse>
+                <View style={styles.skeletonMetaLine} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+              </SkeletonPulse>
+            ) : (
+              <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
+                {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {`${chapters.length} ${countLabel(chapters.length, text.chapter, text.chapters)}`}
+              </Text>
+            )}
           </View>
         ) : null}
 
@@ -661,8 +711,17 @@ const styles = StyleSheet.create({
   chipActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
   chipText: { color: theme.colors.text, fontWeight: "600" },
   chipTextActive: { color: theme.colors.primary, fontWeight: "700" },
-  loadingRow: { alignItems: "center", gap: theme.spacing.sm, minHeight: 36 },
-  loadingText: { color: theme.colors.mutedText, fontSize: theme.typography.small },
+  skeletonChip: {
+    height: 44,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.border
+  },
+  skeletonMetaLine: {
+    width: "72%",
+    height: 16,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.border
+  },
   empty: { color: theme.colors.mutedText, fontSize: theme.typography.small, lineHeight: 22 },
   error: { color: theme.colors.danger },
   sourceCard: { padding: theme.spacing.md, gap: 8, backgroundColor: theme.colors.primarySoft, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radius.lg },

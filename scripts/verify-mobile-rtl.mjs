@@ -7,6 +7,7 @@ for (const marker of [
   'textAlign: align',
   'writingDirection: direction',
   "StyleSheet.flatten(style)",
+  'alignSelf: "flex-start"',
   'width: "100%"',
   'maxWidth: "100%"'
 ]) {

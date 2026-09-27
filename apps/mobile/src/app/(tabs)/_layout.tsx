@@ -20,7 +20,7 @@ export default function TabsLayout() {
   if (loading) {
     return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.background }}><ActivityIndicator color={theme.colors.primary} /></View>;
   }
-  if (!user) return <Redirect href="/(auth)/welcome" />;
+  if (!user) return <Redirect href="/(auth)/login" />;
   if (!user.onboardingCompleted) return <Redirect href="/onboarding" />;
 
   const items = [

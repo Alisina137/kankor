@@ -61,9 +61,22 @@ for (const marker of [
   "<HomeEdgeText style={styles.title}",
   "<HomeEdgeText style={styles.subtitle}",
   "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.recommendation}</HomeEdgeText>",
-  "<HomeEdgeText style={styles.body} direction={direction}>{text.firstAction}</HomeEdgeText>"
+  "<HomeEdgeText style={styles.body} direction={direction}>{text.firstAction}</HomeEdgeText>",
+  "<HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.quick}</HomeEdgeText>",
+  'direction: "ltr"',
+  'quickLabel: {\n    flex: 1'
 ]) {
   if (!home.includes(marker)) throw new Error(`Home RTL edge-anchor invariant missing: ${marker}`);
+}
+
+for (const marker of [
+  'quickCard: {',
+  'flexDirection: "row"',
+  'direction: "ltr"',
+  'quickLabel: {',
+  'flex: 1'
+]) {
+  if (!home.includes(marker)) throw new Error(`Quick Access RTL invariant missing: ${marker}`);
 }
 
 const screen = await readFile(resolve("apps/mobile/src/components/screen.tsx"), "utf8");

@@ -1,7 +1,8 @@
 import { theme } from "@kankor/config";
 import { Stack, type ErrorBoundaryProps } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText as Text } from "../components/app-text";
 import { AuthProvider } from "../providers/auth-provider";
 import { LocaleProvider, useLocale } from "../providers/locale-provider";
 

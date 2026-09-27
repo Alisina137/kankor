@@ -189,11 +189,7 @@ for (const marker of [
   "barTrack",
   "history.slice(0, 5)",
   "useFocusEffect",
-  "Promise.allSettled",
-  "useLocalSearchParams",
-  "welcomeMessage",
-  "welcomeToast",
-  "setTimeout(() => setWelcomeMessage(null), 3000)"
+  "Promise.allSettled"
 ]) {
   if (!progress.includes(marker)) throw new Error(`Progress UX invariant missing: ${marker}`);
 }

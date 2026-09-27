@@ -9,6 +9,44 @@ for (const marker of [
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
 }
 
+const localeAwareTextFiles = [
+  "apps/mobile/src/app/(auth)/login.tsx",
+  "apps/mobile/src/app/(auth)/recovery.tsx",
+  "apps/mobile/src/app/(auth)/register.tsx",
+  "apps/mobile/src/app/(auth)/reset-password.tsx",
+  "apps/mobile/src/app/(auth)/welcome.tsx",
+  "apps/mobile/src/app/(tabs)/exams.tsx",
+  "apps/mobile/src/app/(tabs)/index.tsx",
+  "apps/mobile/src/app/(tabs)/practice.tsx",
+  "apps/mobile/src/app/(tabs)/profile.tsx",
+  "apps/mobile/src/app/(tabs)/progress.tsx",
+  "apps/mobile/src/app/_layout.tsx",
+  "apps/mobile/src/app/exam/[attemptId].tsx",
+  "apps/mobile/src/app/historical.tsx",
+  "apps/mobile/src/app/index.tsx",
+  "apps/mobile/src/app/mistakes.tsx",
+  "apps/mobile/src/app/onboarding.tsx",
+  "apps/mobile/src/app/premium.tsx",
+  "apps/mobile/src/app/result/[attemptId].tsx",
+  "apps/mobile/src/app/review/[attemptId].tsx",
+  "apps/mobile/src/components/account-menu-button.tsx",
+  "apps/mobile/src/components/app-button.tsx",
+  "apps/mobile/src/components/auth-form-shell.tsx",
+  "apps/mobile/src/components/auth-illustration.tsx",
+  "apps/mobile/src/components/form-field.tsx",
+  "apps/mobile/src/components/section-card.tsx"
+];
+
+for (const file of localeAwareTextFiles) {
+  const content = await readFile(resolve(file), "utf8");
+  if (content.includes("<Text") && !content.includes("AppText as Text")) {
+    throw new Error(`Locale-aware AppText missing: ${file}`);
+  }
+  if (/import\s*{[\s\S]*?\bText\b[\s\S]*?}\s*from "react-native";/m.test(content)) {
+    throw new Error(`raw React Native Text import detected: ${file}`);
+  }
+}
+
 const screen = await readFile(resolve("apps/mobile/src/components/screen.tsx"), "utf8");
 for (const marker of [
   'style={[styles.safe, { direction }]}',

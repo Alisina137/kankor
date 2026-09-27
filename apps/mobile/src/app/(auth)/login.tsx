@@ -7,6 +7,7 @@ import { AppText as Text } from "../../components/app-text";
 import { AuthFormShell } from "../../components/auth-form-shell";
 import { FormField } from "../../components/form-field";
 import { ApiError } from "../../lib/api";
+import { setPendingWelcomeMessage } from "../../lib/welcome-message-storage";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
 
@@ -40,11 +41,12 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const user = await login(email, password);
-      router.replace(
-        user.onboardingCompleted
-          ? { pathname: "/(tabs)", params: { welcome: "back" } }
-          : "/onboarding"
-      );
+      if (user.onboardingCompleted) {
+        await setPendingWelcomeMessage("back");
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/onboarding");
+      }
     } catch (e) {
       const code = e instanceof ApiError ? e.code : "";
       setError(

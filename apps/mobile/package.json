@@ -13,9 +13,9 @@
     "check:expo": "npx expo install --check",
     "build:android:preview": "eas build --platform android --profile preview",
     "build:android:production": "eas build --platform android --profile production",
-    "eas:link": "node ../../scripts/link-eas-project.mjs",
-    "update:preview": "node ../../scripts/eas-update-preview.mjs",
-    "update:production": "node ../../scripts/eas-update-production.mjs"
+    "update:preview": "eas update --channel preview",
+    "update:production": "eas update --channel production",
+    "eas:update:configure": "eas update:configure"
   },
   "dependencies": {
     "@kankor/config": "*",

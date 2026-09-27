@@ -40,12 +40,16 @@ for (const marker of [
   if (!authRoutes.includes(marker)) throw new Error(`Profile photo API invariant missing: ${marker}`);
 }
 
+if (!authRoutes.includes('app.delete("/logout"') || !authRoutes.includes("logoutHandler")) {
+  throw new Error("Bodyless DELETE logout API invariant missing");
+}
+
 const authProvider = await source("apps/mobile/src/providers/auth-provider.tsx");
 for (const marker of [
   "updateProfile:",
   'apiRequest<{ user: StudentUser }>("/auth/profile"',
   'apiRequest<void>("/auth/logout"',
-  'body: JSON.stringify({})',
+  'method: "DELETE"',
   'console.info("Remote logout failed; clearing local session anyway"',
   "setUser(result.user)",
   "setLocale(result.user.preferredLanguage)"

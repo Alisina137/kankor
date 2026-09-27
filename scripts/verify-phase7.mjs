@@ -81,7 +81,10 @@ for (const marker of [
   "/progress/subjects",
   "/progress/history",
   "/mistakes",
-  "Practice this topic"
+  "practiceTopic",
+  "/progress/topics/${topic.topicId}/practice",
+  "router.push(`/exam/${result.attempt.id}`)",
+  "text.practice"
 ]) {
   if (!progressPage.includes(marker)) throw new Error(`Progress UI capability missing: ${marker}`);
 }

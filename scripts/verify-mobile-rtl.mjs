@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 
 const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"), "utf8");
 for (const marker of [
-  'textAlign: "right"',
+  'const align = direction === "rtl" ? "right" : "left"',
+  'textAlign: align',
   'writingDirection: direction'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
@@ -57,8 +58,8 @@ for (const marker of [
 }
 
 const field = await readFile(resolve("apps/mobile/src/components/form-field.tsx"), "utf8");
-if (!field.includes("writingDirection: direction") || !field.includes('const align = "right" as const')) {
-  throw new Error("Form fields must stay visually right-aligned while preserving locale writing direction");
+if (!field.includes("writingDirection: direction") || !field.includes('const align = direction === "rtl" ? "right" : "left"')) {
+  throw new Error("Form fields must follow locale text alignment and writing direction");
 }
 
 const button = await readFile(resolve("apps/mobile/src/components/app-button.tsx"), "utf8");
@@ -138,10 +139,28 @@ for (const file of [
   }
 }
 
+const standaloneDirectionScreens = [
+  ["apps/mobile/src/app/exam/[attemptId].tsx", 'styles.page, { direction }'],
+  ["apps/mobile/src/app/result/[attemptId].tsx", 'styles.pageRoot, { direction }'],
+  ["apps/mobile/src/app/review/[attemptId].tsx", 'styles.page, { direction }']
+];
+
+for (const [file, marker] of standaloneDirectionScreens) {
+  const content = await readFile(resolve(file), "utf8");
+  if (!content.includes(marker)) {
+    throw new Error(`Standalone screen direction invariant missing: ${file}`);
+  }
+}
+
+const accountMenu = await readFile(resolve("apps/mobile/src/components/account-menu-button.tsx"), "utf8");
+for (const marker of ["direction", "styles.identity, { direction }", "styles.menuItem, { direction }"]) {
+  if (!accountMenu.includes(marker)) throw new Error(`RTL account-menu invariant missing: ${marker}`);
+}
+
 const exam = await readFile(resolve("apps/mobile/src/app/exam/[attemptId].tsx"), "utf8");
 if (!exam.includes('direction === "rtl" ? "chevron-forward" : "chevron-back"')
   || !exam.includes('direction === "rtl" ? "chevron-back" : "chevron-forward"')) {
   throw new Error("Exam previous/next chevrons must mirror in RTL");
 }
 
-console.log("Mobile RTL verified: Dari/Pashto content inherits RTL from Screen without double reversal, localized text uses RTL writing direction, navigation icons mirror correctly, RTL tab order is preserved, and English remains LTR.");
+console.log("Mobile RTL verified: Dari/Pashto use right alignment plus RTL writing/layout direction, English uses left alignment plus LTR, standalone screens inherit locale direction, navigation icons mirror correctly, and RTL tab order is preserved.");

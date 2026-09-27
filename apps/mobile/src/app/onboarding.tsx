@@ -21,7 +21,7 @@ export default function OnboardingScreen() {
   const rowDirection = "row";
 
   if (!loading && !user) return <Redirect href="/(auth)/welcome" />;
-  if (user?.onboardingCompleted) return <Redirect href="/(tabs)" />;
+  if (user?.onboardingCompleted && !busy) return <Redirect href="/(tabs)" />;
 
   async function finish() {
     setBusy(true);
@@ -32,7 +32,7 @@ export default function OnboardingScreen() {
         targetExamYear: year,
         preparationLevel: level
       });
-      router.replace("/(tabs)");
+      router.replace({ pathname: "/(tabs)", params: { welcome: "new" } });
     } catch {
       setError(text.genericError);
     } finally {

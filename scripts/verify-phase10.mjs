@@ -150,6 +150,13 @@ for (const [script, expected] of Object.entries({
   }
 }
 
+const fingerprintConfig = await text("apps/mobile/fingerprint.config.js");
+for (const marker of ["DEFAULT_SOURCE_SKIPS", "SourceSkips.ExpoConfigExtraSection"]) {
+  if (!fingerprintConfig.includes(marker)) {
+    throw new Error(`Fingerprint configuration invariant missing: ${marker}`);
+  }
+}
+
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
 if (eas.cli?.version !== "24.8.0") {
   throw new Error("EAS CLI version must be pinned to 24.8.0 in eas.json");

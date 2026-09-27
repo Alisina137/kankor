@@ -38,6 +38,7 @@ export default function TabsLayout() {
       headerShown: false,
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.mutedText,
+      tabBarLabelStyle: { writingDirection: direction, textAlign: "center" },
       tabBarStyle: { height: 68, paddingTop: 7, paddingBottom: 8, borderTopColor: theme.colors.border }
     }}>
       {renderedItems.map(([name, title]) => (

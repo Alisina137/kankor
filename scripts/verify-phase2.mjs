@@ -8,6 +8,7 @@ const required = [
   "apps/mobile/src/providers/auth-provider.tsx",
   "apps/mobile/src/lib/session-storage.ts",
   "apps/mobile/src/lib/first-run-storage.ts",
+  "apps/mobile/src/lib/welcome-message-storage.ts",
   "apps/mobile/src/app/(auth)/welcome.tsx",
   "apps/mobile/src/app/(auth)/login.tsx",
   "apps/mobile/src/app/(auth)/register.tsx",
@@ -50,7 +51,7 @@ for (const marker of [
   'variant: "level"',
   "progressTrack",
   "stepBadge",
-  'params: { welcome: "new" }'
+  'setPendingWelcomeMessage("new")'
 ]) {
   if (!onboarding.includes(marker)) throw new Error(`Professional onboarding invariant missing: ${marker}`);
 }

@@ -488,12 +488,25 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { textAlign: align, writingDirection: direction }]}>{text.quick}</Text>
+        <HomeEdgeText style={styles.sectionTitle} direction={direction}>{text.quick}</HomeEdgeText>
         <View style={[styles.quickGrid, { flexDirection: rowDirection }]}>
           {quickActions.map((item) => (
-            <Pressable key={item.label} style={styles.quickCard} onPress={item.action}>
-              <View style={styles.quickIcon}><Ionicons name={item.icon} size={23} color={theme.colors.primary} /></View>
-              <Text style={[styles.quickLabel, { textAlign: align, writingDirection: direction }]}>{item.label}</Text>
+            <Pressable
+              key={item.label}
+              style={styles.quickCard}
+              onPress={item.action}
+            >
+              <View style={styles.quickIcon}>
+                <Ionicons name={item.icon} size={23} color={theme.colors.primary} />
+              </View>
+              <Text
+                style={[
+                  styles.quickLabel,
+                  { textAlign: align, writingDirection: direction }
+                ]}
+              >
+                {item.label}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -643,9 +656,34 @@ const styles = StyleSheet.create({
   metricValue: { color: theme.colors.text, fontSize: 22, fontWeight: "900" },
   metricLabel: { color: theme.colors.mutedText, fontSize: theme.typography.small },
   quickGrid: { flexWrap: "wrap", gap: theme.spacing.sm },
-  quickCard: { width: "47%", flexGrow: 1, minHeight: 92, justifyContent: "space-between", gap: 10, padding: theme.spacing.md, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.surface },
-  quickIcon: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: theme.colors.primarySoft },
-  quickLabel: { color: theme.colors.text, fontWeight: "800" },
+  quickCard: {
+    width: "47%",
+    flexGrow: 1,
+    minHeight: 78,
+    flexDirection: "row",
+    direction: "ltr",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surface
+  },
+  quickIcon: {
+    width: 40,
+    height: 40,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    backgroundColor: theme.colors.primarySoft
+  },
+  quickLabel: {
+    flex: 1,
+    color: theme.colors.text,
+    fontWeight: "800"
+  },
   historyRow: { minHeight: 58, alignItems: "center", gap: theme.spacing.sm, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: theme.spacing.sm },
   score: { color: theme.colors.primary, fontWeight: "900" }
 });

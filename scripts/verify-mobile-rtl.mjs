@@ -1,6 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+const appText = await readFile(resolve("apps/mobile/src/components/app-text.tsx"), "utf8");
+for (const marker of [
+  'textAlign: align',
+  'writingDirection: direction'
+]) {
+  if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
+}
+
 const screen = await readFile(resolve("apps/mobile/src/components/screen.tsx"), "utf8");
 for (const marker of [
   'style={[styles.safe, { direction }]}',
@@ -23,6 +31,9 @@ if (!button.includes("writingDirection: direction")) {
 const tabs = await readFile(resolve("apps/mobile/src/app/(tabs)/_layout.tsx"), "utf8");
 if (!tabs.includes('direction === "rtl" ? [...items].reverse() : items')) {
   throw new Error("Bottom tab order must reverse for RTL locales");
+}
+if (!tabs.includes("tabBarLabelStyle") || !tabs.includes("writingDirection: direction")) {
+  throw new Error("Bottom tab labels must follow locale writing direction");
 }
 
 const writingDirectionScreens = [

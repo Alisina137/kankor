@@ -5,6 +5,7 @@ import type { StyleProp, ViewStyle } from "react-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AccountMenuButton } from "./account-menu-button";
+import { useAuth } from "../providers/auth-provider";
 import { useLocale } from "../providers/locale-provider";
 
 type ScreenProps = PropsWithChildren<{
@@ -14,8 +15,16 @@ type ScreenProps = PropsWithChildren<{
 
 export function Screen({ children, scroll = false, contentContainerStyle }: ScreenProps) {
   const { direction } = useLocale();
+  const { user } = useAuth();
   const segments = useSegments();
-  const showAccountMenu = segments.some((segment) => segment === "(tabs)");
+  const rootSegment = String(segments[0] ?? "");
+  const showAccountMenu = Boolean(
+    user &&
+    rootSegment !== "(auth)" &&
+    rootSegment !== "onboarding" &&
+    rootSegment !== "exam" &&
+    rootSegment !== "index"
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { direction }]}>

@@ -6,25 +6,20 @@
   "build": {
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "channel": "preview",
-      "environment": "preview",
-      "env": {
-        "KANKOR_PREVIEW_BUILD": "true"
       }
     },
     "production": {
+      "channel": "production",
       "autoIncrement": true,
       "env": {
         "KANKOR_RELEASE_BUILD": "true"
       },
       "android": {
         "buildType": "app-bundle"
-      },
-      "channel": "production",
-      "environment": "production"
+      }
     }
   }
 }

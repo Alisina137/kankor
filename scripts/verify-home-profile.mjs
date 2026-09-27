@@ -72,6 +72,19 @@ for (const marker of [
   if (!home.includes(marker)) throw new Error(`Home dashboard invariant missing: ${marker}`);
 }
 
+const login = await source("apps/mobile/src/app/(auth)/login.tsx");
+if (!login.includes('params: { welcome: "back" }')) {
+  throw new Error("Login must request the one-time welcome-back Home toast");
+}
+
+const onboarding = await source("apps/mobile/src/app/onboarding.tsx");
+for (const marker of [
+  'params: { welcome: "new" }',
+  "user?.onboardingCompleted && !busy"
+]) {
+  if (!onboarding.includes(marker)) throw new Error(`Onboarding welcome invariant missing: ${marker}`);
+}
+
 const profile = await source("apps/mobile/src/app/(tabs)/profile.tsx");
 for (const marker of [
   "updateProfile",
@@ -135,7 +148,11 @@ for (const marker of [
   "barTrack",
   "history.slice(0, 5)",
   "useFocusEffect",
-  "Promise.allSettled"
+  "Promise.allSettled",
+  "useLocalSearchParams",
+  "welcomeMessage",
+  "welcomeToast",
+  "setTimeout(() => setWelcomeMessage(null), 3000)"
 ]) {
   if (!progress.includes(marker)) throw new Error(`Progress UX invariant missing: ${marker}`);
 }

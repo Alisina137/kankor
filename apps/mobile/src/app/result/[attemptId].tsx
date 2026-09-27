@@ -183,12 +183,12 @@ export default function ResultScreen() {
   const primary = useMemo(() => data?.result, [data]);
 
   if (loading && !data) {
-    return <View style={styles.center}><ActivityIndicator color={theme.colors.primary} /><Text>{text.loading}</Text></View>;
+    return <View style={[styles.center, { direction }]}><ActivityIndicator color={theme.colors.primary} /><Text>{text.loading}</Text></View>;
   }
 
   if (!data || !primary) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { direction }]}>
         <Text style={styles.error}>{error || text.error}</Text>
         <Pressable style={styles.primaryButton} onPress={() => void load()}><Text style={styles.primaryText}>{text.retry}</Text></Pressable>
       </View>
@@ -238,11 +238,11 @@ export default function ResultScreen() {
   }
 
   return (
-    <View style={styles.pageRoot}>
+    <View style={[styles.pageRoot, { direction }]}>
       <View style={styles.accountBar}>
         <AccountMenuButton />
       </View>
-      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.page, { direction }]} contentContainerStyle={[styles.content, { direction }]}>
       <View style={styles.header}>
         <Ionicons name="trophy-outline" size={34} color={theme.colors.primary} />
         <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>

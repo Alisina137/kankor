@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { theme } from "@kankor/config";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ComponentProps } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -209,7 +209,7 @@ function MenuItem({
   danger = false,
   onPress
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
   direction: "rtl" | "ltr";
   danger?: boolean;

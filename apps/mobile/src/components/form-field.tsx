@@ -20,7 +20,7 @@ export function FormField({
 }: FormFieldProps) {
   const { direction } = useLocale();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const align = "right" as const;
+  const align = direction === "rtl" ? "right" : "left";
   const shouldHidePassword = Boolean(secureTextEntry) && !passwordVisible;
 
   return (

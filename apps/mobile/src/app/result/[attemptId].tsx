@@ -3,6 +3,7 @@ import { theme } from "@kankor/config";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccountMenuButton } from "../../components/account-menu-button";
 import { ApiError, apiRequest } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
 import { useLocale } from "../../providers/locale-provider";
@@ -236,7 +237,11 @@ export default function ResultScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <View style={styles.pageRoot}>
+      <View style={styles.accountBar}>
+        <AccountMenuButton />
+      </View>
+      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Ionicons name="trophy-outline" size={34} color={theme.colors.primary} />
         <Text style={[styles.title, { textAlign: align, writingDirection: direction }]}>{text.title}</Text>
@@ -301,13 +306,25 @@ export default function ResultScreen() {
       <Pressable style={styles.secondaryButton} onPress={() => router.replace("/(tabs)/exams")}>
         <Text style={styles.secondaryText}>{text.back}</Text>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  pageRoot: { flex: 1, backgroundColor: theme.colors.background },
+  accountBar: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    direction: "ltr"
+  },
   page: { flex: 1, backgroundColor: theme.colors.background },
-  content: { padding: theme.spacing.md, paddingTop: 52, paddingBottom: 48, gap: theme.spacing.md },
+  content: { padding: theme.spacing.md, paddingTop: theme.spacing.md, paddingBottom: 48, gap: theme.spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: theme.spacing.md, padding: theme.spacing.lg, backgroundColor: theme.colors.background },
   header: { alignItems: "center", gap: theme.spacing.sm, marginBottom: theme.spacing.sm },
   title: { color: theme.colors.text, fontSize: theme.typography.title, fontWeight: "800" },

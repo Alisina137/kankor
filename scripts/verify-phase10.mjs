@@ -76,12 +76,12 @@ const mobileConfig = await text("apps/mobile/app.config.ts");
 for (const marker of [
   'process.env.EAS_BUILD_PROFILE === "production"',
   'process.env.KANKOR_RELEASE_BUILD === "true"',
-  'process.env.EAS_BUILD_PROFILE === "preview"',
-  'process.env.KANKOR_PREVIEW_BUILD === "true"',
-  "EXPO_PUBLIC_API_URL is required for a",
-  "must use https for a",
-  "must not point to localhost for a",
-  'fallbackToCacheTimeout: mode.preview ? 5000'
+  "EXPO_PUBLIC_API_URL is required for a production mobile build",
+  "must use https for a production mobile build",
+  "must not point to localhost for a production mobile build",
+  'policy: "fingerprint"',
+  'checkAutomatically: "ON_LOAD"',
+  'fallbackToCacheTimeout: 0'
 ]) {
   if (!mobileConfig.includes(marker)) {
     throw new Error(`Mobile release configuration invariant missing: ${marker}`);
@@ -107,11 +107,14 @@ if (mobileApp.expo?.ios?.config?.usesNonExemptEncryption !== false) {
 if (mobileApp.expo?.web?.bundler !== "metro") {
   throw new Error("Expo Router web builds must use the Metro bundler");
 }
-if (mobileApp.expo?.runtimeVersion?.policy !== "appVersion") {
-  throw new Error('EAS Update runtimeVersion must use the "appVersion" policy');
+if (mobileApp.expo?.name !== "KankorPrep Afghanistan") {
+  throw new Error("Existing Expo app name must be preserved");
 }
-if (mobileApp.expo?.updates?.checkAutomatically !== "ON_LOAD") {
-  throw new Error('EAS Update must check for updates on app load');
+if (mobileApp.expo?.slug !== "kankorprep-afghanistan") {
+  throw new Error("Existing Expo slug must be preserved");
+}
+if (mobileApp.expo?.android?.package !== "com.kankorprep.afghanistan") {
+  throw new Error("Existing Android package ID must be preserved");
 }
 
 const mobilePackage = JSON.parse(await text("apps/mobile/package.json"));
@@ -135,20 +138,16 @@ for (const [name, version] of Object.entries({
   }
 }
 if (!mobilePackage.scripts?.["check:expo"]) throw new Error("Expo dependency validation script is missing");
-for (const script of ["build:android:preview", "build:android:production"]) {
-  const command = mobilePackage.scripts?.[script] ?? "";
-  if (!command.startsWith("eas ")) {
-    throw new Error(`Mobile EAS build command ${script} must use the pinned local eas-cli`);
+for (const [script, expected] of Object.entries({
+  "build:android:preview": "eas build --platform android --profile preview",
+  "build:android:production": "eas build --platform android --profile production",
+  "eas:update:configure": "eas update:configure",
+  "update:preview": "eas update --channel preview",
+  "update:production": "eas update --channel production"
+})) {
+  if (mobilePackage.scripts?.[script] !== expected) {
+    throw new Error(`Mobile EAS script ${script} must be: ${expected}`);
   }
-  if (command.includes("npx") || command.includes("npm exec")) {
-    throw new Error("Mobile EAS build commands must use the pinned local eas-cli");
-  }
-}
-if (mobilePackage.scripts?.["update:preview"] !== "node ../../scripts/eas-update-preview.mjs") {
-  throw new Error("Mobile preview updates must use the guarded launcher");
-}
-if (mobilePackage.scripts?.["update:production"] !== "node ../../scripts/eas-update-production.mjs") {
-  throw new Error("Mobile production updates must use the guarded launcher");
 }
 
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
@@ -158,14 +157,11 @@ if (eas.cli?.version !== "24.8.0") {
 if (eas.build?.preview?.android?.buildType !== "apk") {
   throw new Error("EAS preview profile must produce an APK");
 }
-if (eas.build?.preview?.channel !== "preview" || eas.build?.preview?.environment !== "preview") {
-  throw new Error("EAS preview profile must use the preview update channel and environment");
+if (eas.build?.preview?.distribution !== "internal" || eas.build?.preview?.channel !== "preview") {
+  throw new Error("EAS preview profile must use internal distribution and the preview update channel");
 }
-if (eas.build?.production?.channel !== "production" || eas.build?.production?.environment !== "production") {
-  throw new Error("EAS production profile must use the production update channel and environment");
-}
-if (eas.build?.preview?.env?.KANKOR_PREVIEW_BUILD !== "true") {
-  throw new Error("EAS preview profile must enforce preview mobile configuration");
+if (eas.build?.production?.channel !== "production") {
+  throw new Error("EAS production profile must use the production update channel");
 }
 if (eas.build?.production?.android?.buildType !== "app-bundle") {
   throw new Error("EAS production profile must produce an Android App Bundle");
@@ -251,60 +247,11 @@ for (const script of [
   "dev:anywhere",
   "dev:tailscale",
   "verify:eas-update",
-  "eas:link",
+  "eas:update:configure",
   "update:preview",
-  "update:production",
-  "eas:preview:env:list",
-  "eas:preview:env:set-api"
+  "update:production"
 ]) {
   if (!rootPackage.scripts?.[script]) throw new Error(`Root release script missing: ${script}`);
-}
-
-const easLinker = await text("scripts/link-eas-project.mjs");
-for (const marker of [
-  'require.resolve("eas-cli/package.json")',
-  '"project:init"',
-  '"--account"',
-  '"alisina137"',
-  '"--json"',
-  '"--non-interactive"',
-  'app.expo.extra.eas.projectId = projectId',
-  'url: `https://u.expo.dev/${projectId}`'
-]) {
-  if (!easLinker.includes(marker)) throw new Error(`EAS linker invariant missing: ${marker}`);
-}
-if (easLinker.includes("--package=eas-cli") || easLinker.includes('"exec"')) {
-  throw new Error("EAS linker must not dynamically fetch eas-cli");
-}
-
-const previewEnvHelper = await text("scripts/eas-preview-env.mjs");
-for (const marker of [
-  '"env:list"',
-  '"env:set"',
-  '"EXPO_PUBLIC_API_URL"',
-  '"KANKOR_PREVIEW_BUILD"',
-  'Preview API URL must use HTTPS.',
-  'private/LAN addresses are not allowed'
-]) {
-  if (!previewEnvHelper.includes(marker)) throw new Error(`Preview EAS environment helper invariant missing: ${marker}`);
-}
-
-const previewUpdateLauncher = await text("scripts/eas-update-preview.mjs");
-for (const marker of [
-  '"preview"',
-  '"--environment"',
-  'KANKOR_PREVIEW_BUILD: "true"'
-]) {
-  if (!previewUpdateLauncher.includes(marker)) throw new Error(`Preview OTA invariant missing: ${marker}`);
-}
-
-const productionUpdateLauncher = await text("scripts/eas-update-production.mjs");
-for (const marker of [
-  '"production"',
-  '"--environment"',
-  'KANKOR_RELEASE_BUILD: "true"'
-]) {
-  if (!productionUpdateLauncher.includes(marker)) throw new Error(`Production OTA invariant missing: ${marker}`);
 }
 
 const anywhereDev = await text("scripts/dev-anywhere.mjs");

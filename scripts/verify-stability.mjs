@@ -102,7 +102,8 @@ const lanLauncher = await readFile(resolve("scripts/dev-lan.mjs"), "utf8");
 for (const marker of [
   'runRequired(["run", "verify:dev-network"]',
   'runRequired(["run", "db:verify"]',
-  'waitForApi(`http://127.0.0.1:${apiPort}/health`',
+  'const localHealthUrl = `http://127.0.0.1:${apiPort}/health`',
+  "await waitForApi(localHealthUrl, apiProcess)",
   '"start:lan"',
   "process.env.npm_execpath",
   "process.execPath",

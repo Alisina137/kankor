@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { StyleSheet, Text as ReactNativeText } from "react-native";
+import { Text as ReactNativeText } from "react-native";
 import { useLocale } from "../providers/locale-provider";
 
 type AppTextProps = ComponentProps<typeof ReactNativeText>;
@@ -21,15 +21,14 @@ export function AppText({ style, ...props }: AppTextProps) {
           textAlign: align,
           writingDirection: direction
         },
-        isDirectionalContent ? styles.directionalContent : null,
+        isDirectionalContent
+          ? {
+              alignSelf: direction === "rtl" ? "flex-end" : "flex-start",
+              maxWidth: "100%"
+            }
+          : null,
         style
       ]}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  directionalContent: {
-    alignSelf: "stretch"
-  }
-});

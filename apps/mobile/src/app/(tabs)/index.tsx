@@ -346,7 +346,7 @@ export default function HomeScreen() {
   ];
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { direction }]}>
       <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>

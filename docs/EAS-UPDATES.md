@@ -26,13 +26,13 @@ The mobile workspace uses:
 
 - Expo SDK 57
 - `expo-updates ~57.0.23`
-- runtime policy: `fingerprint`
+- runtime policy: `appVersion`
 - automatic update check: `ON_LOAD`
 - `fallbackToCacheTimeout: 0`
 - preview channel: `preview`
 - production channel: `production`
 
-The fingerprint runtime policy lets Expo derive compatibility from native dependencies/configuration so an OTA update is not loaded by an incompatible native build.
+The `appVersion` runtime policy keeps normal OTA updates on the same native runtime. Keep `expo.version` unchanged for JS/TS/UI-only updates. Before any native-runtime change, bump `expo.version` and create a replacement APK/AAB so the old installed build cannot receive that new runtime's updates.
 
 With the standard Expo startup behavior, the app can start from its embedded/cached update when offline. When online, it checks for a compatible update on load. If a new update finishes downloading after startup, it is used on a later app launch/reload.
 
@@ -54,7 +54,7 @@ Then verify:
 npm run verify:eas-update
 ```
 
-That verifier checks the existing project ID, `https://u.expo.dev/<project-id>` update URL, fingerprint runtime strategy, build channels, APK/AAB types, and update commands.
+That verifier checks the existing project ID, `https://u.expo.dev/<project-id>` update URL, `appVersion` runtime strategy, build channels, APK/AAB types, and update commands.
 
 ## First preview APK after this configuration
 
@@ -117,9 +117,13 @@ Create a new APK/AAB when changing the native runtime, including:
 - AndroidManifest/native configuration
 - Expo config plugins/native plugins
 - native splash resources/configuration
-- any other change that alters the native fingerprint
+- any other change that changes the native runtime
 
-With the fingerprint policy, a native-runtime change produces a different runtime fingerprint, preventing the old APK from loading an incompatible update.
+With the `appVersion` policy, bump `expo.version` before every native-runtime change, then build the replacement APK/AAB. Normal JS/TS/UI OTA updates keep the same app version.
+
+## Why appVersion is used here
+
+KankorPrep originally used the `fingerprint` policy, but EAS Build produced different pre-build and post-prebuild fingerprints in this managed npm-workspaces project and failed during `CONFIGURE_EXPO_UPDATES`. `appVersion` is an official Expo runtime policy and avoids that tooling mismatch while preserving safe OTA compatibility when the app version is bumped for native changes.
 
 ## Production
 

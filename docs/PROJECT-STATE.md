@@ -21,6 +21,9 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 - Monorepo with `apps/mobile`, `apps/admin`, `apps/api`, shared packages.
 - RTL localization treats Dari and Pashto as first-class languages; English remains secondary.
 - Mobile text now uses a shared locale-aware `AppText` default in shared controls: Dari and Pashto render right-aligned with RTL writing direction, English remains LTR, form inputs retain locale-aware direction, and bottom-tab labels follow the active locale.
+- First-run UX now separates new and returning signed-out users: new installs enter a three-slide illustrated product introduction, while users who have already completed the intro go directly to Sign in. Completing or leaving the intro persists locally with AsyncStorage.
+- Authentication pages use a shared illustrated premium form shell, and onboarding is a three-step illustrated wizard (Language → Target Kankor year → Preparation level) with step progress, premium option cards, RTL-aware controls, and a final redirect to Home with the one-time animated welcome message.
+- Explicit sign-out now returns to Sign in instead of replaying first-run onboarding.
 - Authentication uses first-party email/password accounts for MVP.
 - Passwords use Node scrypt hashing.
 - Sessions use random opaque bearer tokens; only SHA-256 token hashes are stored server-side.

@@ -117,6 +117,17 @@ if (mobileApp.expo?.android?.package !== "com.kankorprep.afghanistan") {
   throw new Error("Existing Android package ID must be preserved");
 }
 
+const mobileTsconfig = JSON.parse(await text("apps/mobile/tsconfig.json"));
+if (mobileTsconfig.compilerOptions?.baseUrl !== undefined) {
+  throw new Error("Mobile tsconfig must not use deprecated baseUrl with TypeScript 6");
+}
+if (mobileTsconfig.compilerOptions?.paths?.["@/*"]?.[0] !== "./src/*") {
+  throw new Error('Mobile tsconfig must map "@/*" to "./src/*" without baseUrl');
+}
+if ((mobileTsconfig.include ?? []).some((value) => value === "expo-env.d.ts" || value.includes(".expo/types"))) {
+  throw new Error("Generated Expo route/env type paths must not be tracked in the non-typed-routes tsconfig");
+}
+
 const mobilePackage = JSON.parse(await text("apps/mobile/package.json"));
 for (const [name, version] of Object.entries({
   expo: "~57.0.25",
@@ -223,7 +234,7 @@ for (const marker of [
 }
 
 const gitignore = await text(".gitignore");
-for (const marker of [".env.production", ".env.*.local", ".eas/", ".cache/", "*.apk", "*.aab"]) {
+for (const marker of [".env.production", ".env.*.local", ".eas/", ".cache/", "*.apk", "*.aab", "expo-env.d.ts"]) {
   if (!gitignore.split(/\r?\n/).includes(marker)) {
     throw new Error(`Release-sensitive ignore rule missing: ${marker}`);
   }

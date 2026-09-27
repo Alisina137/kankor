@@ -7,6 +7,7 @@ import { AppButton } from "../components/app-button";
 import { AppText as Text } from "../components/app-text";
 import { AuthIllustration } from "../components/auth-illustration";
 import { Screen } from "../components/screen";
+import { setPendingWelcomeMessage } from "../lib/welcome-message-storage";
 import { useAuth } from "../providers/auth-provider";
 import { useLocale } from "../providers/locale-provider";
 
@@ -145,7 +146,8 @@ export default function OnboardingScreen() {
         targetExamYear: year,
         preparationLevel: level
       });
-      router.replace({ pathname: "/(tabs)", params: { welcome: "new" } });
+      await setPendingWelcomeMessage("new");
+      router.replace("/(tabs)");
     } catch {
       setError(text.genericError);
     } finally {

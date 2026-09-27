@@ -20,7 +20,7 @@ Freemium student mobile app, web administration, structured monolith API, Postgr
 ## Architecture decisions
 - Monorepo with `apps/mobile`, `apps/admin`, `apps/api`, shared packages.
 - RTL localization treats Dari and Pashto as first-class languages; English remains secondary.
-- Mobile text now uses a shared `AppText` across all text-bearing mobile screens and shared components with visual right alignment for every locale. Dari and Pashto keep RTL writing direction; English keeps LTR character order but its lines and titles are still anchored to the right. Form inputs follow the same right alignment.
+- Mobile localization now uses true locale direction instead of forced right alignment: Dari and Pashto render with right-aligned text, RTL writing direction, RTL container/layout direction, mirrored navigation, and reversed RTL tab order; English renders left-aligned with LTR writing/layout direction. Shared `AppText`, form inputs, Screen containers, account menus, and standalone Exam/Result/Review screens follow the same rule.
 - First-run UX now separates new and returning signed-out users: new installs enter a three-slide illustrated product introduction, while users who have already completed the intro go directly to Sign in. Choosing Get started or Sign in from the intro persists the intro-complete state locally with AsyncStorage.
 - Authentication pages use a shared illustrated premium form shell, and onboarding is a three-step illustrated wizard (Language → Target Kankor year → Preparation level) with step progress, premium option cards, RTL-aware controls, and a final redirect to Home with the one-time animated welcome message.
 - Explicit sign-out now returns to Sign in instead of replaying first-run onboarding.

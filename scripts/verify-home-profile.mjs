@@ -73,19 +73,24 @@ for (const marker of [
   "Animated.delay(2200)",
   "welcomeOpacity",
   "welcomeOffset",
-  "<Animated.View"
+  "<Animated.View",
+  "consumePendingWelcomeMessage"
 ]) {
   if (!home.includes(marker)) throw new Error(`Home dashboard invariant missing: ${marker}`);
 }
 
 const login = await source("apps/mobile/src/app/(auth)/login.tsx");
-if (!login.includes('params: { welcome: "back" }')) {
-  throw new Error("Login must request the one-time welcome-back Home toast");
+for (const marker of [
+  'setPendingWelcomeMessage("back")',
+  'router.replace("/(tabs)")'
+]) {
+  if (!login.includes(marker)) throw new Error(`Login welcome invariant missing: ${marker}`);
 }
 
 const onboarding = await source("apps/mobile/src/app/onboarding.tsx");
 for (const marker of [
-  'params: { welcome: "new" }',
+  'setPendingWelcomeMessage("new")',
+  'router.replace("/(tabs)")',
   "user?.onboardingCompleted && !busy"
 ]) {
   if (!onboarding.includes(marker)) throw new Error(`Onboarding welcome invariant missing: ${marker}`);

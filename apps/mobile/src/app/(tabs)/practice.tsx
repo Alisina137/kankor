@@ -1,7 +1,7 @@
 import { theme } from "@kankor/config";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../components/screen";
 import { apiRequest, ApiError } from "../../lib/api";
 import { useAuth } from "../../providers/auth-provider";
@@ -17,32 +17,6 @@ const questionCounts = [5, 10, 20, 30];
 const timerOptions = [null, 900, 1800, 3600] as const;
 
 
-function SkeletonPulse({ children }: { children: ReactNode }) {
-  const opacity = useRef(new Animated.Value(0.45)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.9,
-          duration: 700,
-          useNativeDriver: true
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.45,
-          duration: 700,
-          useNativeDriver: true
-        })
-      ])
-    );
-
-    animation.start();
-    return () => animation.stop();
-  }, [opacity]);
-
-  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
-}
-
 function SkeletonChipGroup({
   count = 4,
   wide = false
@@ -53,13 +27,15 @@ function SkeletonChipGroup({
   const widths = wide ? [168, 132, 188, 116] : [72, 104, 88, 120];
 
   return (
-    <SkeletonPulse>
-      <View style={styles.chips} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {widths.slice(0, count).map((width, index) => (
-          <View key={`${width}-${index}`} style={[styles.skeletonChip, { width }]} />
-        ))}
-      </View>
-    </SkeletonPulse>
+    <View
+      style={styles.chips}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {widths.slice(0, count).map((width, index) => (
+        <View key={`${width}-${index}`} style={[styles.skeletonChip, { width }]} />
+      ))}
+    </View>
   );
 }
 
@@ -646,9 +622,11 @@ export default function PracticeScreen() {
               {displayName(selectedBook.titleFa, selectedBook.titlePs)}
             </Text>
             {chaptersLoading ? (
-              <SkeletonPulse>
-                <View style={styles.skeletonMetaLine} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-              </SkeletonPulse>
+              <View
+                style={styles.skeletonMetaLine}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              />
             ) : (
               <Text style={[styles.sourceMeta, { textAlign: align, writingDirection: direction }]}>
                 {text.publisher}: {String(selectedBook.sourceMetadata?.publisher ?? "—")} · {`${chapters.length} ${countLabel(chapters.length, text.chapter, text.chapters)}`}

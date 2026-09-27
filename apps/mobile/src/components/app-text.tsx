@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { Text as ReactNativeText } from "react-native";
+import { StyleSheet, Text as ReactNativeText } from "react-native";
 import { useLocale } from "../providers/locale-provider";
 
 type AppTextProps = ComponentProps<typeof ReactNativeText>;

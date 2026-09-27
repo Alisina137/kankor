@@ -152,6 +152,9 @@ if (mobilePackage.scripts?.["update:production"] !== "node ../../scripts/eas-upd
 }
 
 const eas = JSON.parse(await text("apps/mobile/eas.json"));
+if (eas.cli?.version !== "24.8.0") {
+  throw new Error("EAS CLI version must be pinned to 24.8.0 in eas.json");
+}
 if (eas.build?.preview?.android?.buildType !== "apk") {
   throw new Error("EAS preview profile must produce an APK");
 }

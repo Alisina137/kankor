@@ -394,7 +394,7 @@ export default function HomeScreen() {
               <Text style={styles.compactPrimaryText}>{text.continue}</Text>
             </Pressable>
           </View>
-        </Animated.View>
+        </View>
       ) : null}
 
       <View style={styles.card}>

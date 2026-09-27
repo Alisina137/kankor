@@ -127,7 +127,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(async () => {
     try {
-      if (token) await apiRequest<void>("/auth/logout", { method: "POST" }, token);
+      if (token) {
+        await apiRequest<void>("/auth/logout", {
+          method: "POST",
+          body: JSON.stringify({})
+        }, token);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        const apiError = error instanceof ApiError ? error : null;
+        console.info("Remote logout failed; clearing local session anyway", apiError?.code ?? "logout_failed");
+      }
     } finally {
       setStartupError(null);
       setToken(null);

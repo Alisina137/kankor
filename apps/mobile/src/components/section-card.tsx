@@ -1,6 +1,7 @@
 import { theme } from "@kankor/config";
 import type { PropsWithChildren } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText as Text } from "./app-text";
 import { useLocale } from "../providers/locale-provider";
 
 export function SectionCard({ title, children }: PropsWithChildren<{ title: string }>) {

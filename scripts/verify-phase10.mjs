@@ -79,7 +79,7 @@ for (const marker of [
   "EXPO_PUBLIC_API_URL is required for a production mobile build",
   "must use https for a production mobile build",
   "must not point to localhost for a production mobile build",
-  'policy: "fingerprint"',
+  'policy: "appVersion"',
   'checkAutomatically: "ON_LOAD"',
   'fallbackToCacheTimeout: 0'
 ]) {
@@ -164,13 +164,6 @@ for (const [script, expected] of Object.entries({
 })) {
   if (mobilePackage.scripts?.[script] !== expected) {
     throw new Error(`Mobile EAS script ${script} must be: ${expected}`);
-  }
-}
-
-const fingerprintConfig = await text("apps/mobile/fingerprint.config.js");
-for (const marker of ["DEFAULT_SOURCE_SKIPS", "SourceSkips.ExpoConfigExtraSection"]) {
-  if (!fingerprintConfig.includes(marker)) {
-    throw new Error(`Fingerprint configuration invariant missing: ${marker}`);
   }
 }
 

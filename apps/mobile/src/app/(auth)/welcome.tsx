@@ -15,12 +15,14 @@ import { AppButton } from "../../components/app-button";
 import { AppText as Text } from "../../components/app-text";
 import { AuthIllustration } from "../../components/auth-illustration";
 import { Screen } from "../../components/screen";
+import { markIntroSeen } from "../../lib/first-run-storage";
 import { useLocale } from "../../providers/locale-provider";
 
 const copy = {
   fa: {
     eyebrow: "آمادگی هوشمند کانکور",
     next: "ادامه",
+    getStarted: "شروع کنید",
     slides: [
       {
         title: "با یک مسیر روشن شروع کنید",
@@ -42,6 +44,7 @@ const copy = {
   ps: {
     eyebrow: "هوښیار کانکور چمتووالی",
     next: "دوام",
+    getStarted: "پیل کړئ",
     slides: [
       {
         title: "په روښانه مسیر پیل وکړئ",
@@ -63,6 +66,7 @@ const copy = {
   en: {
     eyebrow: "Smarter Kankor preparation",
     next: "Continue",
+    getStarted: "Get started",
     slides: [
       {
         title: "Start with a clear path",
@@ -91,13 +95,20 @@ export default function WelcomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
 
-  function next() {
+  async function next() {
     if (index < local.slides.length - 1) {
       scrollRef.current?.scrollTo({ x: slideWidth * (index + 1), animated: true });
       setIndex((current) => Math.min(current + 1, local.slides.length - 1));
       return;
     }
+
+    await markIntroSeen();
     router.push("/(auth)/register");
+  }
+
+  async function signIn() {
+    await markIntroSeen();
+    router.push("/(auth)/login");
   }
 
   function onScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -148,13 +159,13 @@ export default function WelcomeScreen() {
           </View>
 
           <AppButton
-            label={index === local.slides.length - 1 ? text.createAccount : local.next}
+            label={index === local.slides.length - 1 ? local.getStarted : local.next}
             onPress={next}
           />
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push("/(auth)/login")}
+            onPress={() => void signIn()}
             style={styles.signIn}
           >
             <Text style={styles.signInMuted}>{text.haveAccount}</Text>

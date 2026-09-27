@@ -7,7 +7,8 @@ for (const marker of [
   'textAlign: align',
   'writingDirection: direction',
   "StyleSheet.flatten(style)",
-  'alignSelf: "stretch"'
+  'alignSelf: direction === "rtl" ? "flex-end" : "flex-start"',
+  'maxWidth: "100%"'
 ]) {
   if (!appText.includes(marker)) throw new Error(`Shared AppText RTL invariant missing: ${marker}`);
 }

@@ -38,6 +38,10 @@ if (app.expo?.android?.package !== "com.kankorprep.afghanistan") {
   throw new Error("Existing Android package ID must be preserved.");
 }
 
+if (app.expo?.runtimeVersion?.policy !== "appVersion") {
+  throw new Error('expo.runtimeVersion.policy must be "appVersion".');
+}
+
 const projectId = app.expo?.extra?.eas?.projectId;
 if (
   typeof projectId !== "string" ||

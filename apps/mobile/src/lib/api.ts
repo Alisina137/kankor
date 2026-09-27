@@ -39,7 +39,12 @@ function apiCandidates() {
   const candidates: string[] = [];
   const expoHost = expoDevelopmentHost();
   const expoHostIsTunnel = Boolean(
-    expoHost && (expoHost.endsWith(".exp.direct") || expoHost.endsWith(".ngrok.io") || expoHost.endsWith(".ngrok-free.app"))
+    expoHost && (
+      expoHost.endsWith(".exp.direct") ||
+      expoHost.endsWith(".ngrok.io") ||
+      expoHost.endsWith(".ngrok-free.app") ||
+      expoHost.endsWith(".trycloudflare.com")
+    )
   );
 
   // On a physical device during Expo development, prefer the host Expo is
